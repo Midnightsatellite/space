@@ -400,7 +400,8 @@ function apply(lang) {
   // documentary button: narration is in English
   const db = $('docBtn'); if (db) { const en = db.textContent.replace(/, en anglais\)$/, ')').replace('Documentaire', 'Documentary'); db.textContent = fr ? en.replace('Documentary', 'Documentaire').replace(/\)$/, ', en anglais)') : en.replace(', en anglais)', ')'); }
   $('search').placeholder = SS.tr('🔍 Search planets, moons, stars, galaxies…');
-  // info cards
+  // info cards (objects added after this file loaded are picked up here)
+  for (const [k, v] of Object.entries(INFO)) if (!INFO_EN[k]) INFO_EN[k] = { ...v };
   for (const [k, v] of Object.entries(INFO_EN)) INFO[k] = fr ? { ...v, ...trInfo(k, v) } : { ...v };
   SS.extras.TOUR.forEach((t, i) => { const f = TOUR[t[0]]; [t[1], t[2]] = fr && f ? f : TOUR_EN[i]; });
   if ($('info').style.display === 'block' && SS.more.current && INFO[SS.more.current]) SS.onFocus(SS.more.current);
@@ -410,6 +411,7 @@ function apply(lang) {
 }
 SS.more.factText = i => (SS.lang === 'fr' && FACTS_FR[i] ? [SS.more.FACTS[i][0], ...FACTS_FR[i]] : SS.more.FACTS[i]);
 SS.setLang = apply;
+SS.i18nAdd = ({ ui = {}, name = {}, cat = {}, dist = {}, fact = {} }) => { Object.assign(UI, ui); Object.assign(NAME, name); Object.assign(CAT, cat); Object.assign(DIST, dist); Object.assign(FACT, fact); };
 
 { // EN | FR switch
   const b = document.createElement('div'); b.id = 'langBtn';

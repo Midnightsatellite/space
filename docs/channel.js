@@ -155,4 +155,5 @@ SS.more.radio = { openRadio, closeRadio, STATIONS };
   SS.more.photo = { enter, exit, save };
 }
 
+await import('./explore.js' + new URL(import.meta.url).search);
 SS.setLang?.(SS.lang);    // translate the new buttons
