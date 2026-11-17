@@ -125,7 +125,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 // =====================================================================
 {
   const count = (name, title) => { try { window.goatcounter?.count?.({ path: 'ev-' + name, title: title || name, event: true }); } catch (e) { } };
-  const BTN = { radioPill: 'radio', quizBtn: 'quiz', ageBtn: 'age-in-space', cineBtn: 'cinema', photoBtn: 'photo-mode', factBtn: 'one-fact', langBtn: 'language', ageShare: 'share-age', qShare: 'share-quiz', vgGold: 'golden-record', glowOn: 'glow-toggle', swarmsOn: 'swarms-toggle' };
+  const BTN = { radioPill: 'radio', postBtn: 'postcard', installBtn: 'install', quizBtn: 'quiz', ageBtn: 'age-in-space', cineBtn: 'cinema', photoBtn: 'photo-mode', factBtn: 'one-fact', langBtn: 'language', ageShare: 'share-age', qShare: 'share-quiz', vgGold: 'golden-record', glowOn: 'glow-toggle', swarmsOn: 'swarms-toggle' };
   document.addEventListener('click', e => { const b = e.target.closest('button,input,a'); if (!b) return; if (BTN[b.id]) count(BTN[b.id]); else if (b.classList.contains('share')) count('share-link'); else if (b.href?.includes('youtube')) count('youtube-link'); else if (b.href?.includes('plus.nasa.gov')) count('nasa-plus'); }, true);
   const prevGo = SS.go; SS.go = k => { if (k && !document.body.classList.contains('cinema')) count('go-' + k, k); prevGo(k); }; focusSel.onchange = e => SS.go(e.target.value);
 }

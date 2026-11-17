@@ -61,6 +61,10 @@ function buildLM() {   // simple Lunar Module, upright (+Y up), used until the N
   return g;   // y = 0 … 5.1, docking tunnel on top
 }
 
+const lmLoader = (() => { let pr; return () => pr ||= new Promise((ok, no) => { const l = new GLTFLoader();
+  l.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));
+  l.load('models/apollo-lm.glb', g => { g.scene.traverse(c => { if (c.isMesh && c.material) { c.material.side = THREE.FrontSide; if (c.material.emissive && c.material.emissive.getHex() === 0) c.material.emissive.setHex(0x2a2620); } }); ok(g.scene); }, undefined, e => { pr = null; no(e); }); }); })();
+SS.apollo = { buildCSM, buildLM, lmLoader, T };
 {
   const old = bodies.Apollo11.obj, moon = bodies.Moon.obj, moonPivot = moon.parent;
   const frame = new THREE.Group(); moonPivot.add(frame);                // turns with the Moon (Moon at x = 3, radius 0.27; Earth radius 1)
@@ -119,16 +123,7 @@ function buildLM() {   // simple Lunar Module, upright (+Y up), used until the N
 
   // ---------- NASA's own Lunar Module model, loaded on the first visit ----------
   let loaded = false;
-  const loadLM = () => {
-    if (loaded) return; loaded = true;
-    const loader = new GLTFLoader();
-    loader.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));
-    loader.load('models/apollo-lm.glb', g => {
-      const m = g.scene; m.scale.setScalar(1.0);                            // the model is about 5.1 m tall here, legs folded out
-      m.traverse(c => { if (c.isMesh && c.material) { c.material.side = THREE.FrontSide; if (c.material.emissive && c.material.emissive.getHex() === 0) c.material.emissive.setHex(0x2a2620); } });
-      lmSimple.visible = false; lmHolder.add(m);
-    }, undefined, e => { console.warn('apollo LM', e); loaded = false; });
-  };
+  const loadLM = () => { if (loaded) return; loaded = true; lmLoader().then(m => { lmSimple.visible = false; lmHolder.add(m.clone(true)); }).catch(e => { console.warn('apollo LM', e); loaded = false; }); };
 
   // ---------- the card: real dates, and what is happening at the shown date ----------
   const STAGE = {
@@ -174,3 +169,5 @@ SS.i18nAdd?.({
   cat: { 'Mission · 16–24 July 1969': 'Mission · 16–24 juillet 1969' },
   dist: { 'Earth → orbit around the Moon → Earth': 'Terre → orbite autour de la Lune → Terre' },
 });
+
+await import('./apollo2.js' + new URL(import.meta.url).search);
