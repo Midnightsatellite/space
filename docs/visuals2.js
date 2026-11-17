@@ -74,3 +74,4 @@ const $ = id => document.getElementById(id);
     set(); $('langBtn')?.addEventListener('click', () => setTimeout(set, 50)); }
 }
 SS.i18nAdd?.({ ui: { 'Milky Way photo': 'Photo de la Voie lactée' } });
+await import('./apollo.js' + new URL(import.meta.url).search);
