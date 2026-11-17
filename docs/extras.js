@@ -40,8 +40,8 @@ sim.unshift(() => {                                               // runs before
   simMs += SS.frameDt * r * 864e5;
   if (frameN++ % 6 === 0) {
     const d = new Date(simMs);
-    clockEl.innerHTML = d.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) +
-      (eventText ? `<br><span class="ev">${eventText}</span>` : '');
+    clockEl.innerHTML = d.toLocaleString(SS.lang === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) +
+      (eventText ? `<br><span class="ev">${(SS.tr || (x => x))(eventText)}</span>` : '');
     if (document.activeElement !== dateIn) dateIn.value = toLocalInput(simMs);
   }
 });
@@ -525,7 +525,7 @@ function exitNight() {
   el.addEventListener('wheel', e => { if (nightOn) { fovNight = Math.max(12, Math.min(90, fovNight * (e.deltaY > 0 ? 1.08 : 0.93))); e.preventDefault(); } }, { passive: false });
 }
 const infoEl = $('info');
-function showInfo(name, cat, dist, fact) { infoEl.innerHTML = `<div class="cat">${cat}</div><b>${name}</b><div class="dist">${dist}</div>${fact}`; infoEl.style.display = 'block'; }
+function showInfo(name, cat, dist, fact) { const t = SS.tr || (x => x); [name, cat, dist, fact] = [name, cat, dist, fact].map(t); infoEl.innerHTML = `<div class="cat">${cat}</div><b>${name}</b><div class="dist">${dist}</div>${fact}`; infoEl.style.display = 'block'; }
 
 // =====================================================================
 // 9. TRUE SCALE MODE
@@ -642,7 +642,7 @@ function nextStop() {
   capEl.style.opacity = 0;
 }
 function stopTour() {
-  if (!tour) return; controls.autoRotate = tour.prevAuto; controls.autoRotateSpeed = 0.25; tour = null; capEl.style.opacity = 0; $('tourBtn').textContent = '▶ Guided tour';
+  if (!tour) return; controls.autoRotate = tour.prevAuto; controls.autoRotateSpeed = 0.25; tour = null; capEl.style.opacity = 0; $('tourBtn').textContent = (SS.tr || (x => x))('▶ Guided tour');
 }
 sim.push(() => {
   if (!tour) return;
@@ -693,7 +693,7 @@ SS.onFocus = key => { if (key !== 'scaleView') exitScale(); exitNight(); prevOnF
   const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-top:2px';
   row.innerHTML = '<button id="tourBtn" type="button">▶ Guided tour</button><button id="cleanBtn" type="button">Hide interface (H)</button>';
   ui.insertBefore(row, ui.children[1]);
-  $('tourBtn').onclick = () => { if (tour) stopTour(); else { startTour(); $('tourBtn').textContent = '■ Stop tour'; } };
+  $('tourBtn').onclick = () => { if (tour) stopTour(); else { startTour(); $('tourBtn').textContent = (SS.tr || (x => x))('■ Stop tour'); } };
   const toggleClean = () => document.body.classList.toggle('clean');
   $('cleanBtn').onclick = toggleClean;
   addEventListener('keydown', e => { if (e.key === 'h' || e.key === 'H') { if (document.activeElement?.tagName !== 'INPUT') toggleClean(); } if (e.key === 'Escape') { document.body.classList.remove('clean'); stopTour(); } });
@@ -715,4 +715,5 @@ sim.push(() => {
 { const layer = [...document.body.children].find(el => el.querySelector && el.querySelector('.lbl')); if (layer) layer.id = 'labelLayer'; }
 
 SS.go = go; SS.stopTour = stopTour;
+SS.extras = { addMoon, smallBody, exoPlanet, paint, lumpy, auToScene, addGroup, nearLabel, scaleHide, PL, EVENTS, TOUR, showInfo, litMaterial, dps, J2000, getTour: () => tour };
 await import('./documentary.js');

@@ -272,3 +272,5 @@ addEventListener('keydown', e => {
   addEventListener('pointermove', wake); addEventListener('keydown', wake); }
 
 SS.documentary = { CHAPTERS, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
+
+await import('./more.js');

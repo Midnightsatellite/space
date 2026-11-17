@@ -176,7 +176,7 @@ conBox.onchange = syncSky; zodBox.onchange = syncSky;
     let cur = ZODIAC[ZODIAC.length - 1];
     for (const z of ZODIAC) if (lam >= z[5]) cur = z;
     if (lam < ZODIAC[0][5]) cur = ZODIAC[ZODIAC.length - 1];
-    sunIn.innerHTML = `From Earth, the Sun is in front of <b>${cur[2]}\uFE0E ${cur[1]}</b>`;
+    sunIn.innerHTML = `${SS.lang === 'fr' ? 'Vu de la Terre, le Soleil est devant' : 'From Earth, the Sun is in front of'} <b>${cur[2]}\uFE0E ${SS.tr ? SS.tr(cur[1]) : cur[1]}</b>`;
   });
 }
 // Fly-to for each sign: look from behind Earth's side of the Sun toward the constellation
@@ -698,5 +698,5 @@ sim.push(() => {
 });
 
 // ---------- Share building blocks with the extras module, then load it ----------
-SS.cosmos = { info, INFO, star, skyDir, place, sceneDist, deepLabel, softDot, puff, gauss, starMaterial, bvToColor, radialTex, syncSky, zodBox, ZODIAC };
+SS.cosmos = { galaxy, galaxyPoints, cloudObject, scatter, pointStar, blackHole, buildProbe, earthOrbiter, earthBack, info, INFO, star, skyDir, place, sceneDist, deepLabel, softDot, puff, gauss, starMaterial, bvToColor, radialTex, syncSky, zodBox, ZODIAC };
 await import('./extras.js');
