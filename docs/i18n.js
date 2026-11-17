@@ -409,6 +409,7 @@ function apply(lang) {
   for (const b of document.querySelectorAll('#langBtn button')) b.classList.toggle('on', b.dataset.l === lang);
   try { localStorage.setItem('ss_lang', lang); } catch (e) { }
 }
+SS.more.FACTS_FR = FACTS_FR;
 SS.more.factText = i => (SS.lang === 'fr' && FACTS_FR[i] ? [SS.more.FACTS[i][0], ...FACTS_FR[i]] : SS.more.FACTS[i]);
 SS.setLang = apply;
 SS.i18nAdd = ({ ui = {}, name = {}, cat = {}, dist = {}, fact = {} }) => { Object.assign(UI, ui); Object.assign(NAME, name); Object.assign(CAT, cat); Object.assign(DIST, dist); Object.assign(FACT, fact); };

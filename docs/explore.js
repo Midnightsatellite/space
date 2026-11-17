@@ -13,6 +13,7 @@ const addOpts = (og, items) => { for (const [k, t] of items) { const o = documen
 const newGroup = (label, after) => { const og = document.createElement('optgroup'); og.label = label; const a = [...focusSel.querySelectorAll('optgroup')].find(g => g.label === after); a ? a.after(og) : focusSel.appendChild(og); return og; };
 const special = {};             // menu entries that set the date or a view before flying
 { const prevGo = SS.go; SS.go = k => { if (special[k]) special[k](); else prevGo(k); }; focusSel.onchange = e => SS.go(e.target.value); }
+SS.more.special = special;
 const flyLater = (k, ms = 120) => setTimeout(() => { flyTo(k); }, ms);
 
 // =====================================================================
@@ -278,3 +279,5 @@ SS.i18nAdd?.({
   }
   SS.i18nAdd?.({ dist, fact, ui });
 }
+
+await import('./astronauts.js' + new URL(import.meta.url).search);
