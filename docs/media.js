@@ -195,3 +195,4 @@ SS.i18nAdd?.({
   cat: { 'Films, series & anime': 'Films, séries et animes' },
   dist: { 'set on real places in this map, and a few made-up ones': 'sur de vrais lieux de cette carte, et quelques mondes imaginaires' },
 });
+await import('./planetinfo.js' + new URL(import.meta.url).search);
