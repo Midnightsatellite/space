@@ -191,3 +191,4 @@ SS.i18nAdd?.({
     MK_NPole: "Une calotte de glace d'eau d'environ 1 000 km de large, recouverte en hiver d'un givre de dioxyde de carbone gelé.",
   },
 });
+await import('./launches.js' + new URL(import.meta.url).search);
