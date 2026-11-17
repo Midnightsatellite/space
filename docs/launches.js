@@ -44,3 +44,4 @@ info('Launches', '🗓️ Upcoming launches', 'Launch schedule', 'from Earth to 
 }
 SS.i18nAdd?.({ ui: { '🗓️ Upcoming launches': '🗓️ Prochains lancements' }, name: { '🗓️ Upcoming launches': '🗓️ Prochains lancements' },
   cat: { 'Launch schedule': 'Calendrier des lancements' }, dist: { 'from Earth to the ISS, the Moon and beyond': "de la Terre vers l'ISS, la Lune et au-delà" } });
+await import('./fun.js' + new URL(import.meta.url).search);
