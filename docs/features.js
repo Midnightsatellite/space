@@ -220,6 +220,7 @@ function showFact(i) {
   fact.querySelector('.hook').textContent = hook; fact.querySelector('.txt').textContent = text;
   $('factNext').textContent = tr('Next fact ›'); $('factCmp').textContent = tr('⚖️ Compare sizes');
   $('factCmp').style.display = SIZES.some(s => s[0] === k) ? '' : 'none';
+  SS.more.syncShortBtn?.();
   fact.classList.remove('on'); setTimeout(() => fact.classList.add('on'), 1600);
   focusSel.value = k; SS.go(k);
   setTimeout(() => { $('info').style.display = 'none'; }, 1700);
@@ -229,13 +230,14 @@ function nextFact() { if (!deck.length) deck = FACTS.map((_, i) => i).sort(() =>
 $('factBtn').onclick = nextFact; $('factNext').onclick = nextFact;
 $('factX').onclick = () => { fact.classList.remove('on'); curFact = null; };
 $('factCmp').onclick = () => { const k = FACTS[curFact][0]; openCmp(k === 'Earth' ? 'Moon' : k, k === 'Earth' ? 'Mars' : 'Earth'); };
-SS.more.refreshFact = () => { if (curFact != null) { const [, hook, text] = SS.more.factText(curFact); fact.querySelector('.hook').textContent = hook; fact.querySelector('.txt').textContent = text; $('factNext').textContent = tr('Next fact ›'); $('factCmp').textContent = tr('⚖️ Compare sizes'); } };
+SS.more.refreshFact = () => { if (curFact != null) { const [, hook, text] = SS.more.factText(curFact); fact.querySelector('.hook').textContent = hook; fact.querySelector('.txt').textContent = text; $('factNext').textContent = tr('Next fact ›'); $('factCmp').textContent = tr('⚖️ Compare sizes'); } SS.more.syncShortBtn?.(); };
 // hide the fact card when the person flies somewhere else
 { const prevGo = SS.go; SS.go = k => { if (curFact != null && FACTS[curFact][0] !== k) { fact.classList.remove('on'); curFact = null; } prevGo(k); }; focusSel.onchange = e => SS.go(e.target.value); }
-SS.more.showFact = showFact;
+SS.more.showFact = showFact; SS.more.currentFactKey = () => (curFact != null ? FACTS[curFact][0] : null);
 
 // ---------- Language switch + link parameters ----------
 await import('./i18n.js' + new URL(import.meta.url).search);
+await import('./channel.js' + new URL(import.meta.url).search);
 {
   const q = new URLSearchParams(location.search);
   const go = q.get('go'), f = q.get('fact');

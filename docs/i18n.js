@@ -17,6 +17,10 @@ const UI = {
   "Midnight Satellite on YouTube": "Midnight Satellite sur YouTube",
   "🔍 Search planets, moons, stars, galaxies…": "🔍 Chercher planètes, lunes, étoiles, galaxies…", "Nothing found": "Aucun résultat",
   "🔗 Copy link to this view": "🔗 Copier le lien de cette vue", "✓ Link copied": "✓ Lien copié", "Copy this link:": "Copiez ce lien :", "Next fact ›": "Fait suivant ›",
+  "🎵 Midnight Satellite radio": "🎵 Radio Midnight Satellite", "🎵 MIDNIGHT SATELLITE RADIO": "🎵 RADIO MIDNIGHT SATELLITE", "Now playing:": "En écoute :", "open on YouTube ↗": "écouter sur YouTube ↗",
+  "Midnight Satellite songs": "Chansons de Midnight Satellite", "Deep space ambient": "Ambiance espace profond", "Lofi Loft": "Lofi Loft",
+  "▶ Watch the Short": "▶ Voir le Short", "🎬 Watch the documentary on YouTube": "🎬 Voir le documentaire sur YouTube",
+  "📸 Photo mode": "📸 Mode photo", "📸 Save picture": "📸 Enregistrer l'image", "📱 Save 9:16": "📱 Enregistrer en 9:16", "Cinematic camera": "Caméra cinéma", "Orbit lines": "Orbites", "✕ Exit (Esc)": "✕ Quitter (Échap)",
   "Paused": "En pause", "Real time": "Temps réel", "1 minute / sec": "1 minute / s", "1 hour / sec": "1 heure / s", "6 hours / sec": "6 heures / s", "1 day / sec": "1 jour / s",
   "3.5 days / sec": "3,5 jours / s", "1 week / sec": "1 semaine / s", "1 month / sec": "1 mois / s", "1 year / sec": "1 an / s",
   "◀ 1 day / sec": "◀ 1 jour / s", "◀ 1 month / sec": "◀ 1 mois / s", "◀ 1 year / sec": "◀ 1 an / s", "Forwards in time": "Vers le futur", "Backwards in time": "Vers le passé",
@@ -382,7 +386,7 @@ function apply(lang) {
   const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
   for (const n of nodes) {
-    if (n.parentElement.closest('script,style,#info,#clock,#doctitle,#dSub,#caption,#fact,#cmp,#searchRes,#docbar,#langBtn,#sunin,#labelLayer,.lbl')) continue;
+    if (n.parentElement.closest('script,style,#info,#clock,#doctitle,#dSub,#caption,#fact,#cmp,#searchRes,#docbar,#langBtn,#sunin,#labelLayer,.lbl,#radioNow')) continue;
     const t = n.textContent, tt = t.trim(); if (!tt) continue;
     const en = keep(n, () => t), enT = en.trim();
     const isLbl = n.parentElement.closest('.lbl,#labelLayer');
