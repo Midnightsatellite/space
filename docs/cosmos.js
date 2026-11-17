@@ -699,4 +699,4 @@ sim.push(() => {
 
 // ---------- Share building blocks with the extras module, then load it ----------
 SS.cosmos = { galaxy, galaxyPoints, cloudObject, scatter, pointStar, blackHole, buildProbe, earthOrbiter, earthBack, info, INFO, star, skyDir, place, sceneDist, deepLabel, softDot, puff, gauss, starMaterial, bvToColor, radialTex, syncSky, zodBox, ZODIAC };
-await import('./extras.js');
+await import('./extras.js?v=4');

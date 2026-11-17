@@ -203,6 +203,8 @@ const FACTS = [
   ['Andromeda', 'Andromeda is coming towards us', 'Our neighbour galaxy will meet the Milky Way in about 4–5 billion years.'],
   ['Cartwheel', 'A galaxy hit by a galaxy', 'The Cartwheel\'s ring of stars rippled out after a smaller galaxy punched straight through it.'],
   ['ProximaB', 'There are more than 6,000 known exoplanets', 'The first around a Sun-like star was found in 1995; now we know thousands, and the closest is Proxima b.'],
+  ['Kepler', 'There are more planets than stars', 'The Kepler telescope found over 2,600 planets and showed that, on average, every star in our galaxy has at least one.'],
+  ['TESS', 'One satellite has found over 1,000 planets', 'Since 2018, TESS has watched nearby stars for tiny dips in their light: more than 1,000 of its planets are now confirmed.'],
 ];
 SS.more.FACTS = FACTS;
 const fact = document.createElement('div'); fact.id = 'fact';
@@ -229,7 +231,7 @@ SS.more.refreshFact = () => { if (curFact != null) { const [, hook, text] = SS.m
 SS.more.showFact = showFact;
 
 // ---------- Language switch + link parameters ----------
-await import('./i18n.js');
+await import('./i18n.js?v=4');
 {
   const q = new URLSearchParams(location.search);
   const go = q.get('go'), f = q.get('fact');

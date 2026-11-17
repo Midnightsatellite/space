@@ -28,7 +28,7 @@ const UI = {
   // menu groups
   "Views": "Vues", "Events": "Événements", "The Sun & planets": "Le Soleil et les planètes", "Moons": "Lunes", "Dwarf planets": "Planètes naines", "Comets, asteroids & belts": "Comètes, astéroïdes et ceintures",
   "Spacecraft": "Engins spatiaux", "Stars (nearest first)": "Étoiles (des plus proches aux plus lointaines)", "Exoplanets": "Exoplanètes", "Star clusters & nebulae": "Amas d'étoiles et nébuleuses",
-  "Black holes": "Trous noirs", "Zodiac (star signs)": "Zodiaque (signes)", "Galaxies": "Galaxies",
+  "Black holes": "Trous noirs", "Space telescopes & satellites": "Télescopes spatiaux et satellites", "Zodiac (star signs)": "Zodiaque (signes)", "Galaxies": "Galaxies",
 };
 
 // ---------- Names (labels, menu and info cards) ----------
@@ -58,6 +58,7 @@ const NAME = {
   "Apollo 11 · July 1969": "Apollo 11 · juillet 1969", "Halley's Comet · Feb 1986": "Comète de Halley · févr. 1986", "Halley's Comet returns · Jul 2061": "Retour de la comète de Halley · juil. 2061",
   "Total solar eclipse": "Éclipse totale de Soleil", "Total lunar eclipse": "Éclipse totale de Lune", "True scale": "Échelle réelle", "Mars": "Mars", "Jupiter": "Jupiter", "Uranus": "Uranus", "Neptune": "Neptune",
   "at Jupiter": "autour de Jupiter", "on Mars": "sur Mars",
+  "TESS (planet hunter)": "TESS (chasseur de planètes)", "Kepler (retired)": "Kepler (retraité)", "Spitzer (retired)": "Spitzer (retraité)", "Chandra (X-rays)": "Chandra (rayons X)", "Fermi (gamma rays)": "Fermi (rayons gamma)",
 };
 function trName(s) {
   if (NAME[s]) return NAME[s];
@@ -82,7 +83,12 @@ const CAT = {
   "Region of the Solar System": "Région du Système solaire", "Region of the Solar System (predicted)": "Région du Système solaire (prédite)",
   "Exoplanet": "Exoplanète", "Exoplanet · hot Jupiter": "Exoplanète · Jupiter chaud", "Exoplanet · lava world": "Exoplanète · monde de lave", "Exoplanet · super-Earth": "Exoplanète · super-Terre",
   "Exoplanet · puffy gas giant": "Exoplanète · géante gazeuse gonflée", "Mission · July 1969": "Mission · juillet 1969", "Event · 2 August 2027": "Événement · 2 août 2027", "Event · 3 March 2026": "Événement · 3 mars 2026",
-  "Sizes and distances to scale": "Tailles et distances à l'échelle", "Zodiac constellation · star sign": "Constellation du zodiaque · signe", "Constellation on the zodiac": "Constellation sur le zodiaque",
+  "Sizes and distances to scale": "Tailles et distances à l'échelle", 
+  "Spacecraft · planet-hunting telescope": "Engin spatial · télescope chasseur de planètes", "Spacecraft · X-ray telescope": "Engin spatial · télescope à rayons X",
+  "Spacecraft · gamma-ray telescope": "Engin spatial · télescope à rayons gamma", "Spacecraft · gamma-ray burst observatory": "Engin spatial · observatoire des sursauts gamma",
+  "Spacecraft · sky-mapping telescope": "Engin spatial · télescope cartographe du ciel", "Spacecraft · exoplanet satellite · launched 2026": "Engin spatial · satellite d'exoplanètes · lancé en 2026",
+  "Spacecraft · CubeSat · launched 2026": "Engin spatial · CubeSat · lancé en 2026", "Spacecraft · CubeSat": "Engin spatial · CubeSat",
+  "Spacecraft · planet hunter · retired 2018": "Engin spatial · chasseur de planètes · retraité en 2018", "Spacecraft · infrared telescope · retired 2020": "Engin spatial · télescope infrarouge · retraité en 2020", "Zodiac constellation · star sign": "Constellation du zodiaque · signe", "Constellation on the zodiac": "Constellation sur le zodiaque",
 };
 const PLANET_DE = { Earth: "de la Terre", Mars: "de Mars", Jupiter: "de Jupiter", Saturn: "de Saturne", Uranus: "d'Uranus", Neptune: "de Neptune", Sun: "du Soleil" };
 const DIST = {
@@ -97,6 +103,8 @@ const DIST = {
   "light travelled about 10 billion years to reach us": "sa lumière a voyagé environ 10 milliards d'années pour nous parvenir", "dives to 6.1 million km from the Sun": "plonge à 6,1 millions de km du Soleil",
   "in orbit around Jupiter since 2016": "en orbite autour de Jupiter depuis 2016", "Jezero Crater, Mars": "Cratère Jezero, Mars",
   "heading to Sun–Earth L2, about 1.5 million km from Earth": "en route vers le point L2 Soleil–Terre, à environ 1,5 million de km de la Terre",
+  "loops out almost to the Moon every 13.7 days": "s'éloigne presque jusqu'à la Lune tous les 13,7 jours", "up to 139,000 km from Earth": "jusqu'à 139 000 km de la Terre",
+  "about 650 km above Earth, over the poles": "environ 650 km au-dessus de la Terre, en passant par les pôles", "drifting around the Sun, trailing behind Earth": "dérive autour du Soleil, derrière la Terre",
 };
 const num = s => s.replace(/(\d),(?=\d{3})/g, '$1 ').replace(/(\d)\.(\d)/g, '$1,$2');
 const big = (n, unit) => { const v = parseFloat(n.replace(/\s/g, '').replace(',', '.')); return unit === 'billion' ? (v >= 2 ? 'milliards' : 'milliard') : (v >= 2 ? 'millions' : 'million'); };
@@ -242,6 +250,18 @@ const FACT = {
   Juno: "Alimentée à l'énergie solaire, même à Jupiter. Elle passe au-dessus des pôles de la planète, sous les cyclones des nuages, avec à bord trois figurines LEGO : Galilée, Jupiter et Junon.",
   Perseverance: "Un robot de la taille d'une voiture qui cherche des traces de vie passée dans le lit d'un ancien lac. Il a emporté l'hélicoptère Ingenuity, le premier engin à voler sur une autre planète.",
   Tiangong: "La station spatiale chinoise en forme de T, habitée en permanence depuis 2022 par des équipes de trois taïkonautes.",
+  TESS: "Lancé en 2018, ses quatre caméras surveillent plus de 85 % du ciel pour repérer les minuscules baisses de lumière quand une planète passe devant son étoile. Plus de 1 000 de ses découvertes sont désormais confirmées.",
+  Chandra: "L'œil à rayons X de la NASA, lancé en 1999. Il observe les endroits les plus chauds et violents de l'Univers, et a même repéré ce qui pourrait être une planète dans une autre galaxie.",
+  Fermi: "Lancé en 2008, il surveille tout le ciel en rayons gamma, la lumière la plus énergétique qui soit, et capte étoiles qui explosent et jets de trous noirs.",
+  Swift: "Conçu pour réagir vite : quand un sursaut gamma éclate quelque part dans le ciel, il se tourne pour l'observer en une minute environ.",
+  NuSTAR: "Il a déployé dans l'espace un mât de 10 mètres pour concentrer les rayons X de haute énergie, la lumière qui jaillit autour des trous noirs.",
+  IXPE: "Lancé en 2021 avec trois télescopes à rayons X qui mesurent la direction dans laquelle vibre la lumière, pour révéler la forme de l'espace autour des trous noirs et des étoiles mortes.",
+  SPHEREx: "Lancé en 2025, il cartographie tout le ciel dans 102 couleurs infrarouges, à la recherche des glaces qui pourraient apporter l'eau aux nouvelles planètes.",
+  Pandora: "Un petit satellite lancé le 11 janvier 2026. Il fixe longuement des étoiles pour étudier l'air des planètes qui passent devant elles, et les sursauts des étoiles elles-mêmes.",
+  SPARCS: "Un CubeSat de la taille d'une boîte de céréales, lancé le 11 janvier 2026. Il surveille 20 petites étoiles rouges pour mesurer les éruptions ultraviolettes qui frappent leurs planètes.",
+  CUTE: "Un minuscule CubeSat lancé en 2021 qui regarde des planètes brûlantes perdre leur atmosphère, qui s'échappe comme la queue d'une comète.",
+  Kepler: "De 2009 à 2018, il a surveillé plus de 150 000 étoiles et découvert plus de 2 600 planètes, record absolu, prouvant qu'il y a plus de planètes que d'étoiles dans notre galaxie.",
+  Spitzer: "Un télescope infrarouge (2003–2020). Il a été le premier à capter directement la lumière d'une exoplanète, a réalisé la première carte météo de l'une d'elles et a pesé les sept planètes de TRAPPIST-1.",
   Roman: "Lancé le 30 août 2026. Sa caméra couvre une zone 100 fois plus grande que celle de Hubble, et la NASA s'attend à ce qu'il découvre environ 100 000 exoplanètes de plus. La science commence début 2027.",
 };
 FACT.T1b = FACT.T1c = FACT.T1d = FACT.T1h = FACT.T1b;
@@ -320,6 +340,8 @@ const FACTS_FR = [
   ["Andromède fonce vers nous", "Notre galaxie voisine rencontrera la Voie lactée dans environ 4 à 5 milliards d'années."],
   ["Une galaxie percutée par une galaxie", "L'anneau d'étoiles de la Roue de chariot s'est formé quand une galaxie plus petite l'a traversée de part en part."],
   ["On connaît plus de 6 000 exoplanètes", "La première autour d'une étoile semblable au Soleil a été découverte en 1995 ; on en connaît aujourd'hui des milliers, et la plus proche est Proxima b."],
+  ["Il y a plus de planètes que d'étoiles", "Le télescope Kepler a découvert plus de 2 600 planètes et montré qu'en moyenne, chaque étoile de notre galaxie en a au moins une."],
+  ["Un satellite a trouvé plus de 1 000 planètes", "Depuis 2018, TESS guette les minuscules baisses de lumière des étoiles proches : plus de 1 000 de ses planètes sont confirmées."],
 ];
 
 // ---------- Applying a language ----------

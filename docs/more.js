@@ -214,6 +214,87 @@ earthOrbiter({ key: 'Tiangong', name: 'Tiangong', scale: 0.02, radius: 1.17, inc
     'Launched on 30 August 2026. Its camera sees an area 100 times bigger than Hubble\'s, and NASA expects it to discover about 100,000 more exoplanets. Science begins in early 2027.');
 }
 
+// ---------- NASA space telescopes & exoplanet satellites ----------
+const SAT = {
+  white: new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 }), silver: metal(0xc8ccd4, 0.85, 0.3), gold: metal(0xc8a040, 0.8, 0.35),
+  panel: metal(0x1b2f78, 0.6, 0.3), dark: metal(0x30343c, 0.5, 0.5),
+};
+const mk = {
+  box: (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m),
+  cyl: (r, l, m, seg = 20, r2 = r) => new THREE.Mesh(new THREE.CylinderGeometry(r2, r, l, seg), m),
+  wings: (g, span, w, y = 0) => { for (const s of [1, -1]) { const p = mk.box(span, 0.03, w, SAT.panel); p.position.set(s * (span / 2 + 0.35), y, 0); g.add(p); } },
+};
+const MODELS = {
+  tess: () => { const g = new THREE.Group(); g.add(mk.box(0.7, 0.5, 0.7, SAT.gold)); for (let i = 0; i < 4; i++) { const c = mk.cyl(0.11, 0.5, SAT.dark); c.position.set(-0.24 + (i % 2) * 0.48 - 0.12 + (i > 1 ? 0.24 : 0), 0.5, (i > 1 ? 0.15 : -0.15)); c.rotation.x = (i - 1.5) * 0.12; g.add(c); } mk.wings(g, 1.2, 0.45, -0.1); return g; },
+  telescope: (len = 2, r = 0.3, mat = SAT.silver) => { const g = new THREE.Group(); const t = mk.cyl(r, len, mat); t.rotation.z = Math.PI / 2; g.add(t);
+    const b = mk.box(0.5, 0.5, 0.5, SAT.gold); b.position.x = -len / 2 - 0.2; g.add(b);
+    for (const s of [1, -1]) { const p = mk.box(len * 0.55, 0.03, 0.7, SAT.panel); p.position.set(-len * 0.15, 0, s * (r + 0.45)); g.add(p); } return g; },
+  chandra: () => MODELS.telescope(3.6, 0.32, SAT.white),
+  fermi: () => { const g = new THREE.Group(); g.add(mk.box(0.9, 0.7, 0.9, SAT.white)); const t = mk.box(0.8, 0.35, 0.8, SAT.gold); t.position.y = 0.52; g.add(t); mk.wings(g, 1.6, 0.6, 0); return g; },
+  swift: () => { const g = MODELS.telescope(1.6, 0.36, SAT.white); return g; },
+  nustar: () => { const g = new THREE.Group(); g.add(mk.box(0.5, 0.5, 0.5, SAT.gold)); const mast = mk.cyl(0.04, 3.2, SAT.silver, 6); mast.rotation.z = Math.PI / 2; mast.position.x = 1.8; g.add(mast);
+    const opt = mk.box(0.35, 0.3, 0.6, SAT.white); opt.position.x = 3.4; g.add(opt); mk.wings(g, 0.9, 0.5, 0); return g; },
+  ixpe: () => { const g = new THREE.Group(); g.add(mk.box(0.6, 0.4, 0.6, SAT.gold)); for (let i = 0; i < 3; i++) { const t = mk.cyl(0.1, 0.8, SAT.white); t.position.set(Math.cos(i * 2.09) * 0.18, 1.4, Math.sin(i * 2.09) * 0.18); g.add(t); }
+    const boom = mk.cyl(0.05, 1.6, SAT.silver, 6); boom.position.y = 0.8; g.add(boom); mk.wings(g, 0.9, 0.4, 0); return g; },
+  spherex: () => { const g = new THREE.Group(); const b = mk.box(0.6, 0.4, 0.6, SAT.gold); b.position.y = -0.5; g.add(b);
+    for (let i = 0; i < 3; i++) { const c = mk.cyl(0.35 + i * 0.12, 0.35, SAT.silver, 24, 0.55 + i * 0.12); c.position.y = i * 0.32; g.add(c); } return g; },
+  cubesat: (k = 1) => { const g = new THREE.Group(); g.add(mk.box(0.3, 0.3 * k, 0.2, SAT.silver)); mk.wings(g, 0.6, 0.25, 0); return g; },
+  pandora: () => { const g = new THREE.Group(); g.add(mk.box(0.5, 0.5, 0.5, SAT.gold)); const t = mk.cyl(0.18, 0.7, SAT.white); t.position.y = 0.55; g.add(t); mk.wings(g, 0.9, 0.45, 0); return g; },
+  kepler: () => { const g = new THREE.Group(); const t = mk.cyl(0.45, 1.8, SAT.silver, 24); g.add(t); const b = mk.cyl(0.55, 0.4, SAT.gold, 6); b.position.y = -1.1; g.add(b);
+    const sh = mk.box(0.06, 2.2, 1.3, SAT.panel); sh.position.x = -0.62; g.add(sh); return g; },
+  spitzer: () => { const g = new THREE.Group(); const t = mk.cyl(0.42, 1.6, SAT.silver, 24); t.position.y = 0.3; g.add(t); const b = mk.cyl(0.5, 0.4, SAT.gold, 8); b.position.y = -0.7; g.add(b);
+    const sh = mk.box(0.06, 2.0, 1.2, SAT.panel); sh.position.x = 0.58; g.add(sh); return g; },
+};
+const earthObj = bodies.Earth.obj, _ep = V();
+// satellites circling Earth (sizes greatly exaggerated so they can be seen)
+function orbiter({ key, name, model, scale = 0.018, a, e = 0, incl = 0.5, node = 0, period, phase = 0, view = 0.2, cat, dist, fact, range = 5 }) {
+  const piv = new THREE.Group(); piv.rotation.set(incl, node, 0); earthObj.add(piv);
+  const craft = model(); craft.scale.setScalar(scale); piv.add(craft);
+  const b = a * Math.sqrt(1 - e * e);
+  let M = phase;
+  sim.push(dt => { M += dt * (2 * Math.PI / period); let E = M; for (let i = 0; i < 8; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    craft.position.set(a * (Math.cos(E) - e), 0, b * Math.sin(E)); craft.rotation.y += dt * 0.2; });
+  if (e > 0.2 || a > 1.6) { const pts = []; for (let k = 0; k <= 160; k++) { const E = k / 160 * 6.2832; pts.push(V(a * (Math.cos(E) - e), 0, b * Math.sin(E))); }
+    const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.2 })); piv.add(ln); SS.orbitLines.push(ln); }
+  nearLabel(craft, name, 0.1 / scale, key, 'craft', range);
+  bodies[key] = { obj: craft, radius: scale, view, dir: t => { earthObj.getWorldPosition(_ep); return t.clone().sub(_ep).normalize().add(V(0, 0.35, 0)).normalize(); } };
+  info(key, name, cat, dist, fact);
+}
+orbiter({ key: 'TESS', name: 'TESS', model: MODELS.tess, scale: 0.03, a: 1.85, e: 0.48, incl: 0.65, node: 1.2, period: 26, phase: 2, view: 0.35, range: 14,
+  cat: 'Spacecraft · planet-hunting telescope', dist: 'loops out almost to the Moon every 13.7 days',
+  fact: 'Launched in 2018, its four cameras watch over 85% of the sky for tiny dips in starlight as planets pass their stars. More than 1,000 of its planet discoveries have now been confirmed.' });
+orbiter({ key: 'Chandra', name: 'Chandra', model: MODELS.chandra, scale: 0.03, a: 1.75, e: 0.35, incl: 0.8, node: 3.4, period: 20, phase: 4, view: 0.4, range: 12,
+  cat: 'Spacecraft · X-ray telescope', dist: 'up to 139,000 km from Earth',
+  fact: 'NASA\'s X-ray eye, launched in 1999. It sees the hottest, most violent places in the universe, and has even spotted what may be a planet in another galaxy.' });
+orbiter({ key: 'Fermi', name: 'Fermi', model: MODELS.fermi, scale: 0.016, a: 1.13, incl: 0.45, node: 0.7, period: 10, phase: 1, cat: 'Spacecraft · gamma-ray telescope', dist: 'about 535 km above Earth',
+  fact: 'Launched in 2008, it watches the whole sky in gamma rays, the most energetic light there is, catching exploding stars and black hole jets.' });
+orbiter({ key: 'Swift', name: 'Swift', model: MODELS.swift, scale: 0.016, a: 1.14, incl: 0.36, node: 2.1, period: 10.5, phase: 3, cat: 'Spacecraft · gamma-ray burst observatory', dist: 'about 585 km above Earth',
+  fact: 'Built to react fast: when a gamma-ray burst flashes anywhere in the sky, it swings round to look within about a minute.' });
+orbiter({ key: 'NuSTAR', name: 'NuSTAR', model: MODELS.nustar, scale: 0.014, a: 1.14, incl: 0.1, node: 4, period: 10.6, phase: 5, cat: 'Spacecraft · X-ray telescope', dist: 'about 610 km above Earth',
+  fact: 'Unfolded a 10-metre mast in space to focus high-energy X-rays, the light that pours out from around black holes.' });
+orbiter({ key: 'IXPE', name: 'IXPE', model: MODELS.ixpe, scale: 0.015, a: 1.135, incl: 0.05, node: 1, period: 10.5, phase: 0.5, cat: 'Spacecraft · X-ray telescope', dist: 'about 600 km above Earth',
+  fact: 'Launched in 2021 with three X-ray telescopes that measure the direction light waves vibrate, revealing the shape of space around black holes and dead stars.' });
+orbiter({ key: 'SPHEREx', name: 'SPHEREx', model: MODELS.spherex, scale: 0.017, a: 1.15, incl: 1.5, node: 2.6, period: 11, phase: 2.5, cat: 'Spacecraft · sky-mapping telescope', dist: 'about 650 km above Earth, over the poles',
+  fact: 'Launched in 2025, it maps the entire sky in 102 colours of infrared light, looking for the ices that may carry water to new planets.' });
+orbiter({ key: 'Pandora', name: 'Pandora', model: MODELS.pandora, scale: 0.014, a: 1.12, incl: 1.7, node: 0.4, period: 10.2, phase: 4.2, cat: 'Spacecraft · exoplanet satellite · launched 2026', dist: 'about 600 km above Earth',
+  fact: 'A small satellite launched on 11 January 2026. It stares at stars for long stretches to study the air of the planets passing in front of them, and the stars\' own flickers.' });
+orbiter({ key: 'SPARCS', name: 'SPARCS', model: () => MODELS.cubesat(1.4), scale: 0.012, a: 1.12, incl: 1.68, node: 0.5, period: 10.2, phase: 4.6, cat: 'Spacecraft · CubeSat · launched 2026', dist: 'about 600 km above Earth',
+  fact: 'A CubeSat about the size of a cereal box, launched on 11 January 2026. It keeps watch on 20 small red stars to measure the ultraviolet flares that hit their planets.' });
+orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.012, a: 1.11, incl: 1.7, node: 3, period: 10, phase: 1.5, cat: 'Spacecraft · CubeSat', dist: 'about 500 km above Earth',
+  fact: 'A tiny CubeSat launched in 2021 that watches hot planets lose their atmospheres, which stream away like a comet\'s tail.' });
+{ // retired telescopes trailing behind Earth around the Sun
+  const trail = (key, name, model, lagDeg, fact, cat, dist) => {
+    const m = model(); m.scale.setScalar(0.12); scene.add(m); scaleHide.push(m);
+    sim.push(dt => { earthObj.getWorldPosition(_ep); const ang = Math.atan2(-_ep.z, _ep.x) - lagDeg * Math.PI / 180, r = _ep.length(); m.position.set(Math.cos(ang) * r, 0.4, -Math.sin(ang) * r); m.rotation.y += dt * 0.05; });
+    nearLabel(m, name, 2.4, key, 'craft', 40);
+    bodies[key] = { obj: m, radius: 0.2, view: 1.1 }; info(key, name, cat, dist, fact);
+  };
+  trail('Kepler', 'Kepler', MODELS.kepler, 55, 'From 2009 to 2018 it watched over 150,000 stars and found more than 2,600 planets, the most of any mission, proving there are more planets than stars in our galaxy.',
+    'Spacecraft · planet hunter · retired 2018', 'drifting around the Sun, trailing behind Earth');
+  trail('Spitzer', 'Spitzer', MODELS.spitzer, 95, 'An infrared telescope (2003–2020). It was the first to see light directly from an exoplanet, made the first weather map of one, and weighed the seven TRAPPIST-1 planets.',
+    'Spacecraft · infrared telescope · retired 2020', 'drifting around the Sun, trailing behind Earth');
+}
+
 // ---------- Fly-to menu entries for the new objects ----------
 {
   const add = (group, items, before) => { const og = [...focusSel.querySelectorAll('optgroup')].find(g => g.label === group); if (!og) return;
@@ -226,6 +307,14 @@ earthOrbiter({ key: 'Tiangong', name: 'Tiangong', scale: 0.02, radius: 1.17, inc
   add('Star clusters & nebulae', [['Horsehead', 'Horsehead Nebula'], ['Lagoon', 'Lagoon Nebula'], ['CatsEye', "Cat's Eye Nebula"]]);
   add('Black holes', [['V404Cyg', 'V404 Cygni'], ['TON618', 'TON 618 (giant)']]);
   add('Galaxies', [['CenA', 'Centaurus A'], ['Pinwheel', 'Pinwheel Galaxy'], ['Cartwheel', 'Cartwheel Galaxy']]);
+  { // a group of its own for the telescopes and satellites
+    const og = document.createElement('optgroup'); og.label = 'Space telescopes & satellites';
+    for (const [k, t] of [['Hubble', 'Hubble'], ['JWST', 'James Webb Telescope'], ['Roman', 'Roman Space Telescope (2026)'], ['TESS', 'TESS (planet hunter)'], ['Kepler', 'Kepler (retired)'], ['Spitzer', 'Spitzer (retired)'],
+      ['Chandra', 'Chandra (X-rays)'], ['Fermi', 'Fermi (gamma rays)'], ['Swift', 'Swift'], ['NuSTAR', 'NuSTAR'], ['IXPE', 'IXPE'], ['SPHEREx', 'SPHEREx'], ['Pandora', 'Pandora (2026)'], ['SPARCS', 'SPARCS (2026)'], ['CUTE', 'CUTE']]) {
+      const o = document.createElement('option'); o.value = k; o.textContent = t; og.appendChild(o);
+      if (['Hubble', 'JWST', 'Roman'].includes(k)) focusSel.querySelector(`optgroup[label="Spacecraft"] option[value="${k}"]`)?.remove(); }
+    [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Spacecraft').after(og);
+  }
   // keep stars in distance order
   const st = [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Stars (nearest first)');
   const order = ['Proxima', 'AlphaCen', 'Barnard', 'Sirius', 'Procyon', 'TauCeti', 'Altair', 'Vega', 'Fomalhaut', 'Pollux', 'Arcturus', 'Capella', 'Aldebaran', 'Regulus', 'Spica', 'Mira', 'Canopus', 'Polaris', 'Betelgeuse', 'Antares', 'Rigel', 'Deneb', 'UYScuti'];
@@ -233,4 +322,4 @@ earthOrbiter({ key: 'Tiangong', name: 'Tiangong', scale: 0.02, radius: 1.17, inc
 }
 
 SS.more = {}; SS.features = SS.features || null;
-await import('./features.js');
+await import('./features.js?v=4');
