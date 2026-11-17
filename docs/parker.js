@@ -98,3 +98,4 @@ SS.i18nAdd?.({
   cat: { 'Spacecraft · solar probe · active': 'Engin spatial · sonde solaire · en activité' },
   dist: { 'dives to about 6.1 million km from the Sun': 'plonge à environ 6,1 millions de km du Soleil' },
 });
+await import('./roman.js' + new URL(import.meta.url).search);
