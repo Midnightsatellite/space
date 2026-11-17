@@ -28,6 +28,11 @@ css.textContent = `
 #radioPill:hover{border-color:#ffd27a}
 #radio{position:fixed;right:16px;bottom:34px;z-index:14;width:356px;display:none;background:rgba(10,14,30,.94);backdrop-filter:blur(8px);border:1px solid rgba(255,210,122,.35);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 #radio.on{display:block}
+#radio.mini{width:200px}
+#radio.mini iframe,#radio.mini #radioPlayer{width:200px!important;height:200px!important}
+#radio.mini .head span .t,#radio.mini .now,#radio.mini select,#radio.mini #radioYT{display:none}
+#radio.mini .ctl{justify-content:center;padding:6px}
+#radio .head{cursor:move;user-select:none}
 #radio .head{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;font-size:12px;color:#ffd27a;letter-spacing:.12em;font-weight:700}
 #radio .head span{flex:1}
 #radio .head button{margin:0;padding:2px 8px}
@@ -56,7 +61,7 @@ document.head.appendChild(css);
 // ---------- 🎵 Midnight Satellite radio ----------
 const pill = document.createElement('button'); pill.id = 'radioPill'; pill.type = 'button'; pill.textContent = '🎵 Midnight Satellite radio';
 const box = document.createElement('div'); box.id = 'radio';
-box.innerHTML = `<div class="head"><span>🎵 MIDNIGHT SATELLITE RADIO</span><button id="radioMin" type="button" title="">—</button></div>
+box.innerHTML = `<div class="head"><span>🎵<span class="t"> MIDNIGHT SATELLITE RADIO</span></span><button id="radioSmall" type="button">▢</button><button id="radioMin" type="button" title="">—</button></div>
 <div id="radioPlayer"></div>
 <div class="now"><span id="radioNowL">Now playing:</span> <b id="radioNow">…</b></div>
 <div class="ctl"><button id="radioPrev" type="button">⏮</button><button id="radioPlay" type="button">⏯</button><button id="radioNext" type="button">⏭</button>
@@ -90,6 +95,19 @@ $('radioNext').onclick = () => { idx = (idx + 1) % order.length; playTrack(); };
 $('radioPrev').onclick = () => { idx = (idx - 1 + order.length) % order.length; playTrack(); };
 $('radioPlay').onclick = () => { if (!ready) return; player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo(); };
 stSel.onchange = () => pickStation(+stSel.value);
+SS.i18nAdd?.({ ui: { Bigger: 'Agrandir', Smaller: 'Réduire' } });
+{ // compact mode (the YouTube player stays at least 200×200, as YouTube requires), remembered between visits
+  const setMini = on => { box.classList.toggle('mini', on); $('radioSmall').textContent = on ? '⤢' : '▢'; $('radioSmall').title = tr(on ? 'Bigger' : 'Smaller'); try { localStorage.setItem('ss_radiomini', on ? '1' : '0'); } catch (e) { } };
+  try { setMini(localStorage.getItem('ss_radiomini') === '1'); } catch (e) { setMini(false); }
+  $('radioSmall').onclick = () => setMini(!box.classList.contains('mini'));
+  // drag the radio by its title bar to anywhere on screen
+  const head = box.querySelector('.head'); let drag = null;
+  head.addEventListener('pointerdown', e => { if (e.target.tagName === 'BUTTON') return; const r = box.getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top }; head.setPointerCapture(e.pointerId); });
+  head.addEventListener('pointermove', e => { if (!drag) return; const r = box.getBoundingClientRect();
+    const x = Math.min(innerWidth - r.width, Math.max(0, e.clientX - drag.dx)), y = Math.min(innerHeight - r.height, Math.max(0, e.clientY - drag.dy));
+    Object.assign(box.style, { left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' }); });
+  head.addEventListener('pointerup', () => { drag = null; });
+}
 SS.more.radio = { openRadio, closeRadio, STATIONS };
 
 // ---------- ▶️ "Watch the Short" on One Fact cards, and the documentary link ----------
