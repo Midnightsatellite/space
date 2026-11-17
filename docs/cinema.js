@@ -141,3 +141,4 @@ if (window.__belt) { const m = window.__belt.material; m.map = SS.cosmos.softDot
 }
 
 SS.i18nAdd?.({ ui: { Glow: 'Halo lumineux', '🎬 Cinema': '🎬 Cinéma', '✕ Exit cinema (Esc)': '✕ Quitter le mode cinéma (Échap)' } });
+await import('./mars.js' + new URL(import.meta.url).search);

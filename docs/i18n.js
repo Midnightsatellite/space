@@ -374,6 +374,7 @@ const FACTS_FR = [
 
 // ---------- Applying a language ----------
 const INFO_EN = {}; for (const [k, v] of Object.entries(INFO)) INFO_EN[k] = { ...v };
+SS.more.INFO_EN = INFO_EN;
 const TOUR_EN = SS.extras.TOUR.map(t => [t[1], t[2]]);
 const orig = new WeakMap();
 const keep = (node, get) => { if (!orig.has(node)) orig.set(node, get()); return orig.get(node); };
