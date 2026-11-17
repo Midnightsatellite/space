@@ -55,6 +55,8 @@ const softenLines = () => scene.traverse(o => { if (o.isLineSegments && o.materi
 softenLines(); setTimeout(softenLines, 1500); setTimeout(softenLines, 5000);   // the line data arrives a moment after loading
 // asteroid belt: round dots instead of little squares
 if (window.__belt) { const m = window.__belt.material; m.map = SS.cosmos.softDot; m.transparent = true; m.depthWrite = false; m.size = 0.2; m.needsUpdate = true; }
+// a few spacecraft near Earth were drawn too big next to the planet: shrink them
+for (const [k, f, view] of [['Satellite', 0.45, 0.4], ['Chandra', 0.55, 0.28], ['TESS', 0.6, 0.25]]) { const b = SS.bodies[k]; if (!b) continue; b.obj.scale.multiplyScalar(f); b.radius *= f; b.view = view; }
 // names of small things (spacecraft, small moons) only show up when you are close to them
 {
   const wp = new THREE.Vector3(), cp = new THREE.Vector3();
