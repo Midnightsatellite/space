@@ -118,3 +118,4 @@ SS.i18nAdd?.({
     'undersea volcanoes off Santorini, Greece': 'Volcans sous-marins au large de Santorin, Grèce', 'lava tubes of Mauna Loa, Hawaiʻi': 'Tunnels de lave du Mauna Loa, Hawaï', 'from the direction of Sagittarius': 'en direction du Sagittaire' },
   fact: { Wow: "Un signal radio puissant capté pendant 72 secondes par le radiotélescope Big Ear, dans l'Ohio. L'astronome Jerry Ehman l'a entouré sur le relevé et a écrit « Wow! ». Personne ne l'a réentendu, et son origine fait encore débat : rien n'a jamais montré qu'il venait d'extraterrestres." },
 });
+await import('./more2.js' + new URL(import.meta.url).search);
