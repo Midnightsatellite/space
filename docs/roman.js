@@ -85,3 +85,4 @@ SS.i18nAdd?.({
   cat: { 'Space telescope · launched 30 Aug 2026': 'Télescope spatial · lancé le 30 août 2026' },
   dist: { 'at Sun–Earth L2, about 1.5 million km from Earth': 'au point L2 Soleil-Terre, à environ 1,5 million de km de la Terre' },
 });
+await import('./nasa2.js' + new URL(import.meta.url).search);
