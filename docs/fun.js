@@ -310,3 +310,4 @@ SS.i18nAdd?.({
   dist: { 'about 6 billion km from Earth, in 1990': 'à environ 6 milliards de km de la Terre, en 1990', 'greatest eclipse 10:07 UTC, near Luxor, Egypt': 'maximum à 10 h 07 UTC, près de Louxor, en Égypte', 'with your own eyes, weather permitting': 'à l\'œil nu, si la météo le permet' },
   fact: { PaleBlueDot: "Le 14 février 1990, alors que Voyager 1 laissait les planètes derrière lui, il a retourné sa caméra pour un dernier regard vers la maison. La Terre faisait moins d'un pixel : un minuscule point bleu pâle pris dans un rayon de Soleil. Carl Sagan, qui avait demandé cette photo, a rappelé que tous ceux qui ont jamais vécu, toutes les histoires et toutes les guerres, sont nés sur ce grain de poussière, et que cela devrait nous rendre plus bienveillants les uns envers les autres et nous pousser à en prendre soin." },
 });
+await import('./sun.js' + new URL(import.meta.url).search);
