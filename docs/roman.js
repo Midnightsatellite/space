@@ -67,7 +67,7 @@ const card = F => {
   return (F ? 'Le nouveau grand télescope de la NASA, successeur de Hubble et Webb : un œil grand angle pour l\'énergie noire, les exoplanètes et l\'astrophysique infrarouge.'
     : 'NASA\'s newest flagship telescope, after Hubble and Webb: a wide-angle eye for dark energy, exoplanets and infrared astrophysics.')
     + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0">${tiles}</div>`
-    + `<details class="pmore" ${matchMedia('(min-height:760px)').matches ? 'open' : ''}><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary><div style="max-height:min(30vh,240px);overflow:auto">
+    + `<details class="pmore" ${matchMedia('(min-height:760px) and (min-width:700px)').matches ? 'open' : ''}><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary><div style="max-height:min(30vh,240px);overflow:auto">
       <ul style="margin:6px 0 4px 16px;padding:0">${FACTS.map(f => `<li style="margin:3px 0">${f[i]}</li>`).join('')}</ul>
       <div style="font-size:12px;opacity:.85"><b style="display:inline;font-size:12px">🔗</b> <a href="https://science.nasa.gov/blogs/roman/" target="_blank" rel="noopener" style="color:#ffd27a">${F ? 'Suivre le blog Roman de la NASA ›' : 'Follow NASA\'s Roman blog ›'}</a></div></div></details>`;
 };

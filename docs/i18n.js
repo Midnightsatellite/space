@@ -94,14 +94,14 @@ const CAT = {
   "Spacecraft · planet-hunting telescope": "Engin spatial · télescope chasseur de planètes", "Spacecraft · X-ray telescope": "Engin spatial · télescope à rayons X",
   "Spacecraft · gamma-ray telescope": "Engin spatial · télescope à rayons gamma", "Spacecraft · gamma-ray burst observatory": "Engin spatial · observatoire des sursauts gamma",
   "Spacecraft · sky-mapping telescope": "Engin spatial · télescope cartographe du ciel", "Spacecraft · exoplanet satellite · launched 2026": "Engin spatial · satellite d'exoplanètes · lancé en 2026",
-  "Spacecraft · CubeSat · launched 2026": "Engin spatial · CubeSat · lancé en 2026", "Spacecraft · CubeSat": "Engin spatial · CubeSat",
+  "Spacecraft · CubeSat · launched 2026": "Engin spatial · CubeSat · lancé en 2026", "Spacecraft · CubeSat": "Engin spatial · CubeSat", "Spacecraft · CubeSat · 2021–2026": "Engin spatial · CubeSat · 2021–2026", "Spacecraft · gamma-ray burst observatory · 2004–2026": "Engin spatial · observatoire des sursauts gamma · 2004–2026",
   "Exoplanet · roasted planet": "Exoplanète · planète rôtie", "Star · young red dwarf": "Étoile · jeune naine rouge", "Exoplanet · Neptune-sized": "Exoplanète · taille de Neptune",
   "Pulsar · dead star": "Pulsar · étoile morte", "Exoplanet · pulsar planet": "Exoplanète · planète de pulsar", "Star · hot subdwarf": "Étoile · sous-naine chaude",
   "Exoplanet · possible inferno world": "Exoplanète · monde infernal (possible)", "Exoplanet · being eaten": "Exoplanète · en train d'être dévorée", "Exoplanet · darkest planet known": "Exoplanète · la plus sombre connue",
   "Spacecraft · planet hunter · retired 2018": "Engin spatial · chasseur de planètes · retraité en 2018", "Spacecraft · infrared telescope · retired 2020": "Engin spatial · télescope infrarouge · retraité en 2020", "Zodiac constellation · star sign": "Constellation du zodiaque · signe", "Constellation on the zodiac": "Constellation sur le zodiaque",
 };
 const PLANET_DE = { Earth: "de la Terre", Mars: "de Mars", Jupiter: "de Jupiter", Saturn: "de Saturne", Uranus: "d'Uranus", Neptune: "de Neptune", Sun: "du Soleil" };
-const DIST = {
+const DIST = { "about 585 km above Earth (re-entered on 4 November 2026)": "environ 585 km au-dessus de la Terre (rentré dans l’atmosphère le 4 novembre 2026)",
   "150 million km from Earth (8.3 light-minutes)": "150 millions de km de la Terre (8,3 minutes-lumière)", "about 384,400 km from Earth": "environ 384 400 km de la Terre",
   "about 23,460 km from Mars": "environ 23 460 km de Mars", "returns every ~76 years": "revient tous les ~76 ans", "orbits close to Earth's path": "orbite près de la trajectoire de la Terre",
   "30–50 times Earth's distance from the Sun": "30 à 50 fois la distance Terre–Soleil", "roughly 2,000 to 100,000 times Earth's distance from the Sun": "entre 2 000 et 100 000 fois environ la distance Terre–Soleil",
@@ -283,7 +283,7 @@ const FACT = {
   SPHEREx: "Lancé en 2025, il cartographie tout le ciel dans 102 couleurs infrarouges, à la recherche des glaces qui pourraient apporter l'eau aux nouvelles planètes.",
   Pandora: "Un petit satellite lancé le 11 janvier 2026. Il fixe longuement des étoiles pour étudier l'air des planètes qui passent devant elles, et les sursauts des étoiles elles-mêmes.",
   SPARCS: "Un CubeSat de la taille d'une boîte de céréales, lancé le 11 janvier 2026. Il surveille 20 petites étoiles rouges pour mesurer les éruptions ultraviolettes qui frappent leurs planètes.",
-  CUTE: "Un minuscule CubeSat lancé en 2021 qui regarde des planètes brûlantes perdre leur atmosphère, qui s'échappe comme la queue d'une comète.",
+  CUTE: "Un minuscule CubeSat lancé en 2021 qui a observé des planètes brûlantes perdre leur atmosphère, qui s'échappe comme la queue d'une comète. Sa mission s'est terminée en juillet 2026.",
   Kepler: "De 2009 à 2018, il a surveillé plus de 150 000 étoiles et découvert plus de 2 600 planètes, record absolu, prouvant qu'il y a plus de planètes que d'étoiles dans notre galaxie.",
   Spitzer: "Un télescope infrarouge (2003–2020). Il a été le premier à capter directement la lumière d'une exoplanète, a réalisé la première carte météo de l'une d'elles et a pesé les sept planètes de TRAPPIST-1.",
   Roman: "Lancé le 30 août 2026. Sa caméra couvre une zone 100 fois plus grande que celle de Hubble, et la NASA s'attend à ce qu'il découvre environ 100 000 exoplanètes de plus. La science commence début 2027.",

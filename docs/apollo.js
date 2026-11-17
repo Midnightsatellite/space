@@ -145,7 +145,7 @@ SS.apollo = { buildCSM, buildLM, lmLoader, T };
   info('Apollo11Trip', 'Apollo 11: the whole trip', 'Mission · 16–24 July 1969', 'Earth → orbit around the Moon → Earth', EN);
   if (SS.more.INFO_EN) delete SS.more.INFO_EN.Apollo11Trip;
   let cur = '';
-  const refresh = () => { for (const k of ['Apollo11', 'Apollo11Trip']) { INFO[k].fact = EN + now(0); SS.i18nAdd?.({ fact: { [k]: FR + now(1) } }); } };
+  const refresh = () => { for (const k of ['Apollo11', 'Apollo11Trip']) { INFO[k].fact = fr() ? FR + now(1) : EN + now(0); if (SS.more.INFO_EN?.[k]) SS.more.INFO_EN[k].fact = EN + now(0); SS.i18nAdd?.({ fact: { [k]: FR + now(1) } }); } };
   const prev = SS.onFocus;
   SS.onFocus = key => { cur = key; if (key === 'Apollo11' || key === 'Apollo11Trip') { loadLM(); stateAt(SS.getDate()); refresh(); } prev(key); };
   let last = '';

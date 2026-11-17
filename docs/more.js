@@ -268,7 +268,7 @@ orbiter({ key: 'Chandra', name: 'Chandra', model: MODELS.chandra, scale: 0.03, a
   fact: 'NASA\'s X-ray eye, launched in 1999. It sees the hottest, most violent places in the universe, and has even spotted what may be a planet in another galaxy.' });
 orbiter({ key: 'Fermi', name: 'Fermi', model: MODELS.fermi, scale: 0.016, a: 1.13, incl: 0.45, node: 0.7, period: 10, phase: 1, cat: 'Spacecraft · gamma-ray telescope', dist: 'about 535 km above Earth',
   fact: 'Launched in 2008, it watches the whole sky in gamma rays, the most energetic light there is, catching exploding stars and black hole jets.' });
-orbiter({ key: 'Swift', name: 'Swift', model: MODELS.swift, scale: 0.016, a: 1.14, incl: 0.36, node: 2.1, period: 10.5, phase: 3, cat: 'Spacecraft · gamma-ray burst observatory', dist: 'about 585 km above Earth',
+orbiter({ key: 'Swift', name: 'Swift', model: MODELS.swift, scale: 0.016, a: 1.14, incl: 0.36, node: 2.1, period: 10.5, phase: 3, cat: 'Spacecraft · gamma-ray burst observatory · 2004–2026', dist: 'about 585 km above Earth (re-entered on 4 November 2026)',
   fact: 'Built to react fast: when a gamma-ray burst flashes anywhere in the sky, it swings round to look within about a minute.' });
 orbiter({ key: 'NuSTAR', name: 'NuSTAR', model: MODELS.nustar, scale: 0.014, a: 1.14, incl: 0.1, node: 4, period: 10.6, phase: 5, cat: 'Spacecraft · X-ray telescope', dist: 'about 610 km above Earth',
   fact: 'Unfolded a 10-metre mast in space to focus high-energy X-rays, the light that pours out from around black holes.' });
@@ -280,8 +280,8 @@ orbiter({ key: 'Pandora', name: 'Pandora', model: MODELS.pandora, scale: 0.014, 
   fact: 'A small satellite launched on 11 January 2026. It stares at stars for long stretches to study the air of the planets passing in front of them, and the stars\' own flickers.' });
 orbiter({ key: 'SPARCS', name: 'SPARCS', model: () => MODELS.cubesat(1.4), scale: 0.012, a: 1.12, incl: 1.68, node: 0.5, period: 10.2, phase: 4.6, cat: 'Spacecraft · CubeSat · launched 2026', dist: 'about 600 km above Earth',
   fact: 'A CubeSat about the size of a cereal box, launched on 11 January 2026. It keeps watch on 20 small red stars to measure the ultraviolet flares that hit their planets.' });
-orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.012, a: 1.11, incl: 1.7, node: 3, period: 10, phase: 1.5, cat: 'Spacecraft · CubeSat', dist: 'about 500 km above Earth',
-  fact: 'A tiny CubeSat launched in 2021 that watches hot planets lose their atmospheres, which stream away like a comet\'s tail.' });
+orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.012, a: 1.11, incl: 1.7, node: 3, period: 10, phase: 1.5, cat: 'Spacecraft · CubeSat · 2021–2026', dist: 'about 525 km above Earth',
+  fact: 'A tiny CubeSat launched in 2021 that watched hot planets lose their atmospheres, which stream away like a comet\'s tail. Its mission ended in July 2026.' });
 { // retired telescopes trailing behind Earth around the Sun
   const trail = (key, name, model, lagDeg, fact, cat, dist) => {
     const m = model(); m.scale.setScalar(0.12); scene.add(m); scaleHide.push(m);
@@ -384,7 +384,7 @@ star({ key: 'TrES2', name: 'TrES-2', ra: 286.808, dec: 49.317, ly: 750, bv: 0.62
   { // a group of its own for the telescopes and satellites
     const og = document.createElement('optgroup'); og.label = 'Space telescopes & satellites';
     for (const [k, t] of [['Hubble', 'Hubble'], ['JWST', 'James Webb Telescope'], ['Roman', 'Roman Space Telescope (2026)'], ['TESS', 'TESS (planet hunter)'], ['Kepler', 'Kepler (retired)'], ['Spitzer', 'Spitzer (retired)'],
-      ['Chandra', 'Chandra (X-rays)'], ['Fermi', 'Fermi (gamma rays)'], ['Swift', 'Swift'], ['NuSTAR', 'NuSTAR'], ['IXPE', 'IXPE'], ['SPHEREx', 'SPHEREx'], ['Pandora', 'Pandora (2026)'], ['SPARCS', 'SPARCS (2026)'], ['CUTE', 'CUTE']]) {
+      ['Chandra', 'Chandra (X-rays)'], ['Fermi', 'Fermi (gamma rays)'], ['Swift', 'Swift (2004–2026)'], ['NuSTAR', 'NuSTAR'], ['IXPE', 'IXPE'], ['SPHEREx', 'SPHEREx'], ['Pandora', 'Pandora (2026)'], ['SPARCS', 'SPARCS (2026)'], ['CUTE', 'CUTE (2021–2026)']]) {
       const o = document.createElement('option'); o.value = k; o.textContent = t; og.appendChild(o);
       if (['Hubble', 'JWST', 'Roman'].includes(k)) focusSel.querySelector(`optgroup[label="Spacecraft"] option[value="${k}"]`)?.remove(); }
     [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Spacecraft').after(og);

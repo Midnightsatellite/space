@@ -40,7 +40,7 @@ const card = F => {
     : 'The most powerful space telescope ever built: it follows on from Hubble and Spitzer and sees the universe in infrared light, through dust and back to the first galaxies.')
     + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0">${tiles}</div>`
     + `<details class="pmore"><summary style="cursor:pointer;color:#9fd0ff">🧩 ${F ? 'Les quatre grandes parties' : 'The four main parts'}</summary><div style="max-height:min(30vh,240px);overflow:auto"><ul style="margin:6px 0 4px 16px;padding:0;list-style:none">${PARTS.map(p => `<li style="margin:4px 0">${p[i]}</li>`).join('')}</ul></div></details>`
-    + `<details class="pmore" ${matchMedia('(min-height:760px)').matches ? 'open' : ''}><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary><div style="max-height:min(30vh,240px);overflow:auto">
+    + `<details class="pmore" ${matchMedia('(min-height:760px) and (min-width:700px)').matches ? 'open' : ''}><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary><div style="max-height:min(30vh,240px);overflow:auto">
       <ul style="margin:6px 0 4px 16px;padding:0">${FACTS.map(f => `<li style="margin:3px 0">${f[i]}</li>`).join('')}</ul>
       <div style="font-size:12px;opacity:.85"><a href="https://science.nasa.gov/mission/webb/spacecraftoverview/" target="_blank" rel="noopener" style="color:#ffd27a">${F ? 'L\'observatoire Webb sur le site de la NASA ›' : 'Webb\'s observatory on NASA\'s website ›'}</a></div></div></details>`;
 };
@@ -53,3 +53,4 @@ const card = F => {
   };
 }
 SS.i18nAdd?.({ cat: { 'Spacecraft · infrared space observatory': 'Engin spatial · observatoire spatial infrarouge' } });
+await import('./cards2.js' + new URL(import.meta.url).search);

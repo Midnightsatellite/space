@@ -107,7 +107,8 @@ const BUILD = {
     return g;
   },
 };
-const PROC = { NuSTAR: 'NuSTAR', IXPE: 'IXPE', SPHEREx: 'SPHEREx', Pandora: 'Pandora', SPARCS: 'cube6', CUTE: 'cube6', NewHorizons: 'NewHorizons', Tiangong: 'Tiangong' };
+Object.assign(BUILD, (await import('./sats.js' + new URL(import.meta.url).search)).SATS);   // detailed IXPE, SPHEREx, Pandora, SPARCS, CUTE
+const PROC = { NuSTAR: 'NuSTAR', IXPE: 'IXPE', SPHEREx: 'SPHEREx', Pandora: 'Pandora', SPARCS: 'SPARCS', CUTE: 'CUTE', NewHorizons: 'NewHorizons', Tiangong: 'Tiangong' };
 
 // ---------- swap: hide the old meshes, add the new model at the same size and centre ----------
 const loader = new GLTFLoader(); loader.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));

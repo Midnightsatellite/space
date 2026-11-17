@@ -130,7 +130,7 @@ const card = (k, F) => {
   const d = D[k], i = F ? 1 : 0;
   const tiles = d.tiles.map(([l, en, f]) => `<div style="background:rgba(140,160,255,.08);border-radius:8px;padding:5px 7px"><div style="font-size:10px;letter-spacing:.04em;text-transform:uppercase;opacity:.65">${L[l][i]}</div><div style="font-size:12.5px;line-height:1.3">${F ? f : en}</div></div>`).join('');
   return `${d.intro[i]}<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0">${tiles}</div>
-    <details class="pmore" ${matchMedia('(min-height:760px)').matches ? 'open' : ''} style="margin-top:4px"><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary>
+    <details class="pmore" ${matchMedia('(min-height:760px) and (min-width:700px)').matches ? 'open' : ''} style="margin-top:4px"><summary style="cursor:pointer;color:#9fd0ff">📖 ${F ? 'En savoir plus' : 'More facts'}</summary>
     <div style="max-height:min(30vh,240px);overflow:auto"><ul style="margin:6px 0 4px 16px;padding:0">${d.facts.map(f => `<li style="margin:3px 0">${f[i]}</li>`).join('')}</ul>
     <div style="font-size:12px;opacity:.85"><b style="display:inline;font-size:12px">🚀 ${F ? 'Ils y sont allés' : 'Visited by'}:</b> ${d.went[i]}</div></div></details>`;
 };
@@ -145,6 +145,6 @@ const card = (k, F) => {
   };
 }
 // the info card can get tall now: let it scroll instead of running off the screen
-{ const st = document.createElement('style'); st.textContent = '#info{max-height:calc(100vh - 70px);overflow:auto}'; document.head.appendChild(st); }
+{ const st = document.createElement('style'); st.textContent = '@media (min-width:761px) and (min-height:521px){#info{max-height:calc(100vh - 70px);overflow:auto}}'; document.head.appendChild(st); }
 SS.more.planetInfo = D;
 await import('./parker.js' + new URL(import.meta.url).search);
