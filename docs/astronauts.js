@@ -133,3 +133,4 @@ SS.i18nAdd?.({
     ArtemisIV: "La NASA prévoit de poser des astronautes près du pôle Sud de la Lune en 2028, là où de la glace se cache dans des cratères jamais éclairés par le Soleil. Avant cela, Artemis III (prévue en 2027) restera en orbite autour de la Terre pour s'entraîner à amarrer Orion à des versions d'essai des atterrisseurs Starship de SpaceX et Blue Moon de Blue Origin.",
   },
 });
+await import('./earthside.js' + new URL(import.meta.url).search);
