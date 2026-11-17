@@ -8,29 +8,33 @@ const SS = window.SS;
 const { scene, camera, bodies } = SS;
 const $ = id => document.getElementById(id);
 
-// ---------- 1. the Milky Way all around you (Solar System Scope, CC BY 4.0), placed by real galactic coordinates ----------
+// ---------- 1. the Milky Way all around you: NASA's Deep Star Maps 2020 (built from ESA Gaia, Hipparcos and Tycho-2), in real sky coordinates ----------
 {
-  const tex = new THREE.TextureLoader().load('tex/milkyway.jpg'); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const loader = new THREE.TextureLoader();
+  const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = Math.min(8, SS.renderer.capabilities.getMaxAnisotropy()); t.generateMipmaps = true; return t; };
+  const tex = prep(loader.load('tex/milkyway4k.jpg'));
   const e = 23.4393 * Math.PI / 180;
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, depthTest: false,
-    uniforms: { map: { value: tex }, k: { value: 2.0 }, ce: { value: Math.cos(e) }, se: { value: Math.sin(e) } },
+    uniforms: { map: { value: tex }, k: { value: 1.7 }, ce: { value: Math.cos(e) }, se: { value: Math.sin(e) } },
     vertexShader: 'varying vec3 vD; void main(){ vD=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
     fragmentShader: `uniform sampler2D map; uniform float k, ce, se; varying vec3 vD;
       void main(){
         vec3 d=normalize(vD);
         vec3 ecl=vec3(d.x,-d.z,d.y);                                   // scene -> ecliptic
         vec3 eq=vec3(ecl.x, ecl.y*ce-ecl.z*se, ecl.y*se+ecl.z*ce);       // ecliptic -> equatorial
-        vec3 g=vec3(-0.0548755604*eq.x-0.8734370902*eq.y-0.4838350155*eq.z,
-                     0.4941094279*eq.x-0.4448296300*eq.y+0.7469822445*eq.z,
-                    -0.8676661490*eq.x-0.1980763734*eq.y+0.4559837762*eq.z);  // equatorial -> galactic
-        float l=atan(g.y,g.x), b=asin(clamp(g.z,-1.,1.));
-        vec2 uv=vec2(0.5-l/6.2831853, 0.5-b/3.1415927);
-        vec3 c=texture2D(map,uv).rgb;
+        float ra=atan(eq.y,eq.x), dec=asin(clamp(eq.z,-1.,1.));
+        vec2 uv=vec2(0.5-ra/6.2831853, 0.5+dec/3.1415927);                // the image has north at the top (textures load flipped)
+        vec2 uv2=vec2(fract(uv.x+0.5)-0.5, uv.y);                        // avoid a seam where the map wraps round
+        vec2 u=fwidth(uv.x)<fwidth(uv2.x)+1e-6?uv:uv2;
+        vec3 c=texture2D(map,u).rgb;
         gl_FragColor=vec4(c*k,1.);
         #include <colorspace_fragment>
       }`,
   });
+  // on a big screen, swap in the sharper 8K map once the page has settled
+  const big = SS.renderer.capabilities.maxTextureSize >= 8192 && !matchMedia('(pointer:coarse)').matches && Math.max(screen.width, screen.height) * devicePixelRatio > 1400;
+  if (big) setTimeout(() => loader.load('tex/milkyway8k.jpg', t => { mat.uniforms.map.value = prep(t); tex.dispose(); }), 6000);
   const sky = new THREE.Mesh(new THREE.SphereGeometry(30000, 64, 32), mat); sky.renderOrder = -10; sky.frustumCulled = false; scene.add(sky);
   SS.sim.push(() => sky.position.copy(camera.position));
   const row = document.createElement('label'); row.innerHTML = '<span>Milky Way photo</span> <input id="mwOn" type="checkbox">';
@@ -70,7 +74,7 @@ const $ = id => document.getElementById(id);
 // ---------- credits ----------
 {
   const note = $('note'); if (note) { const s = document.createElement('span'); s.id = 'creditMore'; note.appendChild(s);
-    const set = () => { s.textContent = SS.lang === 'fr' ? ' · Ciel : Solar System Scope (CC BY 4.0) · Modèles 3D : NASA' : ' · Sky: Solar System Scope (CC BY 4.0) · 3D models: NASA'; };
+    const set = () => { s.textContent = SS.lang === 'fr' ? ' · Ciel : NASA/Goddard SVS, données ESA/Gaia/DPAC · Modèles 3D : NASA' : ' · Sky: NASA/Goddard SVS, ESA/Gaia/DPAC data · 3D models: NASA'; };
     set(); $('langBtn')?.addEventListener('click', () => setTimeout(set, 50)); }
 }
 SS.i18nAdd?.({ ui: { 'Milky Way photo': 'Photo de la Voie lactée' } });

@@ -179,3 +179,4 @@ SS.i18nAdd?.({
   cat: { 'Shooting stars': 'Étoiles filantes', 'Meteor shower': "Pluie d'étoiles filantes", 'Interstellar objects': 'Objets interstellaires' },
   dist: { 'when Earth crosses the dust of comets': 'quand la Terre traverse la poussière des comètes', '3 found so far: 2017, 2019, 2025': '3 trouvés à ce jour : 2017, 2019, 2025' },
 });
+await import('./media.js' + new URL(import.meta.url).search);

@@ -116,12 +116,12 @@ const btn = (id, text) => { const b = document.createElement('button'); b.type =
     ['Moon', 'Why do we always see the same side of the Moon?', ['It spins once per orbit', 'It does not spin', 'The other side is dark'], 'Pourquoi voit-on toujours la même face de la Lune ?', ['Elle tourne une fois par orbite', 'Elle ne tourne pas', 'L\'autre face est sombre']],
   ];
   const p = popup('quizPop'); const box = p.querySelector('.box');
-  let deck = [], i = 0, score = 0;
+  let deck = [], i = 0, score = 0, pool = null, film = false;
   const shuffle = a => { const b = [...a]; for (let k = b.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [b[k], b[j]] = [b[j], b[k]]; } return b; };
-  function start() { deck = shuffle(Q).slice(0, 10); i = 0; score = 0; ask(); p.classList.add('on'); }
+  function start(list) { film = Array.isArray(list); pool = film ? list : Q; deck = shuffle(pool).slice(0, 10); i = 0; score = 0; ask(); p.classList.add('on'); }
   function ask() {
     const F = fr(), q = deck[i], opts = shuffle([0, 1, 2]);
-    box.innerHTML = `<h3><span>❓ ${F ? 'Quiz de l\'espace' : 'Space quiz'} · ${i + 1}/10</span><button type="button" id="qX">✕</button></h3>
+    box.innerHTML = `<h3><span>${film ? (F ? '🎬 Quiz cinéma et séries' : '🎬 Film & TV quiz') : (F ? '❓ Quiz de l\'espace' : '❓ Space quiz')} · ${i + 1}/10</span><button type="button" id="qX">✕</button></h3>
       <div style="font-size:16px;margin:6px 0 4px">${F ? q[3] : q[1]}</div>${opts.map(o => `<button type="button" class="opt" data-o="${o}">${(F ? q[4] : q[2])[o]}</button>`).join('')}<div id="qNext"></div>`;
     $('qX').onclick = () => p.classList.remove('on');
     for (const b of box.querySelectorAll('.opt')) b.onclick = () => {
@@ -139,13 +139,13 @@ const btn = (id, text) => { const b = document.createElement('button'); b.type =
     const F = fr(), msg = score >= 9 ? (F ? 'Astronaute confirmé ! 🚀' : 'Certified astronaut! 🚀') : score >= 6 ? (F ? 'Belle mission ! 🌟' : 'Great mission! 🌟') : (F ? 'Encore un tour en orbite ? 🌍' : 'Another orbit? 🌍');
     box.innerHTML = `<h3><span>❓ ${F ? 'Votre score' : 'Your score'}</span><button type="button" id="qX">✕</button></h3><div class="big">${score}/10</div><div style="text-align:center">${msg}</div>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:12px"><button type="button" id="qAgain">${F ? '↺ Rejouer' : '↺ Play again'}</button><button type="button" id="qShare">${F ? '🔗 Défier un ami' : '🔗 Challenge a friend'}</button></div>`;
-    $('qX').onclick = () => p.classList.remove('on'); $('qAgain').onclick = start;
+    $('qX').onclick = () => p.classList.remove('on'); $('qAgain').onclick = () => start(film ? pool : undefined);
     $('qShare').onclick = () => { const t = F ? `J'ai eu ${score}/10 au quiz de l'espace de Midnight Satellite 🚀 Tu fais mieux ? ${location.origin}${location.pathname}?quiz=1&lang=fr` : `I scored ${score}/10 on the Midnight Satellite space quiz 🚀 Can you beat me? ${location.origin}${location.pathname}?quiz=1`;
       (navigator.clipboard?.writeText(t) || Promise.reject()).then(() => $('qShare').textContent = F ? '✓ Copié' : '✓ Copied', () => prompt('', t)); };
   }
-  btn('quizBtn', '❓ Quiz').onclick = start;
+  btn('quizBtn', '❓ Quiz').onclick = () => start();
   if (new URLSearchParams(location.search).get('quiz')) setTimeout(start, 1500);
-  SS.more.quiz = { start };
+  SS.more.quiz = { start, Q };
 }
 
 // =====================================================================
