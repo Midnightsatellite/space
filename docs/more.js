@@ -138,7 +138,7 @@ const metal = (c, m = 0.8, r = 0.35) => new THREE.MeshStandardMaterial({ color: 
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.7, 6), metal(0x9aa0aa)); body.rotation.z = Math.PI / 2; g.add(body);
   for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 0.45), metal(0x1b2f78, 0.6, 0.3)); p.position.set(-0.1, 0, s * 0.55); g.add(p); }
   g.scale.setScalar(0.35); const holder = new THREE.Group(); holder.add(g); scene.add(holder); scaleHide.push(holder);
-  const q = 6.2, Q = 13.6, a = (q + Q) / 2, e = (Q - q) / (Q + q), b = a * Math.sqrt(1 - e * e), P = 88, peri = Date.UTC(2024, 11, 24, 11, 53), tilt = 0.06, w = 1.3;
+  const q = 6.2, Q = 13.6, a = (q + Q) / 2, e = (Q - q) / (Q + q), b = a * Math.sqrt(1 - e * e), P = 88.44, peri = Date.UTC(2026, 8, 4, 14, 53), tilt = 0.06, w = 1.3;
   const pts = []; for (let k = 0; k <= 200; k++) { const E = k / 200 * 6.2832; pts.push(V(a * (Math.cos(E) - e), 0, b * Math.sin(E)).applyAxisAngle(V(0, 1, 0), w).applyAxisAngle(V(1, 0, 0), tilt)); }
   const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.35 })); scene.add(line); SS.orbitLines.push(line); scaleHide.push(line);
   sim.push(() => {

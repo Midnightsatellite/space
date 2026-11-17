@@ -147,3 +147,4 @@ const card = (k, F) => {
 // the info card can get tall now: let it scroll instead of running off the screen
 { const st = document.createElement('style'); st.textContent = '#info{max-height:calc(100vh - 70px);overflow:auto}'; document.head.appendChild(st); }
 SS.more.planetInfo = D;
+await import('./parker.js' + new URL(import.meta.url).search);
