@@ -225,3 +225,4 @@ SS.i18nAdd?.({
     SgrDwarf: "Une petite galaxie en train d'être déchirée par la Voie lactée. Ses étoiles s'étirent en un courant qui fait tout le tour de notre galaxie, et ses passages à travers notre disque ont peut-être contribué à onduler les bras spiraux de la Voie lactée.",
   },
 });
+await import('./voyager.js' + new URL(import.meta.url).search);
