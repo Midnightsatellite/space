@@ -78,3 +78,4 @@ const q = new THREE.Quaternion();
 SS.sim.push((dt, t) => { surface.uniforms.t.value = t; corona.uniforms.t.value = t; sheet.quaternion.copy(sun.getWorldQuaternion(q).invert().multiply(SS.camera.quaternion)); });
 // the old flat glow sprites can be gentler now that the corona and the glow effect do the work
 for (const c of sun.children) if (c.isSprite) c.material.opacity *= 0.3;
+await import('./life.js' + new URL(import.meta.url).search);
