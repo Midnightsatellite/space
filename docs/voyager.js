@@ -94,3 +94,4 @@ function live(k) {
 }
 SS.i18nAdd?.({ ui: { '📡 Voyager 1, live distance': '📡 Voyager 1, distance en direct' }, name: { '📡 Voyager 1, live distance': '📡 Voyager 1, distance en direct' },
   dist: { 'over 25 billion km from Earth': 'à plus de 25 milliards de km de la Terre', 'over 21 billion km from Earth': 'à plus de 21 milliards de km de la Terre' } });
+await import('./cinema.js' + new URL(import.meta.url).search);
