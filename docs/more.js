@@ -295,6 +295,80 @@ orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.
     'Spacecraft · infrared telescope · retired 2020', 'drifting around the Sun, trailing behind Earth');
 }
 
+// ---------- 👻 Galaxy of Horrors (from NASA's exoplanet "Galaxy of Horrors" tour) ----------
+// HD 80606 b: swings from far out to scorching close on a wildly stretched orbit
+star({ key: 'HD80606', name: 'HD 80606', ra: 140.656, dec: 50.604, ly: 217, bv: 0.76, R: 0.98, cat: 'Star', dist: '217 light-years', fact: 'A Sun-like star with a planet on one of the most stretched-out orbits known.' });
+{ const host = bodies.HD80606.obj, piv = new THREE.Group(); piv.rotation.set(0.25, 1.1, 0); host.add(piv);
+  const p = new THREE.Mesh(new THREE.SphereGeometry(0.85, 48, 24), SS.extras.litMaterial(jupTex, out => host.getWorldPosition(out))); p.material.uniforms.tint.value.set(0xff9a60); piv.add(p);
+  const a = 7, e = 0.93, b = a * Math.sqrt(1 - e * e);
+  const pts = []; for (let k = 0; k <= 240; k++) { const E = k / 240 * 6.2832; pts.push(V(a * (Math.cos(E) - e), 0, b * Math.sin(E))); }
+  const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xff9a60, transparent: true, opacity: 0.35 })); piv.add(ln);
+  const glow = glowSprite(3, 'rgba(255,120,60,0.8)', 'rgba(0,0,0,0)', 0.7); p.add(glow);
+  let M = 2.5; sim.push(dt => { M += Math.min(1.2, 2 * Math.PI / 111.4 * dps()) * SS.frameDt; let E = M; for (let i = 0; i < 25; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    p.position.set(a * (Math.cos(E) - e), 0, b * Math.sin(E)); const r = p.position.length(); glow.material.opacity = Math.max(0, Math.min(0.9, (1.6 - r) / 1.2)); p.rotation.y += SS.frameDt * 0.3; });
+  deepLabel(p, 'HD 80606 b', 1.3, 'HD80606b', 'exo', 200);
+  bodies.HD80606b = { obj: p, radius: 0.85, view: 5 };
+  info('HD80606b', 'HD 80606 b', 'Exoplanet · roasted planet', '217 light-years away',
+    'Its orbit is so stretched that it swoops from far out to scorching close to its star. In just hours it heats by hundreds of degrees, unleashing supersonic winds and shockwave storms.');
+}
+// AU Microscopii: a young, angry star inside a ghostly disk of dust
+star({ key: 'AUMic', name: 'AU Microscopii', ra: 311.29, dec: -31.34, ly: 31.7, bv: 1.44, R: 0.75, cat: 'Star · young red dwarf', dist: '31.7 light-years', fact: 'Only about 22 million years old, and prone to violent flares.' });
+exoPlanet({ hostKey: 'AUMic', key: 'AUMicb', name: 'AU Mic b', r: 0.45, dist: 3.2, period: 8.46, tex: paint(741, '#2a3040', '#8a96b0', 1.6, 0), tint: 0xb0c0ff,
+  cat: 'Exoplanet · Neptune-sized', distStr: '31.7 light-years away', fact: 'A planet trapped inside a giant disk of dust around one of the youngest planetary systems ever seen, blasted by X-ray flares from its furious star.' });
+{ const host = bodies.AUMic.obj, n = 22000, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, r = 6 + Math.pow(Math.random(), 0.7) * 22; pos.set([Math.cos(a) * r, gauss() * 0.25 * (r / 10), Math.sin(a) * r], i * 3); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const disk = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xd8c8ff, size: 0.3, map: softDot, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
+  disk.rotation.x = 0.15; host.add(disk);
+  const flare = glowSprite(8, 'rgba(255,170,120,0.9)', 'rgba(0,0,0,0)', 0); host.add(flare);
+  sim.push((dt, t) => { const f = Math.max(0, Math.sin(t * 0.9) - 0.85) * 6; flare.material.opacity = f; });
+  bodies.AUMic.view = 34;
+}
+// The pulsar planets: Poltergeist, Phobetor and Draugr circle a dead star, "Lich"
+{ const holder = new THREE.Group(); holder.position.copy(place(195.015, 12.683, 2300)); scene.add(holder);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 24, 12), new THREE.MeshBasicMaterial({ color: 0xe8f0ff })); holder.add(core);
+  holder.add(glowSprite(3, 'rgba(170,200,255,0.9)', 'rgba(0,0,0,0)', 0.9));
+  const beams = new THREE.Group(); holder.add(beams); beams.rotation.z = 0.5;
+  for (const s of [1, -1]) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.9, 9, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0x9fc4ff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    c.position.y = s * 4.5; c.rotation.x = s > 0 ? Math.PI : 0; beams.add(c); }
+  sim.push(dt => { beams.rotation.y += dt * 9; });
+  deepLabel(holder, 'Lich (PSR B1257+12)', 1.8, 'Lich', 'star', 300);
+  bodies.Lich = { obj: holder, radius: 1, view: 16, selfLit: true };
+  info('Lich', 'Lich (PSR B1257+12)', 'Pulsar · dead star', 'about 2,300 light-years', 'The spinning core of an exploded star, sweeping beams of radiation around 160 times a second. Its planets were the very first ever found beyond our Solar System, in 1992.');
+  const ghostTex = paint(751, '#2a2a34', '#7a7a8a', 2.2, 60);
+  for (const [k, nm, r, d, per, fact] of [
+    ['Draugr', 'Draugr', 0.12, 2.4, 25.3, 'One of the smallest planets known, about twice the mass of our Moon, bathed in the pulsar\'s deadly radiation.'],
+    ['Poltergeist', 'Poltergeist', 0.3, 3.6, 66.5, 'A "zombie world" circling a dead star. It was among the first planets ever discovered beyond our Solar System.'],
+    ['Phobetor', 'Phobetor', 0.29, 4.6, 98.2, 'Named after a Greek god of nightmares. It and its neighbours may have formed from the wreckage of the star\'s explosion.']]) {
+    const piv = new THREE.Group(); piv.rotation.set(0.2, hash(d, r) * 6.28, 0); holder.add(piv);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), SS.extras.litMaterial(ghostTex, out => holder.getWorldPosition(out))); m.material.uniforms.tint.value.set(0xa8b8ff); m.position.x = d; piv.add(m);
+    const pts = Array.from({ length: 96 }, (_, i) => V(Math.cos(i / 96 * 6.283) * d, 0, Math.sin(i / 96 * 6.283) * d));
+    piv.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fb0ff, transparent: true, opacity: 0.22 })));
+    sim.push(() => { piv.rotation.y += Math.min(1.2, 2 * Math.PI / per * dps()) * SS.frameDt; });
+    deepLabel(m, nm, r + 0.4, k, 'exo', 60);
+    bodies[k] = { obj: m, radius: r, view: Math.max(1.4, r * 6) }; info(k, nm, 'Exoplanet · pulsar planet', 'about 2,300 light-years away', fact);
+  }
+}
+// Kepler-70 b: a world that may have survived a trip inside its star
+star({ key: 'Kepler70', name: 'Kepler-70', ra: 296.356, dec: 41.093, ly: 3850, bv: -0.3, R: 0.2, cat: 'Star · hot subdwarf', dist: 'about 3,850 light-years', fact: 'The scorching bare core of a star that swelled into a red giant and then lost its outer layers.' });
+exoPlanet({ hostKey: 'Kepler70', key: 'Kepler70b', name: 'Kepler-70 b', r: 0.2, dist: 1.4, period: 0.24, labelRange: 60, tex: paint(761, '#3a0a00', '#ffb040', 1.2, 0), tint: 0xffc080,
+  cat: 'Exoplanet · possible inferno world', distStr: 'about 3,850 light-years away', fact: 'Possibly the hottest planet known, around 6,800 °C. It may once have been Jupiter-sized before spending time inside its star when the star swelled up.' });
+// WASP-12 b: a planet being eaten, stretched into an egg
+star({ key: 'WASP12', name: 'WASP-12', ra: 97.637, dec: 29.672, ly: 1400, bv: 0.57, R: 1.6, cat: 'Star', dist: 'about 1,400 light-years', fact: 'A hot star slowly devouring its closest planet.' });
+{ const p = exoPlanet({ hostKey: 'WASP12', key: 'WASP12b', name: 'WASP-12 b', r: 0.75, dist: 4.2, period: 1.09, tex: jupTex, tint: 0xff8a50,
+    cat: 'Exoplanet · being eaten', distStr: 'about 1,400 light-years away', fact: 'So close to its star that gravity stretches it into an egg shape and strips its gas away. Its orbit is shrinking: in a few million years it will plunge in.' });
+  p.scale.set(1.35, 1, 1);
+  const stream = new THREE.Group(); p.parent.add(stream);
+  for (let i = 0; i < 40; i++) { const u = i / 40; const s = puff(0xff9a60, 1.4 - u * 0.8, 0.28); s.position.set(4.2 * (1 - u) - u * 0.4, gauss() * 0.08, -Math.sin(u * 3) * 0.9 * u); stream.add(s); }
+  sim.push(() => { stream.visible = p.visible; });
+}
+// TrES-2 b: darker than coal
+star({ key: 'TrES2', name: 'TrES-2', ra: 286.808, dec: 49.317, ly: 750, bv: 0.62, R: 1.0, cat: 'Star', dist: 'about 750 light-years', fact: 'A Sun-like star with the darkest planet ever found.' });
+{ const p = exoPlanet({ hostKey: 'TrES2', key: 'TrES2b', name: 'TrES-2 b', r: 0.75, dist: 3.8, period: 2.47, tex: paint(771, '#020202', '#1a0a06', 1, 0), tint: 0x302020,
+    cat: 'Exoplanet · darkest planet known', distStr: 'about 750 light-years away', fact: 'The planet of eternal night: it reflects less light than coal, yet its air is as hot as lava, glowing a faint dull red.' });
+  p.add(glowSprite(2.2, 'rgba(160,30,10,0.55)', 'rgba(0,0,0,0)', 0.45));
+}
+
 // ---------- Fly-to menu entries for the new objects ----------
 {
   const add = (group, items, before) => { const og = [...focusSel.querySelectorAll('optgroup')].find(g => g.label === group); if (!og) return;
@@ -315,6 +389,11 @@ orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.
       if (['Hubble', 'JWST', 'Roman'].includes(k)) focusSel.querySelector(`optgroup[label="Spacecraft"] option[value="${k}"]`)?.remove(); }
     [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Spacecraft').after(og);
   }
+  { const og = document.createElement('optgroup'); og.label = '👻 Galaxy of Horrors';
+    for (const [k, t] of [['HD80606b', 'HD 80606 b (roasted planet)'], ['AUMicb', 'AU Mic b (flares of fury)'], ['Lich', 'Lich: the zombie worlds'], ['Poltergeist', 'Poltergeist'], ['Phobetor', 'Phobetor'], ['Draugr', 'Draugr'],
+      ['Kepler70b', "Kepler-70 b (Kepler's inferno)"], ['WASP12b', 'WASP-12 b (being eaten)'], ['TrES2b', 'TrES-2 b (eternal darkness)'], ['HD189733b', 'HD 189733 b (rains of glass)'], ['CygX1', 'Cygnus X-1 (devoured by gravity)']]) {
+      const o = document.createElement('option'); o.value = k; o.textContent = t; og.appendChild(o); }
+    [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Exoplanets').after(og); }
   // keep stars in distance order
   const st = [...focusSel.querySelectorAll('optgroup')].find(g => g.label === 'Stars (nearest first)');
   const order = ['Proxima', 'AlphaCen', 'Barnard', 'Sirius', 'Procyon', 'TauCeti', 'Altair', 'Vega', 'Fomalhaut', 'Pollux', 'Arcturus', 'Capella', 'Aldebaran', 'Regulus', 'Spica', 'Mira', 'Canopus', 'Polaris', 'Betelgeuse', 'Antares', 'Rigel', 'Deneb', 'UYScuti'];

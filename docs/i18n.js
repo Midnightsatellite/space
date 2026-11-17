@@ -28,7 +28,7 @@ const UI = {
   // menu groups
   "Views": "Vues", "Events": "Événements", "The Sun & planets": "Le Soleil et les planètes", "Moons": "Lunes", "Dwarf planets": "Planètes naines", "Comets, asteroids & belts": "Comètes, astéroïdes et ceintures",
   "Spacecraft": "Engins spatiaux", "Stars (nearest first)": "Étoiles (des plus proches aux plus lointaines)", "Exoplanets": "Exoplanètes", "Star clusters & nebulae": "Amas d'étoiles et nébuleuses",
-  "Black holes": "Trous noirs", "Space telescopes & satellites": "Télescopes spatiaux et satellites", "Zodiac (star signs)": "Zodiaque (signes)", "Galaxies": "Galaxies",
+  "Black holes": "Trous noirs", "Space telescopes & satellites": "Télescopes spatiaux et satellites", "👻 Galaxy of Horrors": "👻 La galaxie des horreurs", "Zodiac (star signs)": "Zodiaque (signes)", "Galaxies": "Galaxies",
 };
 
 // ---------- Names (labels, menu and info cards) ----------
@@ -59,6 +59,9 @@ const NAME = {
   "Total solar eclipse": "Éclipse totale de Soleil", "Total lunar eclipse": "Éclipse totale de Lune", "True scale": "Échelle réelle", "Mars": "Mars", "Jupiter": "Jupiter", "Uranus": "Uranus", "Neptune": "Neptune",
   "at Jupiter": "autour de Jupiter", "on Mars": "sur Mars",
   "TESS (planet hunter)": "TESS (chasseur de planètes)", "Kepler (retired)": "Kepler (retraité)", "Spitzer (retired)": "Spitzer (retraité)", "Chandra (X-rays)": "Chandra (rayons X)", "Fermi (gamma rays)": "Fermi (rayons gamma)",
+  "HD 80606 b (roasted planet)": "HD 80606 b (planète rôtie)", "AU Mic b (flares of fury)": "AU Mic b (éruptions furieuses)", "Lich: the zombie worlds": "Lich : les mondes zombies",
+  "Kepler-70 b (Kepler's inferno)": "Kepler-70 b (l'enfer de Kepler)", "WASP-12 b (being eaten)": "WASP-12 b (dévorée)", "TrES-2 b (eternal darkness)": "TrES-2 b (ténèbres éternelles)",
+  "HD 189733 b (rains of glass)": "HD 189733 b (pluies de verre)", "Cygnus X-1 (devoured by gravity)": "Cygnus X-1 (dévoré par la gravité)", "AU Microscopii": "AU Microscopii",
 };
 function trName(s) {
   if (NAME[s]) return NAME[s];
@@ -88,6 +91,9 @@ const CAT = {
   "Spacecraft · gamma-ray telescope": "Engin spatial · télescope à rayons gamma", "Spacecraft · gamma-ray burst observatory": "Engin spatial · observatoire des sursauts gamma",
   "Spacecraft · sky-mapping telescope": "Engin spatial · télescope cartographe du ciel", "Spacecraft · exoplanet satellite · launched 2026": "Engin spatial · satellite d'exoplanètes · lancé en 2026",
   "Spacecraft · CubeSat · launched 2026": "Engin spatial · CubeSat · lancé en 2026", "Spacecraft · CubeSat": "Engin spatial · CubeSat",
+  "Exoplanet · roasted planet": "Exoplanète · planète rôtie", "Star · young red dwarf": "Étoile · jeune naine rouge", "Exoplanet · Neptune-sized": "Exoplanète · taille de Neptune",
+  "Pulsar · dead star": "Pulsar · étoile morte", "Exoplanet · pulsar planet": "Exoplanète · planète de pulsar", "Star · hot subdwarf": "Étoile · sous-naine chaude",
+  "Exoplanet · possible inferno world": "Exoplanète · monde infernal (possible)", "Exoplanet · being eaten": "Exoplanète · en train d'être dévorée", "Exoplanet · darkest planet known": "Exoplanète · la plus sombre connue",
   "Spacecraft · planet hunter · retired 2018": "Engin spatial · chasseur de planètes · retraité en 2018", "Spacecraft · infrared telescope · retired 2020": "Engin spatial · télescope infrarouge · retraité en 2020", "Zodiac constellation · star sign": "Constellation du zodiaque · signe", "Constellation on the zodiac": "Constellation sur le zodiaque",
 };
 const PLANET_DE = { Earth: "de la Terre", Mars: "de Mars", Jupiter: "de Jupiter", Saturn: "de Saturne", Uranus: "d'Uranus", Neptune: "de Neptune", Sun: "du Soleil" };
@@ -250,6 +256,20 @@ const FACT = {
   Juno: "Alimentée à l'énergie solaire, même à Jupiter. Elle passe au-dessus des pôles de la planète, sous les cyclones des nuages, avec à bord trois figurines LEGO : Galilée, Jupiter et Junon.",
   Perseverance: "Un robot de la taille d'une voiture qui cherche des traces de vie passée dans le lit d'un ancien lac. Il a emporté l'hélicoptère Ingenuity, le premier engin à voler sur une autre planète.",
   Tiangong: "La station spatiale chinoise en forme de T, habitée en permanence depuis 2022 par des équipes de trois taïkonautes.",
+  HD80606: "Une étoile semblable au Soleil, avec une planète sur l'une des orbites les plus étirées que l'on connaisse.",
+  HD80606b: "Son orbite est si étirée qu'elle plonge de très loin jusqu'à frôler son étoile. En quelques heures, elle se réchauffe de centaines de degrés, déchaînant des vents supersoniques et des tempêtes d'ondes de choc.",
+  AUMic: "Âgée d'environ 22 millions d'années seulement, et sujette à de violentes éruptions.",
+  AUMicb: "Une planète prisonnière d'un immense disque de poussière autour de l'un des plus jeunes systèmes planétaires jamais observés, bombardée de rayons X par son étoile furieuse.",
+  Lich: "Le cœur en rotation d'une étoile qui a explosé, balayant l'espace de faisceaux de radiation environ 160 fois par seconde. Ses planètes furent les toutes premières découvertes hors du Système solaire, en 1992.",
+  Draugr: "L'une des plus petites planètes connues, environ deux fois la masse de notre Lune, baignée dans les radiations mortelles du pulsar.",
+  Poltergeist: "Un « monde zombie » autour d'une étoile morte. Ce fut l'une des premières planètes découvertes hors de notre Système solaire.",
+  Phobetor: "Nommée d'après un dieu grec des cauchemars. Elle et ses voisines se sont peut-être formées à partir des débris de l'explosion de l'étoile.",
+  Kepler70: "Le noyau nu et brûlant d'une étoile qui a gonflé en géante rouge avant de perdre ses couches extérieures.",
+  Kepler70b: "Peut-être la planète la plus chaude connue, environ 6 800 °C. Elle a peut-être été de la taille de Jupiter avant de séjourner à l'intérieur de son étoile quand celle-ci a gonflé.",
+  WASP12: "Une étoile chaude qui dévore lentement sa planète la plus proche.",
+  WASP12b: "Si proche de son étoile que la gravité l'étire en forme d'œuf et lui arrache son gaz. Son orbite rétrécit : dans quelques millions d'années, elle plongera dans l'étoile.",
+  TrES2: "Une étoile semblable au Soleil avec la planète la plus sombre jamais découverte.",
+  TrES2b: "La planète de la nuit éternelle : elle reflète moins de lumière que du charbon, mais son air est aussi chaud que de la lave et luit d'un rouge sombre.",
   TESS: "Lancé en 2018, ses quatre caméras surveillent plus de 85 % du ciel pour repérer les minuscules baisses de lumière quand une planète passe devant son étoile. Plus de 1 000 de ses découvertes sont désormais confirmées.",
   Chandra: "L'œil à rayons X de la NASA, lancé en 1999. Il observe les endroits les plus chauds et violents de l'Univers, et a même repéré ce qui pourrait être une planète dans une autre galaxie.",
   Fermi: "Lancé en 2008, il surveille tout le ciel en rayons gamma, la lumière la plus énergétique qui soit, et capte étoiles qui explosent et jets de trous noirs.",
@@ -342,6 +362,10 @@ const FACTS_FR = [
   ["On connaît plus de 6 000 exoplanètes", "La première autour d'une étoile semblable au Soleil a été découverte en 1995 ; on en connaît aujourd'hui des milliers, et la plus proche est Proxima b."],
   ["Il y a plus de planètes que d'étoiles", "Le télescope Kepler a découvert plus de 2 600 planètes et montré qu'en moyenne, chaque étoile de notre galaxie en a au moins une."],
   ["Un satellite a trouvé plus de 1 000 planètes", "Depuis 2018, TESS guette les minuscules baisses de lumière des étoiles proches : plus de 1 000 de ses planètes sont confirmées."],
+  ["La planète la plus sombre est plus noire que le charbon", "TrES-2 b reflète moins de lumière que du charbon, mais son air est aussi chaud que de la lave."],
+  ["Une étoile est en train de dévorer sa planète", "WASP-12 b est étirée en forme d'œuf et perd son gaz : dans quelques millions d'années, elle plongera dans son étoile."],
+  ["Les premières exoplanètes tournaient autour d'une étoile morte", "En 1992, on a découvert des planètes autour d'un pulsar, le cœur d'une étoile qui a explosé : des mondes « zombies » baignés de radiations."],
+  ["Cette planète chauffe de centaines de degrés en quelques heures", "HD 80606 b plonge vers son étoile sur une orbite très étirée, ce qui déclenche des vents supersoniques et des tempêtes d'ondes de choc."],
 ];
 
 // ---------- Applying a language ----------

@@ -205,6 +205,10 @@ const FACTS = [
   ['ProximaB', 'There are more than 6,000 known exoplanets', 'The first around a Sun-like star was found in 1995; now we know thousands, and the closest is Proxima b.'],
   ['Kepler', 'There are more planets than stars', 'The Kepler telescope found over 2,600 planets and showed that, on average, every star in our galaxy has at least one.'],
   ['TESS', 'One satellite has found over 1,000 planets', 'Since 2018, TESS has watched nearby stars for tiny dips in their light: more than 1,000 of its planets are now confirmed.'],
+  ['TrES2b', 'The darkest planet is blacker than coal', 'TrES-2 b reflects less light than coal, yet its air is as hot as lava.'],
+  ['WASP12b', 'A star is eating its planet', 'WASP-12 b is stretched into an egg shape and losing its gas: in a few million years it will plunge into its star.'],
+  ['Poltergeist', 'The first exoplanets circled a dead star', 'In 1992 planets were found around a pulsar, the core of an exploded star: "zombie worlds" bathed in radiation.'],
+  ['HD80606b', 'This planet heats up by hundreds of degrees in hours', 'HD 80606 b swoops close to its star on a very stretched orbit, setting off supersonic winds and shockwave storms.'],
 ];
 SS.more.FACTS = FACTS;
 const fact = document.createElement('div'); fact.id = 'fact';
