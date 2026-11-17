@@ -273,4 +273,4 @@ addEventListener('keydown', e => {
 
 SS.documentary = { CHAPTERS, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
 
-await import('./more.js?v=4');
+await import('./more.js' + new URL(import.meta.url).search);

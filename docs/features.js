@@ -231,7 +231,7 @@ SS.more.refreshFact = () => { if (curFact != null) { const [, hook, text] = SS.m
 SS.more.showFact = showFact;
 
 // ---------- Language switch + link parameters ----------
-await import('./i18n.js?v=4');
+await import('./i18n.js' + new URL(import.meta.url).search);
 {
   const q = new URLSearchParams(location.search);
   const go = q.get('go'), f = q.get('fact');
@@ -239,3 +239,44 @@ await import('./i18n.js?v=4');
   else if (f != null) setTimeout(() => { const i = FACTS.findIndex(x => x[0] === f); i >= 0 ? showFact(i) : nextFact(); }, 600);
 }
 SS.features = { openCmp, showFact, nextFact };
+
+// ---------- Names: "All names" option, no overlapping names, current object in gold ----------
+{
+  const st = document.createElement('style');
+  st.textContent = `.lbl.focus{border-color:#ffd27a!important;color:#fff;background:rgba(60,44,8,.7);font-weight:600;z-index:2}
+  .lbl.hid{visibility:hidden!important}`;
+  document.head.appendChild(st);
+  const namesRow = $('labels').parentElement;
+  const row = document.createElement('label'); row.innerHTML = '<span>All names (far away too)</span> <input id="allNames" type="checkbox">';
+  namesRow.after(row);
+  const all = $('allNames');
+  try { all.checked = localStorage.getItem('ss_allnames') === '1'; } catch (e) { }
+  all.onchange = () => { try { localStorage.setItem('ss_allnames', all.checked ? '1' : '0'); } catch (e) { } if (all.checked && !$('labels').checked) { $('labels').checked = true; $('labels').dispatchEvent(new Event('change')); } };
+  const V3 = SS.camera.position.constructor, cp = new V3(), op = new V3();
+  const shown = l => { let p = l.parent; while (p) { if (!p.visible) return false; p = p.parent; } return true; };
+  let n = 0; const bodyObjs = new Set();
+  SS.sim.push(() => {
+    const on = $('labels').checked;
+    if (on && all.checked) for (const l of SS.labels) l.visible = shown(l);          // override the distance limits
+    if (n++ % 4) return;
+    if (!bodyObjs.size || n % 200 === 1) { bodyObjs.clear(); for (const b of Object.values(SS.bodies)) if (b?.obj) bodyObjs.add(b.obj); }
+    // gold name for the object you are looking at
+    const cur = SS.more.current, obj = cur && SS.bodies[cur]?.obj;
+    // hide names that would sit on top of a nearer (or the current) object's name
+    SS.camera.getWorldPosition(cp);
+    const vis = [];
+    for (const l of SS.labels) {
+      const el = l.element; const isCur = !!obj && (l.parent === obj || l.parent?.parent === obj);
+      el.classList.toggle('focus', isCur);
+      if (!l.visible || el.style.display === 'none') { el.classList.remove('hid'); continue; }
+      el.classList.remove('hid'); const r = el.getBoundingClientRect(); if (!r.width) continue;
+      const major = (el.className.trim() === 'lbl' && bodyObjs.has(l.parent)) || el.classList.contains('focus'); vis.push({ el, r, d: isCur ? -1 : (major ? 0 : 1e6) + l.parent.getWorldPosition(op).distanceTo(cp) });
+    }
+    vis.sort((a, b) => a.d - b.d);
+    const placed = [];
+    for (const v of vis) {
+      const hit = placed.some(p => v.r.left < p.right - 2 && v.r.right > p.left + 2 && v.r.top < p.bottom - 1 && v.r.bottom > p.top + 1);
+      if (hit) v.el.classList.add('hid'); else placed.push(v.r);
+    }
+  });
+}

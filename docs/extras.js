@@ -716,4 +716,4 @@ sim.push(() => {
 
 SS.go = go; SS.stopTour = stopTour;
 SS.extras = { addMoon, smallBody, exoPlanet, paint, lumpy, auToScene, addGroup, nearLabel, scaleHide, PL, EVENTS, TOUR, showInfo, litMaterial, dps, J2000, getTour: () => tour };
-await import('./documentary.js?v=4');
+await import('./documentary.js' + new URL(import.meta.url).search);

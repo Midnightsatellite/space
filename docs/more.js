@@ -322,4 +322,4 @@ orbiter({ key: 'CUTE', name: 'CUTE', model: () => MODELS.cubesat(1.4), scale: 0.
 }
 
 SS.more = {}; SS.features = SS.features || null;
-await import('./features.js?v=4');
+await import('./features.js' + new URL(import.meta.url).search);

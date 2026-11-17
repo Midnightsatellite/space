@@ -10,7 +10,7 @@ const UI = {
   "Drag to rotate · scroll to zoom · right-drag to pan · click a name to fly there": "Faites glisser pour tourner · molette pour zoomer · clic droit pour vous déplacer · cliquez sur un nom pour y aller",
   "by Midnight Satellite": "par Midnight Satellite", "▶ Guided tour": "▶ Visite guidée", "■ Stop tour": "■ Arrêter la visite", "Hide interface (H)": "Masquer l'interface (H)",
   "✨ One Fact": "✨ One Fact", "⚖️ Compare sizes": "⚖️ Comparer les tailles", "Compare sizes": "Comparer les tailles", "vs": "contre",
-  "Fly to": "Aller à", "Time speed": "Vitesse du temps", "Date": "Date", "Now": "Maintenant", "Auto-rotate camera": "Rotation auto de la caméra", "Names": "Noms",
+  "Fly to": "Aller à", "Time speed": "Vitesse du temps", "Date": "Date", "Now": "Maintenant", "Auto-rotate camera": "Rotation auto de la caméra", "Names": "Noms", "All names (far away too)": "Tous les noms (même lointains)",
   "Constellations": "Constellations", "Zodiac / star signs": "Zodiaque / signes", "Orbit paths": "Orbites", "Ambient sound": "Son d'ambiance",
   "Sizes and distances compressed so everything fits on screen · Planet maps:": "Tailles et distances compressées pour tout faire tenir à l'écran · Cartes des planètes :",
   "(CC BY 4.0), Earth: NASA · Star positions: Hipparcos catalogue ·": "(CC BY 4.0), Terre : NASA · Positions des étoiles : catalogue Hipparcos ·",
