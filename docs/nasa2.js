@@ -137,3 +137,4 @@ for (const k of Object.keys(PROC)) swap(k);
 { const prev = SS.onFocus; SS.onFocus = k => { prev(k); if (GLB[k]) swap(k); }; }
 setTimeout(() => { let i = 0; const keys = Object.keys(GLB); const next = () => { if (i < keys.length) { swap(keys[i++]); setTimeout(next, 1500); } }; next(); }, 12000);
 SS.more.nasa2 = { swap, BUILD };
+await import('./webb.js' + new URL(import.meta.url).search);
