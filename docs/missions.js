@@ -1,6 +1,6 @@
 // =====================================================================
 // Full mission cards (EN + FR) in the style of the NASA/IPAC mission pages:
-// Fermi, Swift, IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler, Chandra
+// Fermi, Swift, IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler, Chandra, New Horizons, comms satellite (TDRS)
 // =====================================================================
 const SS = window.SS;
 const T = (l, lf, v, vf) => [l, lf, v, vf];
@@ -181,5 +181,42 @@ Object.assign(D, {
       ['February 2026: it caught HD 61005, a 100-million-year-old "young Sun" 120 light-years away, blowing a bubble of hot wind around itself: the first astrosphere seen around a Sun-like star.', 'Février 2026 : il a surpris HD 61005, un « jeune Soleil » de 100 millions d’années à 120 années-lumière, en train de souffler autour de lui une bulle de vent chaud : la première astrosphère vue autour d’une étoile comme le Soleil.'],
       ['October 2026: it explained the "Treble Clef", a radio shape like the musical symbol hidden behind the Milky Way: a giant black hole outburst, then two galaxy clusters colliding.', 'Octobre 2026 : il a expliqué la « Clé de sol », une forme radio comme le symbole musical cachée derrière la Voie lactée : l’éruption d’un trou noir géant, puis la collision de deux amas de galaxies.'],
       ['Before launch it was called AXAF; it was renamed after astrophysicist Subrahmanyan Chandrasekhar, whose name means "luminous" in Sanskrit, following a public naming contest.', 'Avant son lancement, il s’appelait AXAF ; il a été rebaptisé, après un concours public, du nom de l’astrophysicien Subrahmanyan Chandrasekhar, dont le nom signifie « lumineux » en sanskrit.']] },
+
+  NewHorizons: { intro: ['The first spacecraft to explore Pluto up close (14 July 2015), then the Kuiper Belt object Arrokoth (1 January 2019), the most distant world ever visited. It is still flying outward at about 480 million km a year.',
+      'Le premier engin à explorer Pluton de près (14 juillet 2015), puis l’objet de la ceinture de Kuiper Arrokoth (1er janvier 2019), le monde le plus lointain jamais visité. Il file toujours vers l’extérieur à environ 480 millions de km par an.'],
+    tiles: [T('Launch', 'Lancement', '19 Jan 2006 · Atlas V 551, Cape Canaveral', '19 janv. 2006 · Atlas V 551, cap Canaveral'),
+      T('Speed record', 'Record', 'left Earth at 58,536 km/h, the fastest launch ever', 'a quitté la Terre à 58 536 km/h, le lancement le plus rapide de l’histoire'),
+      T('Pluto flyby', 'Survol de Pluton', '14 July 2015, 12,500 km from Pluto, 28,800 km from Charon', '14 juillet 2015, à 12 500 km de Pluton et 28 800 km de Charon'),
+      T('Arrokoth flyby', 'Survol d’Arrokoth', '1 Jan 2019, 3,500 km away', '1er janv. 2019, à 3 500 km'),
+      T('Distance', 'Distance', 'about 9.5 billion km; signals take nearly 9 hours', 'environ 9,5 milliards de km ; les signaux mettent près de 9 heures'),
+      T('Size', 'Taille', 'about a grand piano, 478 kg, with a 2.1 m dish', 'à peu près un piano à queue, 478 kg, avec une antenne de 2,1 m'),
+      T('Power', 'Énergie', 'plutonium generator (RTG), a spare from Cassini: 250 W at launch', 'générateur au plutonium (RTG), une pièce de rechange de Cassini : 250 W au lancement'),
+      T('Instruments', 'Instruments', '7: Ralph, Alice, LORRI, REX, SWAP, PEPSSI and the Student Dust Counter', '7 : Ralph, Alice, LORRI, REX, SWAP, PEPSSI et le compteur de poussière étudiant'),
+      T('Team', 'Équipe', 'PI Alan Stern (SwRI); built and flown by Johns Hopkins APL', 'Responsable Alan Stern (SwRI) ; construit et piloté par le Johns Hopkins APL'),
+      T('Status', 'Statut', 'Woke on 23 June 2026 from a 321-day sleep, healthy', 'Réveillée le 23 juin 2026 après 321 jours de sommeil, en bonne santé')],
+    facts: [['Jupiter’s gravity (28 Feb 2007) sped it up by about 14,000 km/h and cut three years off the trip. On the way it photographed Io’s volcanoes erupting.', 'La gravité de Jupiter (28 févr. 2007) l’a accéléré d’environ 14 000 km/h et a raccourci le voyage de trois ans. Au passage, il a photographié des volcans d’Io en éruption.'],
+      ['It slept through most of the trip, waking for about two months each year, to save wear on its systems.', 'Il a dormi pendant la plus grande partie du voyage, se réveillant environ deux mois par an, pour ménager ses systèmes.'],
+      ['It settled Pluto’s size: about 2,370 km across, slightly bigger than thought. Charon is about 1,208 km across.', 'Il a fixé la taille de Pluton : environ 2 370 km de diamètre, un peu plus que prévu. Charon mesure environ 1 208 km.'],
+      ['Pluto’s "heart" is Sputnik Planitia, a nitrogen-ice glacier about 1,000 km wide, the largest known glacier in the Solar System. Pluto may even hide an ocean under its ice.', 'Le « cœur » de Pluton est Sputnik Planitia, un glacier d’azote d’environ 1 000 km de large, le plus grand glacier connu du Système solaire. Pluton cache peut-être même un océan sous sa glace.'],
+      ['Sending all 6.25 gigabytes of Pluto data home took over 15 months, at just 1 to 2 kilobits per second.', 'Envoyer les 6,25 gigaoctets de données sur Pluton a pris plus de 15 mois, à seulement 1 à 2 kilobits par seconde.'],
+      ['Arrokoth is a reddish "snowman" 35 km long made of two flattened lobes stuck together, unlike anything seen before.', 'Arrokoth est un « bonhomme de neige » rougeâtre de 35 km de long, fait de deux lobes aplatis collés ensemble, comme on n’en avait jamais vu.'],
+      ['Beyond the expected edge of the Kuiper Belt it still finds a lot of dust, so the belt may stretch much farther than thought.', 'Au-delà du bord supposé de la ceinture de Kuiper, il trouve encore beaucoup de poussière : la ceinture s’étend peut-être bien plus loin qu’on ne le pensait.'],
+      ['It carries some of the ashes of Clyde Tombaugh, who discovered Pluto in 1930.', 'Il emporte une partie des cendres de Clyde Tombaugh, qui a découvert Pluton en 1930.']] },
+
+  Satellite: { intro: ['This model is one of NASA’s Tracking and Data Relay Satellites (TDRS): giant "switchboards" in geostationary orbit that pass messages between Earth and spacecraft such as the ISS and Hubble.',
+      'Ce modèle est l’un des satellites relais TDRS (Tracking and Data Relay Satellite) de la NASA : d’immenses « standards téléphoniques » en orbite géostationnaire qui relaient les messages entre la Terre et des engins comme l’ISS et Hubble.'],
+    tiles: [T('Type', 'Type', 'Communications relay satellite', 'Satellite relais de communications'),
+      T('Orbit', 'Orbite', 'geostationary, 35,786 km above the equator: one lap a day', 'géostationnaire, à 35 786 km au-dessus de l’équateur : un tour par jour'),
+      T('First TDRS', 'Premier TDRS', 'April 1983, from Space Shuttle Challenger (STS-6)', 'avril 1983, depuis la navette Challenger (STS-6)'),
+      T('Latest', 'Le plus récent', 'TDRS-13, launched in August 2017', 'TDRS-13, lancé en août 2017'),
+      T('Fleet', 'Flotte', '7 active satellites, 3 generations', '7 satellites actifs, 3 générations'),
+      T('Serves', 'Pour', 'over 25 missions in low Earth orbit, including the ISS and Hubble', 'plus de 25 missions en orbite basse, dont l’ISS et Hubble'),
+      T('Antennas', 'Antennes', 'two big steerable dishes, each aimed at one spacecraft', 'deux grandes antennes orientables, chacune pointée vers un engin'),
+      T('Future', 'Avenir', 'closed to new missions since Nov 2024; commercial relays to take over in the 2030s', 'fermé aux nouvelles missions depuis nov. 2024 ; des relais commerciaux prendront le relais dans les années 2030')],
+    facts: [['At 35,786 km a satellite takes exactly one day to go round, so it seems to hang still over one spot: ideal for TV, weather and relay satellites.', 'À 35 786 km, un satellite met exactement un jour pour faire le tour : il semble immobile au-dessus d’un point, idéal pour la télévision, la météo et les relais.'],
+      ['Science-fiction writer Arthur C. Clarke described this idea in 1945. Syncom 3 was the first to use it in 1964, showing the Tokyo Olympics on American TV.', 'L’écrivain de science-fiction Arthur C. Clarke a décrit cette idée en 1945. Syncom 3 a été le premier à l’utiliser en 1964, en montrant les Jeux olympiques de Tokyo à la télévision américaine.'],
+      ['A spacecraft in low orbit only sees a ground station for a few minutes at a time. With three TDRS spread around the world, it can stay in contact almost all the time.', 'Un engin en orbite basse ne voit une station au sol que quelques minutes à la fois. Avec trois TDRS répartis autour du monde, il peut rester en contact presque en permanence.'],
+      ['Astronauts’ live video from the ISS, and Hubble’s pictures, travel up to a TDRS and back down to the ground station at White Sands, New Mexico.', 'Les vidéos en direct des astronautes de l’ISS et les images de Hubble montent jusqu’à un TDRS puis redescendent vers la station de White Sands, au Nouveau-Mexique.'],
+      ['The fleet is ageing: TDRS-9 was retired after more than 15 years. In 2026 NASA picked Astranis, Global Enterprise Solutions and Viasat to build commercial Ka-band relay services to replace it.', 'La flotte vieillit : TDRS-9 a été retiré après plus de 15 ans. En 2026, la NASA a choisi Astranis, Global Enterprise Solutions et Viasat pour créer des services de relais commerciaux en bande Ka qui la remplaceront.']] },
 });
 

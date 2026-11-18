@@ -1,6 +1,6 @@
 // =====================================================================
 // Detailed hand-built models for missions NASA has no 3D file for:
-// NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
+// New Horizons, NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
 // =====================================================================
 import * as THREE from 'three';
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -41,6 +41,48 @@ function shells(R, n, m) { const g = new THREE.Group();
   return g; }
 
 export const SATS = {
+
+  // New Horizons: about the size of a grand piano, 478 kg. A thick triangular gold body, the 2.1 m white dish on one face
+  // (with its feed tripod), the ribbed RTG power unit sticking out of one corner, the LORRI telescope and Ralph on the sides.
+  NewHorizons: () => {
+    const g = new THREE.Group(), R = 1.25, T = 0.75;
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(R, R, T, 3), mat.gold); body.rotation.x = Math.PI / 2; g.add(body);
+    const edge = new THREE.Mesh(new THREE.CylinderGeometry(R * 1.01, R * 1.01, 0.05, 3), mat.goldD); edge.rotation.x = Math.PI / 2; edge.position.z = T / 2; g.add(edge);
+    const edge2 = edge.clone(); edge2.position.z = -T / 2; g.add(edge2);
+    // corners of the triangle (in the XY plane); the cylinder's first vertex points along +Y after the rotation
+    const corner = i => { const a = -Math.PI / 2 + (i % 3) * 2.094; return V(Math.cos(a) * R, Math.sin(a) * R, 0); };   // the triangle's 3 corners
+    // black radiator panels and boxes on the side faces
+    for (let i = 0; i < 3; i++) { const a = -Math.PI / 2 + i * 2.094 + Math.PI / 3 * 0, n = V(Math.cos(a + Math.PI), Math.sin(a + Math.PI), 0);
+      const mid = corner(i).add(corner(i + 1)).multiplyScalar(0.5), f = box(0.9, 0.4, 0.02, mat.black); f.position.copy(mid).addScaledVector(mid.clone().normalize(), 0.01);
+      f.lookAt(mid.clone().multiplyScalar(2)); g.add(f); }
+    // LORRI: the long-range camera, a round opening on one side face
+    { const mid = corner(1).add(corner(2)).multiplyScalar(0.5), dir = mid.clone().normalize();
+      const lorri = cyl(0.16, 0.16, 0.25, mat.silver, 24); lorri.quaternion.setFromUnitVectors(V(0, 1, 0), dir); lorri.position.copy(mid).addScaledVector(dir, 0.1).add(V(0.25, 0, -0.1)); g.add(lorri);
+      const lens = cyl(0.12, 0.12, 0.02, mat.black, 24); lens.quaternion.copy(lorri.quaternion); lens.position.copy(lorri.position).addScaledVector(dir, 0.13); g.add(lens);
+      const ralph = box(0.3, 0.25, 0.25, mat.silver); ralph.position.copy(mid).addScaledVector(dir, 0.12).add(V(-0.35, 0, 0.12)); g.add(ralph);
+      const ap = cyl(0.07, 0.07, 0.02, mat.black, 16); ap.quaternion.setFromUnitVectors(V(0, 1, 0), dir); ap.position.copy(ralph.position).addScaledVector(dir, 0.13); g.add(ap); }
+    // the RTG: a finned cylinder sticking out from one corner
+    { const c = corner(0), dir = c.clone().normalize(), rtg = new THREE.Group();
+      rtg.add(at(cyl(0.05, 0.1, 0.3, mat.alu, 12), 0, 0.15, 0));                       // mounting cone
+      rtg.add(at(cyl(0.13, 0.13, 0.95, mat.dark, 20), 0, 0.78, 0));
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; rtg.add(at(box(0.015, 0.9, 0.14, mat.silver), Math.cos(a) * 0.19, 0.78, Math.sin(a) * 0.19, 0, -a, 0)); }
+      for (const y of [0.3, 0.55, 0.8, 1.05, 1.27]) rtg.add(at(cyl(0.2, 0.2, 0.025, mat.alu, 20), 0, y, 0));
+      rtg.quaternion.setFromUnitVectors(V(0, 1, 0), dir); rtg.position.copy(c).addScaledVector(dir, -0.28); g.add(rtg); }
+    // thrusters and star trackers
+    for (const i of [1, 2]) { const c = corner(i); g.add(at(cyl(0.04, 0.07, 0.12, mat.dark, 10), c.x * 0.95, c.y * 0.95, -T / 2 - 0.06, Math.PI / 2, 0, 0)); }
+    g.add(at(cyl(0.07, 0.09, 0.15, mat.black, 12), 0.2, -0.3, -T / 2 - 0.08, Math.PI / 2, 0, 0));
+    // the 2.1 m dish on the +Z face, its feed tripod and the small medium-gain dish in front
+    const dish = new THREE.Mesh(new THREE.SphereGeometry(1.6, 48, 12, 0, 6.283, 0, 0.72), ds(M(0xf6f6f4, 0.1, 0.55, 0x8c8c8c)));
+    dish.rotation.x = -Math.PI / 2; dish.position.z = T / 2 + 1.6 + 0.05; g.add(dish);
+    const rimZ = T / 2 + 0.05 + 1.6 * (1 - Math.cos(0.72)), rimR = 1.6 * Math.sin(0.72);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(rimR, 0.025, 6, 64), mat.white); rim.position.z = rimZ; g.add(rim);
+    g.add(at(cyl(0.2, 0.25, 0.25, mat.white, 20), 0, 0, T / 2 + 0.15, Math.PI / 2, 0, 0));
+    const tip = V(0, 0, rimZ + 0.75);
+    for (let k = 0; k < 3; k++) { const a = Math.PI / 2 + k * 2.094; g.add(rod(V(Math.cos(a) * rimR * 0.92, Math.sin(a) * rimR * 0.92, rimZ - 0.02), tip, 0.015, mat.alu)); }
+    g.add(at(cyl(0.14, 0.14, 0.05, mat.white, 20), tip.x, tip.y, tip.z, Math.PI / 2, 0, 0));
+    g.add(at(cyl(0.03, 0.03, 0.25, mat.alu, 8), tip.x, tip.y, tip.z + 0.14, Math.PI / 2, 0, 0));
+    return g;
+  },
 
   // NuSTAR: 10.9 m long once deployed. One end: the optics bench with two X-ray telescopes (133 nested shells each).
   // Middle: the 10 m deployable lattice mast. Other end: Orbital's spacecraft bus with the focal plane (CdZnTe detectors)
