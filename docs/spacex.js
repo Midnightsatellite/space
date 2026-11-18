@@ -1,6 +1,6 @@
 // =====================================================================
 // SpaceX: Starman's Tesla Roadster (on its real orbit round the Sun), a Crew Dragon docked to the ISS,
-// Starship and its launch tower at Starbase, and a full card for the Starlink swarm.
+// Starship and its launch tower at Starbase, and a train of Starlink satellites in low orbit.
 // =====================================================================
 import * as THREE from 'three';
 const SS = window.SS;
@@ -22,52 +22,8 @@ const rod = (p, q, r, m) => { const d = q.clone().sub(p), o = new THREE.Mesh(new
   o.position.copy(p).add(q).multiplyScalar(0.5); o.quaternion.setFromUnitVectors(V(0, 1, 0), d.normalize()); return o; };
 const T = (l, lf, v, vf) => [l, lf, v, vf];
 
-// ---------------------------------------------------------------- models (in metres)
-export function buildRoadster() {   // a red two-seat roadster with a spacesuited mannequin at the wheel
-  const g = new THREE.Group();
-  add(g, at(box(3.9, 0.45, 1.75, mat.red), 0, 0.55, 0), at(box(1.3, 0.25, 1.7, mat.red), 1.25, 0.88, 0), at(box(1.0, 0.3, 1.7, mat.red), -1.4, 0.9, 0));
-  add(g, at(box(0.05, 0.45, 1.5, mat.glass), 0.55, 1.05, 0, 0, 0, -0.5), at(box(1.4, 0.12, 1.5, mat.black), -0.2, 0.84, 0));   // windscreen, cockpit
-  for (const x of [1.3, -1.3]) for (const z of [0.85, -0.85]) add(g, at(cyl(0.33, 0.33, 0.25, mat.tyre, 20), x, 0.33, z, Math.PI / 2, 0, 0), at(cyl(0.2, 0.2, 0.27, mat.steel, 12), x, 0.33, z, Math.PI / 2, 0, 0));
-  for (const z of [0.55, -0.55]) add(g, at(box(0.05, 0.15, 0.4, M(0xfff4d0, 0.2, 0.3, 0x998f70)), 1.96, 0.62, z));               // headlights
-  // the mannequin: white suit, black helmet with gold visor, one arm resting on the door
-  const s = new THREE.Group(); s.position.set(-0.25, 0.85, 0.4); g.add(s);
-  add(s, at(box(0.35, 0.6, 0.45, mat.white), 0, 0.3, 0), at(new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 14), mat.black), 0, 0.78, 0));
-  add(s, at(box(0.06, 0.16, 0.24, mat.visor), 0.15, 0.78, 0), at(box(0.12, 0.12, 0.5, mat.white), 0.05, 0.45, 0.35, 0.4, 0, 0), at(box(0.5, 0.12, 0.12, mat.white), 0.3, 0.35, -0.2));
-  add(s, at(box(0.6, 0.18, 0.4, mat.white), 0.3, 0.05, 0));   // legs
-  g.add(at(cyl(0.18, 0.18, 0.03, mat.black, 16), 0.25, 1.0, 0.4, 0, 0, 1.2));   // steering wheel
-  return g;
-}
-export function buildDragon(noseOpen = true) {   // Crew Dragon: capsule on +Y, trunk below
-  const g = new THREE.Group();
-  add(g, at(cyl(1.85, 1.85, 2.8, mat.white, 40), 0, 1.4, 0));                                         // trunk
-  { const sol = new THREE.Mesh(new THREE.CylinderGeometry(1.87, 1.87, 2.6, 40, 1, true, 0, Math.PI), mat.cell); sol.position.y = 1.4; g.add(sol); }   // solar cells on half
-  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; g.add(at(box(0.05, 1.0, 0.7, mat.white), Math.cos(a) * 2.1, 0.6, Math.sin(a) * 2.1, 0, -a, 0)); }   // fins
-  add(g, at(cyl(2.0, 2.0, 0.25, mat.black, 40), 0, 2.95, 0));                                          // heat shield edge
-  add(g, at(cyl(1.0, 2.0, 2.4, mat.white, 40), 0, 4.25, 0), at(cyl(0.65, 1.0, 0.5, mat.white, 32), 0, 5.7, 0));   // capsule
-  for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; add(g, at(box(0.5, 0.45, 0.08, mat.black), Math.cos(a) * 1.55, 4.0, Math.sin(a) * 1.55, 0, -a + Math.PI / 2, -0.4)); }   // SuperDraco pods
-  add(g, at(box(0.45, 0.3, 0.05, mat.glass), 1.3, 4.6, 0.9, 0, -0.6, -0.4));                            // window
-  add(g, at(cyl(0.55, 0.55, 0.35, mat.grey, 24), 0, 6.1, 0));                                          // docking adapter
-  const nose = cyl(0.05, 0.95, 0.7, mat.white, 32); if (noseOpen) { nose.position.set(0, 6.3, 1.1); nose.rotation.x = 1.4; } else nose.position.set(0, 6.3, 0); g.add(nose);
-  return g;
-}
-export function buildStarship() {   // Super Heavy booster + Starship on the launch mount, with the catch tower
-  const g = new THREE.Group();
-  add(g, at(cyl(9, 9, 6, mat.grey, 24), 0, 3, 0), at(cyl(5.2, 6, 4, mat.tower, 24), 0, 8, 0));         // pad and launch mount
-  const y0 = 10;
-  add(g, at(cyl(4.5, 4.5, 71, mat.steel, 40), 0, y0 + 35.5, 0));                                        // Super Heavy
-  for (let k = 0; k < 3; k++) { const a = k * 2.094; g.add(at(box(0.4, 5, 4, mat.grey), Math.cos(a) * 5.4, y0 + 66, Math.sin(a) * 5.4, 0, -a, 0)); }   // grid fins
-  add(g, at(cyl(4.6, 4.6, 2.5, mat.grey, 40), 0, y0 + 72, 0));                                          // hot-staging ring
-  const s0 = y0 + 73.3;
-  add(g, at(cyl(4.5, 4.5, 38, mat.steel, 40), 0, s0 + 19, 0));
-  { const nose = new THREE.Mesh(new THREE.SphereGeometry(4.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat.steel); nose.scale.y = 3.1; nose.position.y = s0 + 38; g.add(nose); }
-  { const tiles = new THREE.Mesh(new THREE.CylinderGeometry(4.53, 4.53, 38, 40, 1, true, Math.PI / 2, Math.PI), M(0x22232a, 0.3, 0.6, 0x1a1b20)); tiles.position.y = s0 + 19; g.add(tiles); }   // heat shield side
-  for (const [y, h, w] of [[s0 + 4, 9, 4.5], [s0 + 44, 5, 2.5]]) for (const sx of [1, -1]) g.add(at(box(w, h, 0.4, mat.black), sx * (4.5 + w / 2), y, 0));   // flaps
-  // the tower ("Mechazilla") beside the rocket, with its two catch arms reaching towards it
-  const tz = 22; add(g, at(box(9, 145, 9, M(0x6a6e76, 0.5, 0.6, 0x3a3d42)), 0, 72.5, tz));
-  for (let y = 5; y < 145; y += 10) { g.add(rod(V(4.6, y, tz - 4.6), V(-4.6, y + 10, tz - 4.6), 0.3, mat.tower)); }
-  for (const sx of [1, -1]) add(g, at(box(2, 3, 20, mat.tower), sx * 6, 118, tz - 12, 0, sx * -0.25, 0));
-  return g;
-}
+import { buildRoadster, buildDragon, buildStarship, buildStarlink } from './spacexmodels.js?v=38';
+export { buildRoadster, buildDragon, buildStarship, buildStarlink };
 
 // ---------------------------------------------------------------- 1. Starman's Roadster round the Sun
 {
@@ -85,7 +41,8 @@ export function buildStarship() {   // Super Heavy booster + Starship on the lau
   const iss = bodies.ISS.obj, dr = buildDragon(true);
   const holder = new THREE.Group(); holder.scale.setScalar(1 / 24.5); holder.position.set(0, 0, -1.12); holder.rotation.x = Math.PI / 2; holder.add(dr); dr.position.y = -6.45;   // nose into the front port
   iss.add(holder);
-  bodies.Dragon = { obj: holder, radius: 0.007, view: 0.035, dir: bodies.ISS.dir };
+  const dq = new THREE.Quaternion();   // look at the capsule from the side, a little towards the trunk, so its windows and lettering show
+  bodies.Dragon = { obj: holder, radius: 0.007, view: 0.03, dir: () => { dr.getWorldQuaternion(dq); return V(0.8, -0.27, 0.53).applyQuaternion(dq).normalize(); } };
   info('Dragon', 'Crew Dragon', 'Spacecraft · crew capsule', 'docked to the ISS, about 400 km above Earth',
     'SpaceX’s capsule that carries astronauts to and from the International Space Station. Four people ride inside, and it docks on its own.');
 }
@@ -105,11 +62,29 @@ export function buildStarship() {   // Super Heavy booster + Starship on the lau
     'The biggest and most powerful rocket ever flown: 124 m of stainless steel. In September 2026 it reached orbit for the first time.');
 }
 
-// ---------------------------------------------------------------- 4. Starlink (shares the satellite-swarms view)
-if (bodies.Swarms) bodies.Starlink = bodies.Swarms;
+// ---------------------------------------------------------------- 4. Starlink: a "train" of real-looking satellites in low orbit
+{
+  const earth = bodies.Earth.obj, R = 1.12, N = 18, gap = 0.03, sc = 0.0008;
+  const plane = new THREE.Group(); plane.rotation.set(53 * D2R, 1.3, 0); earth.add(plane);
+  const spin = new THREE.Group(); plane.add(spin);
+  const sats = [];
+  for (let i = 0; i < N; i++) {
+    const a = i * gap, s = buildStarlink(); s.scale.setScalar(sc);
+    s.position.set(Math.cos(a) * R, 0, Math.sin(a) * R);
+    const up = V(Math.cos(a), 0, Math.sin(a)), fwd = V(-Math.sin(a), 0, Math.cos(a));
+    s.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(0, -1, 0), up, fwd));
+    s.rotation.y += (i % 3 - 1) * 0.04; spin.add(s); sats.push(s);
+  }
+  sim.push(dt => { spin.rotation.y -= dt * 0.54; });
+  const mid = sats[N >> 1];
+  nearLabel(sats[N - 1], 'Starlink', 30 / sc * 0.0008, 'Starlink', 'craft', 0.6);
+  const e = V(), m = V();
+  bodies.Starlink = { obj: mid, radius: 0.03, view: 0.12,
+    dir: () => { earth.getWorldPosition(e); mid.getWorldPosition(m); const out = m.clone().sub(e).normalize(); const along = V(0, 1, 0).applyQuaternion(plane.getWorldQuaternion(new THREE.Quaternion())); return out.multiplyScalar(0.9).add(along.multiplyScalar(0.6)).normalize(); } };
+}
 info('Starlink', 'Starlink', 'Satellite constellation · internet', 'about 340–570 km above Earth',
-  'More than 11,000 SpaceX internet satellites circle the Earth, most of the working satellites in the sky.');
-special.Starlink = () => { special.Swarms?.(); flyTo('Starlink'); };
+  'A "train" of Starlink V2 Mini satellites soon after launch, each a flat body with two big solar wings about 30 m across. More than 11,000 of them now circle Earth.');
+special.Starlink = () => flyTo('Starlink');
 
 // ---------------------------------------------------------------- cards
 Object.assign(D, {
@@ -200,5 +175,5 @@ SS.i18nAdd?.({
   fact: { Roadster: 'Une voiture de sport rouge avec un mannequin astronaute au volant, lancée en 2018 par la première Falcon Heavy. Elle tournera autour du Soleil pendant des millions d’années.',
     Dragon: 'La capsule de SpaceX qui emmène les astronautes vers la Station spatiale internationale et les ramène. Quatre personnes y prennent place, et elle s’amarre toute seule.',
     Starship: 'La fusée la plus grande et la plus puissante jamais lancée : 124 m d’acier inoxydable. En septembre 2026, elle a atteint l’orbite pour la première fois.',
-    Starlink: 'Plus de 11 000 satellites Internet de SpaceX tournent autour de la Terre, la majorité des satellites en service dans le ciel.' },
+    Starlink: 'Un « train » de satellites Starlink V2 Mini peu après leur lancement : chacun est un corps plat avec deux grandes ailes solaires d’environ 30 m d’envergure. Plus de 11 000 tournent aujourd’hui autour de la Terre.' },
 });
