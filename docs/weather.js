@@ -4,7 +4,7 @@
 //   🌧 rain radar (RainViewer, every 10 minutes)
 //   🌀 tropical cyclones happening now (GDACS)
 //   🌪 tornado reports in the US, last 72 hours (NOAA / National Weather Service)
-//   📍 click anywhere on Earth for the forecast (Open-Meteo)
+//   🔎 the forecast for any city (search), and 🏙 major cities as pins on the globe (Open-Meteo)
 // =====================================================================
 import * as THREE from 'three';
 const SS = window.SS;
@@ -24,7 +24,7 @@ const when = (ms, F) => new Date(ms).toLocaleString(F ? 'fr-FR' : 'en-GB', { day
 const ago = (ms, F) => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000)); return m < 60 ? t2(F, `${m} min ago`, `il y a ${m} min`) : t2(F, `${Math.round(m / 60)} h ago`, `il y a ${Math.round(m / 60)} h`); };
 
 const toNow = () => { SS.setDate(Date.now()); const sp = $('speed'); if (sp) { sp.value = '0.0000115741'; sp.dispatchEvent(new Event('change')); } };   // today, turning at its real speed
-const state = { clouds: false, radar: false, storms: false, tornado: false, click: false };
+const state = { clouds: false, radar: false, storms: false, tornado: false, cities: false };
 const status = { clouds: '', radar: '', storms: '', tornado: '' };
 let panelOpen = false;
 
@@ -167,32 +167,69 @@ const WMO = { 0: ['☀️', 'Clear sky', 'Ciel dégagé'], 1: ['🌤', 'Mainly c
   95: ['⛈', 'Thunderstorm', 'Orage'], 96: ['⛈', 'Thunderstorm with hail', 'Orage avec grêle'], 99: ['⛈', 'Thunderstorm with heavy hail', 'Orage avec forte grêle'] };
 const wmo = (c, F) => { const w = WMO[c] || ['🌡', '—', '—']; return [w[0], F ? w[2] : w[1]]; };
 let fc = null;   // last forecast: {lat, lon, place, data} or {err}
-const pin = emojiSprite('📍', R * 0.09); pin.center.set(0.5, 0.1);
+const pin = emojiSprite('📍', R * 0.035); pin.center.set(0.5, 0.1);
 const pinHolder = new THREE.Group(); pinHolder.add(pin);
-async function forecast(lat, lon) {
+async function forecast(lat, lon, name) {
   pinHolder.position.copy(local(lat, lon).multiplyScalar(R * 1.015)); earthMesh.add(pinHolder);
-  fc = { lat, lon, loading: true }; openPanel(); render();
+  fc = { lat, lon, place: name || '', loading: true }; openPanel(); render();
   const F = fr();
   const q = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,precipitation,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=4`;
   const g = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat.toFixed(3)}&longitude=${lon.toFixed(3)}&localityLanguage=${F ? 'fr' : 'en'}`;
   try {
-    const [d, p] = await Promise.all([fetch(q).then(r => r.json()), fetch(g).then(r => r.json()).catch(() => null)]);
-    const place = p ? [p.city || p.locality, p.principalSubdivision, p.countryName].filter((x, i, a) => x && a.indexOf(x) === i).join(', ') : '';
+    const [d, p] = await Promise.all([fetch(q).then(r => r.json()), name ? null : fetch(g).then(r => r.json()).catch(() => null)]);
+    const place = name || (p ? [p.city || p.locality, p.countryName].filter((x, i, a) => x && a.indexOf(x) === i).join(', ') : '');
     fc = { lat, lon, place, data: d };
   } catch (e) { fc = { lat, lon, err: true }; }
   render();
 }
-{ // a click (not a drag) on the Earth while the forecast tool is on
-  const ray = new THREE.Raycaster(); let down = null;
-  addEventListener('pointerdown', e => { down = e.target.tagName === 'CANVAS' ? [e.clientX, e.clientY] : null; }, true);
-  addEventListener('pointerup', e => {
-    if (!state.click || !down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5) return;
-    const r = e.target.getBoundingClientRect?.(); if (!r || e.target.tagName !== 'CANVAS') return;
-    ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
-    const hit = ray.intersectObject(earthMesh, false)[0]; if (!hit) return;
-    const p = earthMesh.worldToLocal(hit.point.clone()).normalize();
-    forecast(Math.asin(p.y) / D2R, Math.atan2(-p.z, p.x) / D2R);
-  }, true);
+// 🔎 city search (Open-Meteo geocoding) and 🏙 major cities as pins
+const CITIES = [   // [English, French, lat, lon]
+  ['London', 'Londres', 51.507, -0.128], ['Paris', 'Paris', 48.857, 2.352], ['Berlin', 'Berlin', 52.52, 13.405], ['Madrid', 'Madrid', 40.417, -3.704], ['Rome', 'Rome', 41.903, 12.496],
+  ['Lisbon', 'Lisbonne', 38.722, -9.139], ['Dublin', 'Dublin', 53.35, -6.26], ['Brussels', 'Bruxelles', 50.85, 4.352], ['Amsterdam', 'Amsterdam', 52.37, 4.895], ['Bern', 'Berne', 46.948, 7.447],
+  ['Geneva', 'Genève', 46.204, 6.143], ['Luxembourg', 'Luxembourg', 49.611, 6.13], ['Vienna', 'Vienne', 48.208, 16.373], ['Warsaw', 'Varsovie', 52.23, 21.012], ['Prague', 'Prague', 50.075, 14.438],
+  ['Stockholm', 'Stockholm', 59.329, 18.069], ['Oslo', 'Oslo', 59.914, 10.752], ['Copenhagen', 'Copenhague', 55.676, 12.568], ['Helsinki', 'Helsinki', 60.17, 24.938], ['Reykjavik', 'Reykjavik', 64.147, -21.942],
+  ['Athens', 'Athènes', 37.984, 23.728], ['Istanbul', 'Istanbul', 41.008, 28.978], ['Moscow', 'Moscou', 55.756, 37.617], ['Kyiv', 'Kyiv', 50.45, 30.524], ['Cairo', 'Le Caire', 30.044, 31.236],
+  ['Casablanca', 'Casablanca', 33.573, -7.59], ['Algiers', 'Alger', 36.754, 3.059], ['Tunis', 'Tunis', 36.806, 10.181], ['Dakar', 'Dakar', 14.716, -17.467], ['Lagos', 'Lagos', 6.524, 3.379],
+  ['Kinshasa', 'Kinshasa', -4.441, 15.266], ['Addis Ababa', 'Addis-Abeba', 9.03, 38.74], ['Nairobi', 'Nairobi', -1.292, 36.822], ['Johannesburg', 'Johannesburg', -26.204, 28.047], ['Cape Town', 'Le Cap', -33.925, 18.424],
+  ['Dubai', 'Dubaï', 25.205, 55.271], ['Riyadh', 'Riyad', 24.713, 46.675], ['Tehran', 'Téhéran', 35.689, 51.389], ['Karachi', 'Karachi', 24.861, 67.01], ['Delhi', 'Delhi', 28.614, 77.209],
+  ['Mumbai', 'Bombay', 19.076, 72.878], ['Dhaka', 'Dacca', 23.81, 90.413], ['Bangkok', 'Bangkok', 13.756, 100.502], ['Singapore', 'Singapour', 1.352, 103.82], ['Jakarta', 'Jakarta', -6.208, 106.846],
+  ['Manila', 'Manille', 14.6, 120.984], ['Hong Kong', 'Hong Kong', 22.32, 114.17], ['Beijing', 'Pékin', 39.904, 116.407], ['Shanghai', 'Shanghai', 31.23, 121.474], ['Seoul', 'Séoul', 37.567, 126.978],
+  ['Tokyo', 'Tokyo', 35.676, 139.65], ['Sydney', 'Sydney', -33.869, 151.209], ['Melbourne', 'Melbourne', -37.814, 144.963], ['Auckland', 'Auckland', -36.848, 174.763], ['Honolulu', 'Honolulu', 21.307, -157.858],
+  ['Anchorage', 'Anchorage', 61.218, -149.9], ['Vancouver', 'Vancouver', 49.283, -123.121], ['San Francisco', 'San Francisco', 37.775, -122.419], ['Los Angeles', 'Los Angeles', 34.052, -118.244], ['Mexico City', 'Mexico', 19.433, -99.133],
+  ['Chicago', 'Chicago', 41.878, -87.63], ['Toronto', 'Toronto', 43.653, -79.383], ['Montreal', 'Montréal', 45.502, -73.567], ['New York', 'New York', 40.713, -74.006], ['Washington', 'Washington', 38.907, -77.037],
+  ['Miami', 'Miami', 25.762, -80.192], ['Havana', 'La Havane', 23.113, -82.366], ['Bogotá', 'Bogota', 4.711, -74.072], ['Lima', 'Lima', -12.046, -77.043], ['Santiago', 'Santiago', -33.449, -70.669],
+  ['Buenos Aires', 'Buenos Aires', -34.604, -58.382], ['São Paulo', 'São Paulo', -23.551, -46.633], ['Rio de Janeiro', 'Rio de Janeiro', -22.907, -43.173], ['Brasília', 'Brasilia', -15.794, -47.882], ['Kourou', 'Kourou', 5.16, -52.65],
+];
+let cityGroup = null;
+function buildCities() {
+  cityGroup = new THREE.Group();
+  CITIES.forEach(([en, f, lat, lon], i) => { const key = 'WXCity' + i, m = new THREE.Group(); m.position.copy(local(lat, lon).multiplyScalar(R * 1.004)); cityGroup.add(m);
+    m.add(new THREE.Mesh(new THREE.SphereGeometry(R * 0.006, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd36a })));
+    nearLabel(m, en, R * 0.012, key, 'small', R * 9);
+    bodies[key] = { obj: m, radius: R * 0.02, view: R * 1.4, dir: outward(m) }; special[key] = () => flyTo(key);
+    info(key, en, 'Live weather · city', `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`, 'The forecast is in the 🌦 Live weather panel.'); });
+  SS.i18nAdd?.({ name: Object.fromEntries(CITIES.filter(c => c[0] !== c[1]).map(c => [c[0], c[1]])), cat: { 'Live weather · city': 'Météo en direct · ville' },
+    fact: { 'The forecast is in the 🌦 Live weather panel.': 'La météo est dans le panneau 🌦 Météo en direct.' } });
+}
+function setCities(on) { state.cities = on; if (on && !cityGroup) buildCities(); if (cityGroup) on ? earthMesh.add(cityGroup) : earthMesh.remove(cityGroup); }
+{ const prev = SS.onFocus; SS.onFocus = key => { prev(key); const m = /^WXCity(\d+)$/.exec(key || ''); if (m) { const c = CITIES[+m[1]]; forecast(c[2], c[3], fr() ? c[1] : c[0]); } }; }
+// a place the camera can fly to for a searched city
+const placeObj = new THREE.Group(); earthMesh.add(placeObj);
+bodies.WXPlace = { obj: placeObj, radius: R * 0.02, view: R * 1.6, dir: outward(placeObj) };
+function goPlace(lat, lon, name) { placeObj.position.copy(local(lat, lon).multiplyScalar(R)); forecast(lat, lon, name);
+  info('WXPlace', name, t2(fr(), 'Live weather · city', 'Météo en direct · ville'), `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : (fr() ? 'O' : 'W')}`,
+    t2(fr(), 'The forecast is in the 🌦 Live weather panel.', 'La météo est dans le panneau 🌦 Météo en direct.'));
+  flyTo('WXPlace'); }
+let search = { q: '', results: [], busy: false }, searchTimer = 0;
+async function runSearch(q) {
+  const F = fr(), low = q.trim().toLowerCase(); if (low.length < 2) { search.results = []; return render(); }
+  const local = CITIES.filter(c => c[0].toLowerCase().startsWith(low) || c[1].toLowerCase().startsWith(low)).slice(0, 3).map(c => ({ name: F ? c[1] : c[0], sub: '', lat: c[2], lon: c[3] }));
+  search.busy = true; render();
+  try { const j = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q.trim())}&count=8&language=${F ? 'fr' : 'en'}`)).json();
+    const web = (j.results || []).map(r => ({ name: r.name, sub: [r.admin1, r.country].filter(Boolean).join(', '), lat: r.latitude, lon: r.longitude }));
+    search.results = [...local, ...web.filter(w => !local.some(l => Math.abs(l.lat - w.lat) < 0.3 && Math.abs(l.lon - w.lon) < 0.3))].slice(0, 8);
+  } catch (e) { search.results = local; }
+  search.busy = false; if (search.q === q) render();
 }
 
 // ---------------------------------------------------------------- the side panel
@@ -221,7 +258,12 @@ function render() {
   h += row('tornado', state.tornado, '🌪 ' + t2(F, 'Tornado reports (USA, last 3 days)', 'Tornades signalées (États-Unis, 3 derniers jours)') + dot(status.tornado),
     status.tornado === 'err' ? t2(F, 'Couldn’t load the reports.', 'Rapports indisponibles.') : state.tornado && status.tornado === 'ok' ? (tornList.length ? `${tornList.length} ${t2(F, 'reports', 'rapports')}` : t2(F, 'No tornadoes reported in the last 3 days', 'Aucune tornade signalée ces 3 derniers jours')) : t2(F, 'Preliminary reports from the US weather service', 'Rapports préliminaires du service météo américain'));
   if (state.tornado && tornList.length) h += tornList.slice(0, 8).map(t => `<div style="margin:3px 0 0 26px;font-size:12px"><a href="#" data-go="${t._key}">${esc(t._kind[F ? 1 : 0])} · ${esc(t.properties.loc_desc)}, ${esc(t.properties.state)}</a> <span style="opacity:.65">${ago(t.properties.lsr_validtime, F)}</span></div>`).join('');
-  h += row('click', state.click, '📍 ' + t2(F, 'Click Earth for the forecast', 'Cliquez sur la Terre pour la météo'), t2(F, 'Turn this on, then click any place on the globe', 'Activez, puis cliquez n’importe où sur le globe'));
+  h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(140,160,255,.2)"><b>🔎 ${t2(F, 'Forecast for a city', 'Météo d’une ville')}</b>
+    <input id="wxSearch" type="search" autocomplete="off" placeholder="${t2(F, 'Type a city… (London, Tokyo, Dakar)', 'Tapez une ville… (Paris, Tokyo, Dakar)')}" style="display:block;width:100%;box-sizing:border-box;margin-top:5px;background:#141a33;color:#e6ebff;border:1px solid #2c3766;border-radius:6px;padding:5px 8px;font-size:13px">
+    ${search.busy ? `<div style="font-size:12px;opacity:.6;margin-top:3px">⏳</div>` : ''}
+    ${search.results.map((r, i) => `<div><a href="#" data-city="${i}" style="display:block;padding:3px 2px;font-size:12.5px">📍 ${esc(r.name)}${r.sub ? ` <span style="opacity:.6">· ${esc(r.sub)}</span>` : ''}</a></div>`).join('')}
+    ${search.q.trim().length >= 2 && !search.busy && !search.results.length ? `<div style="font-size:12px;opacity:.6;margin-top:3px">${t2(F, 'No place found', 'Aucun lieu trouvé')}</div>` : ''}</div>`;
+  h += row('cities', state.cities, '🏙 ' + t2(F, 'Major cities on the globe', 'Grandes villes sur le globe'), t2(F, 'Capitals and big cities: click a name for its forecast', 'Capitales et grandes villes : cliquez sur un nom pour sa météo'));
   if (fc) {
     const ll = `${Math.abs(fc.lat).toFixed(1)}°${fc.lat >= 0 ? 'N' : 'S'} ${Math.abs(fc.lon).toFixed(1)}°${fc.lon >= 0 ? 'E' : (F ? 'O' : 'W')}`;
     h += `<div style="margin-top:9px;padding-top:8px;border-top:1px solid rgba(140,160,255,.2)"><b>📍 ${esc(fc.place || ll)}</b>${fc.place ? `<br><span style="font-size:11.5px;opacity:.65">${ll}</span>` : ''}`;
@@ -243,16 +285,21 @@ function render() {
   h += `<div style="font-size:10.5px;opacity:.55;margin-top:9px;line-height:1.35">${t2(F, 'Sources', 'Sources')}: ${t2(F, 'clouds', 'nuages')} <a href="https://github.com/matteason/live-cloud-maps" target="_blank" rel="noopener">live-cloud-maps</a> (${t2(F, 'contains modified EUMETSAT data', 'contient des données EUMETSAT modifiées')}) ·
     ${t2(F, 'Weather data by', 'Données radar par')} <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a> ·
     ${t2(F, 'cyclones', 'cyclones')} <a href="https://www.gdacs.org" target="_blank" rel="noopener">GDACS</a> · ${t2(F, 'tornadoes', 'tornades')} <a href="https://www.weather.gov" target="_blank" rel="noopener">NOAA/NWS</a> ·
-    ${t2(F, 'forecasts', 'prévisions')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> · ${t2(F, 'places', 'lieux')} <a href="https://www.bigdatacloud.com" target="_blank" rel="noopener">BigDataCloud</a>.
+    ${t2(F, 'forecasts', 'prévisions')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> · ${t2(F, 'city search', 'recherche de villes')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> / <a href="https://www.geonames.org" target="_blank" rel="noopener">GeoNames</a>.
     ${t2(F, 'For official warnings, follow your national weather service.', 'Pour les alertes officielles, suivez votre service météo national.')}</div>`;
+  const old = $('wxSearch'), focused = document.activeElement === old, pos = old?.selectionStart;
   panel.innerHTML = h;
+  const ni = $('wxSearch'); if (ni) { ni.value = search.q; if (focused) { ni.focus(); try { ni.setSelectionRange(pos, pos); } catch (e) { } } }
 }
 panel.addEventListener('change', e => { const k = e.target.dataset?.wx; if (!k) return; const on = e.target.checked;
-  ({ clouds: setClouds, radar: setRadar, storms: setStorms, tornado: setTornado, click: v => { state.click = v; if (!v) earthMesh.remove(pinHolder); } })[k](on); render(); });
+  ({ clouds: setClouds, radar: setRadar, storms: setStorms, tornado: setTornado, cities: setCities })[k](on); render(); });
+panel.addEventListener('input', e => { if (e.target.id !== 'wxSearch') return; search.q = e.target.value; clearTimeout(searchTimer); const q = search.q; searchTimer = setTimeout(() => runSearch(q), 350); });
+panel.addEventListener('keydown', e => { if (e.target.id === 'wxSearch') { e.stopPropagation(); if (e.key === 'Enter' && search.results[0]) { const r = search.results[0]; search.results = []; search.q = ''; goPlace(r.lat, r.lon, r.name); } } });
 panel.addEventListener('click', e => {
   if (e.target.id === 'wxClose') return closePanel();
   if (e.target.id === 'wxNow') { toNow(); return render(); }
   const go = e.target.closest?.('[data-go]'); if (go) { e.preventDefault(); flyTo(go.dataset.go); }
+  const ct = e.target.closest?.('[data-city]'); if (ct) { e.preventDefault(); const r = search.results[+ct.dataset.city]; if (r) { search.results = []; search.q = ''; goPlace(r.lat, r.lon, r.name); } }
 });
 function openPanel() { panelOpen = true; panel.style.display = 'block'; render(); }
 function closePanel() { panelOpen = false; panel.style.display = 'none'; }
@@ -270,17 +317,17 @@ setInterval(() => {   // sit under the info card; if there's no room, put the ca
     b.onclick = () => panelOpen ? closePanel() : openPanel(); } }
 bodies.LiveWeather = { obj: bodies.Earth.obj, radius: bodies.Earth.radius, view: R * 3.2 };
 info('LiveWeather', 'Live weather on Earth', 'Earth · live data', 'clouds, rain, storms and forecasts, right now',
-  'Turn on live clouds, rain radar, tropical cyclones and US tornado reports in the 🌦 panel, or click anywhere on Earth for its forecast.');
+  'Turn on live clouds, rain radar, tropical cyclones and US tornado reports in the 🌦 panel, or search any city for its forecast.');
 special.LiveWeather = () => { toNow();
   if (!state.clouds) setClouds(true); if (!state.storms) setStorms(true); openPanel(); flyTo('LiveWeather'); };
 { const views = focusSel.querySelector('optgroup'), o = document.createElement('option'); o.value = 'LiveWeather'; o.textContent = '🌦 Live weather on Earth';
   const after = views.querySelector('option[value="SkyMonth"]') || views.querySelector('option[value="Tonight"]'); after ? after.after(o) : views.appendChild(o); }
-SS.weather = { openPanel, closePanel, setClouds, setRadar, setStorms, setTornado, forecast, state, status };
+SS.weather = { openPanel, closePanel, setClouds, setRadar, setStorms, setTornado, setCities, forecast, goPlace, runSearch, state, status, search };
 SS.i18nAdd?.({
   ui: { '🌦 Live weather': '🌦 Météo en direct', '🌦 Live weather on Earth': '🌦 Météo en direct sur Terre' },
   name: { '🌦 Live weather on Earth': '🌦 Météo en direct sur Terre', 'Live weather on Earth': 'Météo en direct sur Terre' },
   cat: { 'Earth · live data': 'Terre · données en direct' },
   dist: { 'clouds, rain, storms and forecasts, right now': 'nuages, pluie, tempêtes et prévisions, en ce moment' },
-  fact: { 'Turn on live clouds, rain radar, tropical cyclones and US tornado reports in the 🌦 panel, or click anywhere on Earth for its forecast.':
-    'Activez les nuages en direct, le radar de pluie, les cyclones tropicaux et les tornades aux États-Unis dans le panneau 🌦, ou cliquez n’importe où sur la Terre pour sa météo.' },
+  fact: { 'Turn on live clouds, rain radar, tropical cyclones and US tornado reports in the 🌦 panel, or search any city for its forecast.':
+    'Activez les nuages en direct, le radar de pluie, les cyclones tropicaux et les tornades aux États-Unis dans le panneau 🌦, ou cherchez une ville pour sa météo.' },
 });

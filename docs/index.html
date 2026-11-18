@@ -34,6 +34,7 @@
   #ui label{display:flex;align-items:center;justify-content:space-between;gap:10px}
   #ui input[type=range]{width:110px}
   #ui select{background:#141a33;color:#e6ebff;border:1px solid #2c3766;border-radius:6px;padding:3px 6px;font-size:13px}
+  #ui #focus{flex:1 1 auto;width:0;min-width:0;max-width:100%;text-overflow:ellipsis}
   #hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.6;pointer-events:none;text-align:center;z-index:5}
   .lbl{color:#dfe6ff;font-size:12px;letter-spacing:.04em;padding:2px 7px;border-radius:10px;background:rgba(8,12,30,.45);border:1px solid rgba(150,170,255,.25);cursor:pointer;pointer-events:auto;white-space:nowrap;user-select:none}
   .lbl:hover{background:rgba(60,80,170,.6);color:#fff}
@@ -679,6 +680,6 @@ addEventListener('resize',()=>{
   renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight);
 });
 </script>
-<script type="module" src="cosmos.js?v=43"></script>
+<script type="module" src="cosmos.js?v=44"></script>
 </body>
 </html>
