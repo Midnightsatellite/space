@@ -14,7 +14,7 @@ const earth = ms => { const L = (SS.astro.sunLon((ms - J2000) / 864e5) + 180) * 
 const YR = 365.25 * 864e5;
 // direction in the sky (RA, Dec, degrees) and speed away from the Sun (AU per year)
 const PROBES = {
-  Voyager1: { dir: eclip(258.4, 12.2), v: 3.57, anchor: Date.UTC(2026, 10, 18, 6, 16, 7), anchorKm: LIGHT_DAY },   // NASA: exactly 1 light-day from Earth at 06:16:07 UTC, 18 Nov 2026
+  Voyager1: { dir: eclip(258.4, 12.2), v: 3.57, anchor: Date.UTC(2026, 10, 18, 10, 16, 7), anchorKm: LIGHT_DAY },   // NASA: exactly 1 light-day from Earth at 10:16:07 UTC (4:16:07 a.m. CST), 18 Nov 2026
   Voyager2: { dir: eclip(302.4, -60.2), v: 3.25, anchor: Date.UTC(2026, 10, 17), anchorKm: 144.2 * AU },
 };
 for (const k in PROBES) { // fix the distance from the Sun so the distance from Earth matches the anchor

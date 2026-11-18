@@ -242,4 +242,6 @@ await import('./esaiss.js' + new URL(import.meta.url).search);
 await import('./esamissions.js' + new URL(import.meta.url).search);
 await import('./flyers.js' + new URL(import.meta.url).search);
 await import('./obs.js' + new URL(import.meta.url).search);
+await import('./nasafleet.js' + new URL(import.meta.url).search);
+await import('./skymonth.js' + new URL(import.meta.url).search);
 await import('./earthpins.js' + new URL(import.meta.url).search);
