@@ -238,4 +238,5 @@ Object.assign(D, {
 });
 await import('./ilrs.js' + new URL(import.meta.url).search);
 await import('./spacex.js' + new URL(import.meta.url).search);
+await import('./esaiss.js' + new URL(import.meta.url).search);
 await import('./earthpins.js' + new URL(import.meta.url).search);

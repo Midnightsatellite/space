@@ -51,24 +51,26 @@ const $ = id => document.getElementById(id);
   const loader = new GLTFLoader();
   loader.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));
   const MODELS = { Voyager1: 'models/voyager.glb', Voyager2: 'models/voyager.glb', Hubble: 'models/hubble.glb', ISS: 'models/iss.glb', JWST: 'models/jwst.glb' };
-  const done = {}, cache = {};
+  const done = {}, cache = {}, onModel = {};
   const box = new THREE.Box3(), size = new THREE.Vector3();
-  const worldSize = o => { box.makeEmpty(); o.updateWorldMatrix(true, true); o.traverse(c => { if (c.isMesh && c.visible) box.expandByObject(c, false); }); return box.isEmpty() ? 0 : box.getSize(size).length(); };
+  const worldSize = o => { box.makeEmpty(); o.updateWorldMatrix(true, true); o.traverse(c => { let k = false; for (let p = c; p && p !== o; p = p.parent) if (p.userData.keep) k = true; if (c.isMesh && c.visible && !k) box.expandByObject(c, false); }); return box.isEmpty() ? 0 : box.getSize(size).length(); };
   function swap(key) {
     if (done[key] || !bodies[key]) return; done[key] = true;
     const obj = bodies[key].obj, url = MODELS[key];
     const old = worldSize(obj);
     (cache[url] ||= new Promise((ok, no) => loader.load(url, g => ok(g.scene), undefined, no))).then(model => {
       const m = model.clone(true);
-      obj.traverse(c => { if (c.isMesh) c.visible = false; });         // hide the hand-made model (its name stays)
+      const kept = c => { for (let o = c; o && o !== obj; o = o.parent) if (o.userData.keep) return true; return false; };
+      obj.traverse(c => { if (c.isMesh && !kept(c)) c.visible = false; });   // hide the hand-made model (its name stays), not craft docked to it
       obj.add(m); m.updateWorldMatrix(true, true);
       const now = worldSize(m); if (now > 0 && old > 0) m.scale.multiplyScalar(old / now * 1.15);
       // centre it on the old position
       m.updateWorldMatrix(true, true); box.setFromObject(m); const c = box.getCenter(new THREE.Vector3()); obj.worldToLocal(c); m.position.sub(c);
+      done[key] = m; for (const f of (onModel[key] || [])) f(m);
     }).catch(err => { console.warn('model', key, err); done[key] = false; });
   }
   const prev = SS.onFocus; SS.onFocus = key => { prev(key); if (MODELS[key]) swap(key); };
-  SS.more.nasaModels = { swap };
+  SS.more.nasaModels = { swap, onModel, done };
 }
 
 // ---------- credits ----------

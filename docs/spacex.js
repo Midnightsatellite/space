@@ -40,7 +40,10 @@ export { buildRoadster, buildDragon, buildStarship, buildStarlink };
 {
   const iss = bodies.ISS.obj, dr = buildDragon(true);
   const holder = new THREE.Group(); holder.scale.setScalar(1 / 24.5); holder.position.set(0, 0, -1.12); holder.rotation.x = Math.PI / 2; holder.add(dr); dr.position.y = -6.45;   // nose into the front port
-  iss.add(holder);
+  holder.userData.keep = true; iss.add(holder);
+  // when NASA's detailed ISS model loads, move the capsule to that model's forward port on Harmony (measured from the model)
+  const redock = () => { holder.position.set(0.65, 0.258, -0.005); holder.rotation.set(Math.PI, 0, 0); };
+  const nm = SS.more.nasaModels; if (nm) { if (nm.done.ISS && nm.done.ISS !== true) redock(); else (nm.onModel.ISS ||= []).push(redock); }
   const dq = new THREE.Quaternion();   // look at the capsule from the side, a little towards the trunk, so its windows and lettering show
   bodies.Dragon = { obj: holder, radius: 0.007, view: 0.03, dir: () => { dr.getWorldQuaternion(dq); return V(0.8, -0.27, 0.53).applyQuaternion(dq).normalize(); } };
   info('Dragon', 'Crew Dragon', 'Spacecraft · crew capsule', 'docked to the ISS, about 400 km above Earth',
