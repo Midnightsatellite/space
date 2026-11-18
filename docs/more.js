@@ -41,7 +41,7 @@ addMoon({ planet: 'Uranus', key: 'Oberon', name: 'Oberon', r: 0.15, dist: 3.15, 
 smallBody({ key: 'Apophis', name: 'Apophis', el: { a: 0.9224, e: 0.1914, i: 3.34, node: 204.0, peri: 126.7 }, M0: 1.2, color: 0xff9a7a,
   mesh: new THREE.Mesh(lumpy(0.07, 0.25, 31, [1.3, 0.9, 0.9]), new THREE.MeshStandardMaterial({ map: paint(681, '#3a3530', '#857a6e', 4, 20), roughness: 1 })),
   cat: 'Near-Earth asteroid', distStr: 'crosses Earth\'s orbit', fact: 'On 13 April 2029 it will pass just 32,000 km from Earth, closer than many satellites, bright enough to see with the naked eye.' });
-smallBody({ key: 'Psyche', name: 'Psyche', el: { a: 2.92, e: 0.134, i: 3.1, node: 150.0, peri: 229.0 }, M0: 3.3, color: 0xc8c8d8,
+smallBody({ key: 'Psyche', name: 'Psyche', el: { a: 2.9233, e: 0.13435, i: 3.097, node: 150.01, peri: 229.75 }, perihelionMs: Date.UTC(2025, 3, 28), color: 0xc8c8d8,
   mesh: new THREE.Mesh(lumpy(0.17, 0.2, 41, [1.25, 0.95, 0.8]), new THREE.MeshStandardMaterial({ color: 0x8a8a90, metalness: 0.7, roughness: 0.5 })),
   cat: 'Asteroid · metal-rich', distStr: 'about 437 million km from the Sun', fact: 'Rich in metal: it may be the exposed core of a planet that was smashed apart. NASA\'s Psyche spacecraft arrives in 2029.' });
 smallBody({ key: 'Eros', name: 'Eros', el: { a: 1.458, e: 0.223, i: 10.83, node: 304.3, peri: 178.9 }, M0: 0.4, color: 0xd0b090,

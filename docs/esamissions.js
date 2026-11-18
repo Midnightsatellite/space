@@ -4,6 +4,7 @@
 // and Rosetta with Philae on comet 67P. Real orbits where they are known; craft are drawn much larger than life.
 // =====================================================================
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { buildBepi, buildHera, buildCubesat, buildJuice, buildSolarOrbiter, buildEuclid, buildGaia, buildSmile, buildAriane6, buildRosetta, buildPhilae } from './esamodels.js?v=39';
 const SS = window.SS;
 const { bodies, sim, flyTo, focusSel } = SS;
@@ -151,6 +152,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
       obj.scale.setScalar(scale); obj.position.copy(p); obj.quaternion.setFromUnitVectors(V(0, 1, 0), dirL.clone().negate()); g.add(obj); return obj;
     };
     const ros = buildRosetta(); land(ros, V(0.16, 0.5, 0.05), 0.0022); ros.rotateZ(0.5); ros.translateY(0.004);   // resting on one wing, in the Ma'at region
+    new GLTFLoader().load('models/rosetta.glb', gl => { for (const c of [...ros.children]) ros.remove(c); ros.add(gl.scene); });   // NASA's 3D model replaces the simple one
     const phi = buildPhilae(); land(phi, V(0.35, 0.15, 0.3), 0.012);                                                // tucked in a shadowy crack at Abydos
     const lab = new THREE.Object3D(); lab.position.copy(ros.position).add(V(0, 0.03, 0)); g.add(lab);
     nearLabel(lab, 'Rosetta & Philae', 0.02, 'Rosetta', 'craft', 2);
