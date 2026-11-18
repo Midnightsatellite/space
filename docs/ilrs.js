@@ -64,10 +64,10 @@ for (const [mon, code, place, country, lat, lon] of ST) {
   const pin = new THREE.Group(); pin.position.copy(n).multiplyScalar(1.002); pin.quaternion.setFromUnitVectors(V(0, 1, 0), n); grp.add(pin);
   pin.add(glowSprite(0.016, MOON[code] ? '#ffe27a' : '#7dffb0', 'rgba(0,0,0,0)', 0.95));
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.0008, 0.0008, 0.05, 4), new THREE.MeshBasicMaterial({ color: MOON[code] ? 0xffe27a : 0x7dffb0, transparent: true, opacity: 0.8 })); beam.position.y = 0.025; pin.add(beam);
-  nearLabel(pin, '📡 ' + place, 0.04, key, 'craft', 3);
+  nearLabel(pin, '📡 ' + place, 0.03, key, 'craft', 0.8);
   pins.push(pin);
   const wp = V(), ep = V();
-  bodies[key] = { obj: pin, radius: 0.04, view: 1.4, dir: () => { pin.getWorldPosition(wp); earthMesh.getWorldPosition(ep); return wp.sub(ep).normalize().add(V(0, 0.25, 0)).normalize(); } };
+  bodies[key] = { obj: pin, radius: 0.04, view: 0.7, dir: () => { pin.getWorldPosition(wp); earthMesh.getWorldPosition(ep); return wp.sub(ep).normalize().add(V(0, 0.25, 0)).normalize(); } };
   const extra = NOTE[code] ? ' ' + NOTE[code][0] : '';
   info(key, place, 'Laser ranging station · ' + code + ' · ' + mon, place.includes(',') ? country : place + ', ' + country,
     `One of about 45 stations of the International Laser Ranging Service. It fires short laser pulses at satellites carrying mirrors and times the echo, to measure their distance to within millimetres${MOON[code] ? ', and it can even reach the mirrors on the Moon' : ''}.${extra}`);
