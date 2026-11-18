@@ -1,6 +1,6 @@
 // =====================================================================
 // Full mission cards (EN + FR) in the style of the NASA/IPAC mission pages:
-// Fermi, Swift, IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler, Chandra, New Horizons, comms satellite (TDRS)
+// Fermi, Swift, IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler, Chandra, New Horizons, comms satellite (TDRS), Tiangong
 // =====================================================================
 const SS = window.SS;
 const T = (l, lf, v, vf) => [l, lf, v, vf];
@@ -218,5 +218,22 @@ Object.assign(D, {
       ['A spacecraft in low orbit only sees a ground station for a few minutes at a time. With three TDRS spread around the world, it can stay in contact almost all the time.', 'Un engin en orbite basse ne voit une station au sol que quelques minutes à la fois. Avec trois TDRS répartis autour du monde, il peut rester en contact presque en permanence.'],
       ['Astronauts’ live video from the ISS, and Hubble’s pictures, travel up to a TDRS and back down to the ground station at White Sands, New Mexico.', 'Les vidéos en direct des astronautes de l’ISS et les images de Hubble montent jusqu’à un TDRS puis redescendent vers la station de White Sands, au Nouveau-Mexique.'],
       ['The fleet is ageing: TDRS-9 was retired after more than 15 years. In 2026 NASA picked Astranis, Global Enterprise Solutions and Viasat to build commercial Ka-band relay services to replace it.', 'La flotte vieillit : TDRS-9 a été retiré après plus de 15 ans. En 2026, la NASA a choisi Astranis, Global Enterprise Solutions et Viasat pour créer des services de relais commerciaux en bande Ka qui la remplaceront.']] },
-});
 
+  Tiangong: { intro: ['Tiangong ("Heavenly Palace") is China’s T-shaped space station: the Tianhe core with the Wentian and Mengtian labs, finished in November 2022 and crewed by teams of three taikonauts who swap every six months.',
+      'Tiangong (« Palais céleste ») est la station spatiale chinoise en forme de T : le module central Tianhe et les laboratoires Wentian et Mengtian, achevée en novembre 2022 et habitée par des équipes de trois taïkonautes relevées tous les six mois.'],
+    tiles: [T('Modules', 'Modules', 'Tianhe core (Apr 2021), Wentian lab (Jul 2022), Mengtian lab (Oct 2022)', 'module central Tianhe (avr. 2021), labo Wentian (juil. 2022), labo Mengtian (oct. 2022)'),
+      T('Launched from', 'Lancée depuis', 'Wenchang, on Long March 5B rockets', 'Wenchang, sur des fusées Longue Marche 5B'),
+      T('Orbit', 'Orbite', 'about 340–450 km, tilted 41.5°, one lap every ~92 minutes', 'environ 340–450 km, inclinée de 41,5°, un tour toutes les ~92 minutes'),
+      T('Size', 'Taille', 'about 55 m across the solar wings; about 100 tonnes with visiting ships, a quarter of the ISS', 'environ 55 m d’envergure avec les ailes ; environ 100 tonnes avec les vaisseaux, un quart de l’ISS'),
+      T('Crew', 'Équipage', '3 taikonauts, 6-month stays; up to 6 during handovers', '3 taïkonautes, séjours de 6 mois ; jusqu’à 6 pendant les relèves'),
+      T('Ships', 'Vaisseaux', 'Shenzhou (crew) from Jiuquan, Tianzhou (cargo) from Wenchang', 'Shenzhou (équipage) depuis Jiuquan, Tianzhou (fret) depuis Wenchang'),
+      T('Next crew', 'Prochain équipage', 'Shenzhou-24, late Nov 2026, with the first foreign visitor, from Pakistan', 'Shenzhou-24, fin nov. 2026, avec le premier visiteur étranger, venu du Pakistan'),
+      T('Run by', 'Géré par', 'China Manned Space Agency (CMSA)', 'Agence spatiale habitée chinoise (CMSA)')],
+    facts: [['Before Tiangong came two small test labs. Tiangong-1 (2011–2018) hosted China’s first space dockings and burned up over the Pacific in April 2018.', 'Avant Tiangong, il y a eu deux petits laboratoires d’essai. Tiangong-1 (2011–2018) a accueilli les premiers amarrages chinois et s’est désintégré au-dessus du Pacifique en avril 2018.'],
+      ['Tiangong-2 launched on 15 September 2016. Two taikonauts lived on it for 30 days, and the Tianzhou-1 cargo ship practised refuelling it in orbit. It was steered into the Pacific on 19 July 2019.', 'Tiangong-2 a été lancé le 15 septembre 2016. Deux taïkonautes y ont vécu 30 jours, et le cargo Tianzhou-1 s’y est entraîné à faire le plein en orbite. Il a été dirigé vers le Pacifique le 19 juillet 2019.'],
+      ['Tiangong-2 carried laser mirrors so ground stations could check its GPS-measured orbit: see the 📡 laser ranging stations in the menu.', 'Tiangong-2 portait des miroirs laser pour que les stations au sol vérifient son orbite mesurée par GPS : voir les 📡 stations de télémétrie laser dans le menu.'],
+      ['Each lab carries a pair of huge flexible solar wings, about 27 m long, that roll out like blankets.', 'Chaque laboratoire porte une paire d’immenses ailes solaires souples, d’environ 27 m de long, qui se déroulent comme des couvertures.'],
+      ['In November 2025 a tiny piece of debris cracked the window of Shenzhou-20. Its crew came home in Shenzhou-21, and an empty Shenzhou-22 was rushed up as a new lifeboat.', 'En novembre 2025, un minuscule débris a fissuré le hublot de Shenzhou-20. Son équipage est rentré dans Shenzhou-21, et un Shenzhou-22 vide a été envoyé en urgence comme nouveau canot de sauvetage.'],
+      ['China built Tiangong on its own after being kept out of the International Space Station.', 'La Chine a construit Tiangong seule après avoir été tenue à l’écart de la Station spatiale internationale.']] },
+});
+await import('./ilrs.js' + new URL(import.meta.url).search);

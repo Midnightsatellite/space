@@ -1,6 +1,6 @@
 // =====================================================================
 // Detailed hand-built models for missions NASA has no 3D file for:
-// New Horizons, NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
+// Tiangong, New Horizons, NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
 // =====================================================================
 import * as THREE from 'three';
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -41,6 +41,48 @@ function shells(R, n, m) { const g = new THREE.Group();
   return g; }
 
 export const SATS = {
+
+  // Tiangong today: a T shape. Tianhe core module (16.6 m) with its docking hub at the front, the Wentian and Mengtian lab
+  // modules (about 17.9 m each) on either side of the hub, each with a pair of huge flexible solar wings, plus Tianhe's own two
+  // wings at the back. Visiting ships: a Shenzhou crew capsule at the front and underneath, a Tianzhou cargo ship at the back.
+  Tiangong: () => {
+    const g = new THREE.Group(), wh = mat.white, band = M(0xc9cdd3, 0.3, 0.5, 0x2a2c30);
+    const along = (o, axis) => { if (axis === 'x') o.rotation.z = Math.PI / 2; else if (axis === 'z') o.rotation.x = Math.PI / 2; return o; };
+    const tube = (r1, r2, len, axis, x, y, z, m = wh) => { const c = along(cyl(r1, r2, len, m, 32), axis); c.position.set(x, y, z); g.add(c); return c; };
+    const ring = (r, axis, x, y, z) => tube(r * 1.02, r * 1.02, 0.12, axis, x, y, z, band);
+    // a flexible solar wing: a long blanket of cells on a thin mast, along +dir from p
+    const flexWing = (p, dir, len, wid, normal) => { const w = new THREE.Group(), n = 10;
+      for (let i = 0; i < n; i++) w.add(at(box(len / n * 0.97, 0.03, wid, mat.cell), (i + 0.5) * len / n, 0, 0));
+      w.add(at(box(len, 0.06, 0.08, mat.goldD), len / 2, 0, 0)); w.add(at(box(0.3, 0.12, wid, mat.alu), len, 0, 0));
+      w.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(dir, normal, dir.clone().cross(normal))); w.position.copy(p); g.add(w); return w; };
+    // Tianhe core: hub sphere at z = 0, then the narrow cabin, a cone, the wide cabin and the aft service section
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(1.45, 32, 20), wh));
+    tube(1.4, 1.4, 5.0, 'z', 0, 0, 3.9); tube(1.4, 2.1, 1.2, 'z', 0, 0, 7.0); tube(2.1, 2.1, 4.6, 'z', 0, 0, 9.9); tube(1.4, 1.4, 1.6, 'z', 0, 0, 13.0);
+    for (const z of [2.0, 4.2, 6.3, 8.0, 10.2, 12.1]) ring(z < 7.5 ? 1.4 : 2.1, 'z', 0, 0, z);
+    // Tianhe's own two wings at the back, out to the sides
+    for (const sx of [1, -1]) flexWing(V(sx * 2.1, 0, 12.4), V(sx, 0, 0), 11, 3.0, V(0, 1, 0));
+    // robotic arm folded along the core
+    g.add(rod(V(1.3, 1.5, 3.0), V(1.6, 1.9, 9.0), 0.1, mat.alu)); g.add(rod(V(1.6, 1.9, 9.0), V(1.0, 2.4, 11.5), 0.1, mat.alu));
+    // the two lab modules on the sides of the hub, each with two giant wings near its far end
+    for (const sx of [1, -1]) {
+      tube(1.4, 1.4, 2.2, 'x', sx * 2.5, 0, 0); tube(1.4, 2.1, 1.2, 'x', sx * 4.2, 0, 0); tube(2.1, 2.1, 11.5, 'x', sx * 10.6, 0, 0); tube(1.6, 1.6, 1.4, 'x', sx * 17.0, 0, 0);
+      for (const x of [5.5, 8.5, 11.5, 14.5]) ring(2.1, 'x', sx * x, 0, 0);
+      g.add(at(box(2.4, 0.15, 2.6, mat.alu), sx * 12.5, 2.2, 0));                           // exposed experiment platform
+      for (const sz of [1, -1]) flexWing(V(sx * 17.0, 0, sz * 1.6), V(0, 0, sz), 25, 4.2, V(1, 0, 0));
+    }
+    // a Shenzhou: orbital module, re-entry capsule, service module with four panels
+    const shenzhou = (p, dir, up) => { const s = new THREE.Group();
+      s.add(at(new THREE.Mesh(new THREE.SphereGeometry(1.1, 24, 16), wh), 0, 1.3, 0)); s.add(at(cyl(1.25, 0.9, 2.2, M(0x8a8f96, 0.4, 0.5, 0x202226), 24), 0, 3.3, 0));
+      s.add(at(cyl(1.4, 1.4, 2.9, wh, 24), 0, 5.9, 0)); s.add(at(cyl(1.45, 1.45, 0.1, band, 24), 0, 4.45, 0));
+      for (const sx of [1, -1]) { const p2 = panel(7.5, 2.0, 4, 1); p2.rotation.y = sx > 0 ? 0 : Math.PI; p2.position.set(sx * 1.4, 6.0, 0); s.add(p2); }
+      s.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(dir), dir, up)); s.position.copy(p); g.add(s); };
+    shenzhou(V(0, 0, -1.2), V(0, 0, -1), V(0, 1, 0));            // front port
+    shenzhou(V(0, -1.2, 0), V(0, -1, 0), V(0, 0, 1));            // radial port underneath
+    // a Tianzhou cargo ship at the back
+    tube(1.7, 1.7, 9.0, 'z', 0, 0, 18.4); tube(1.4, 1.7, 0.8, 'z', 0, 0, 13.6);
+    for (const sx of [1, -1]) { const p3 = panel(6.5, 2.4, 3, 1); p3.rotation.y = sx > 0 ? 0 : Math.PI; p3.position.set(sx * 1.7, 0, 20); g.add(p3); }
+    return g;
+  },
 
   // New Horizons: about the size of a grand piano, 478 kg. A thick triangular gold body, the 2.1 m white dish on one face
   // (with its feed tripod), the ribbed RTG power unit sticking out of one corner, the LORRI telescope and Ralph on the sides.
