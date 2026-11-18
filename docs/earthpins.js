@@ -6,9 +6,9 @@ const SS = window.SS;
 const { bodies } = SS;
 const special = SS.more.special, $ = id => document.getElementById(id);
 
-const keys = Object.keys(bodies).filter(k => k.startsWith('LS_') || k.startsWith('AE_') || k === 'Starship');
+const keys = Object.keys(bodies).filter(k => k.startsWith('LS_') || k.startsWith('AE_') || k === 'Starship' || k === 'Ariane6');
 const groups = new Set();
-for (const k of keys) { const o = bodies[k].obj; groups.add(k.startsWith('LS_') ? o.parent : k === 'Starship' ? o.parent : o); }
+for (const k of keys) { const o = bodies[k].obj; groups.add(k.startsWith('LS_') ? o.parent : (k === 'Starship' || k === 'Ariane6') ? o.parent : o); }
 
 const row = document.createElement('label'); row.innerHTML = '<span>Places on Earth</span> <input id="placesOn" type="checkbox">';
 ($('ilrsOn') ? $('ilrsOn').parentElement : $('labels').parentElement).before(row);
