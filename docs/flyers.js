@@ -5,7 +5,7 @@
 // =====================================================================
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { buildClipper, buildPsyche, buildLucy, buildTianwen2, buildAditya, buildSOHO, buildGateway } from './flyermodels.js?v=40';
+import { buildClipper, buildPsyche, buildLucy, buildTianwen2, buildAditya, buildSOHO, buildGateway } from './craftmodels.js?v=42';
 const SS = window.SS;
 const { bodies, sim, flyTo, focusSel } = SS;
 const { info } = SS.cosmos;

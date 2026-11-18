@@ -5,7 +5,7 @@
 // =====================================================================
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { buildBepi, buildHera, buildCubesat, buildJuice, buildSolarOrbiter, buildEuclid, buildGaia, buildSmile, buildAriane6, buildRosetta, buildPhilae } from './esamodels.js?v=39';
+import { buildBepi, buildHera, buildCubesat, buildJuice, buildSolarOrbiter, buildEuclid, buildGaia, buildSmile, buildAriane6, buildRosetta, buildPhilae } from './craftmodels.js?v=42';
 const SS = window.SS;
 const { bodies, sim, flyTo, focusSel } = SS;
 const { info } = SS.cosmos;
@@ -32,14 +32,14 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
 {
   const merc = PL.Mercury.holder, R = 0.38;
   const plane = new THREE.Group(); plane.rotation.set(0, 0.6, Math.PI / 2); merc.add(plane);   // a polar orbit
-  const craft = scaled(buildBepi(), 0.012); plane.add(craft);
+  const craft = scaled(buildBepi(), 0.008); plane.add(craft);
   const a = R * 2.0, e = 0.35, P = 2.3;   // shown as a loose capture orbit (drawn larger than life)
   const pts = []; for (let k = 0; k <= 160; k++) { const nu = k / 160 * Math.PI * 2, r = a * (1 - e * e) / (1 + e * Math.cos(nu)); pts.push(V(Math.cos(nu) * r, 0, Math.sin(nu) * r)); }
   plane.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.35 })));
   sim.push(() => { const t = SS.getDate() / 864e5 / P * 2 * Math.PI; const E = kepler(t % (2 * Math.PI), e), nu = nuOf(E, e), r = a * (1 - e * Math.cos(E));
     craft.position.set(Math.cos(nu) * r, 0, Math.sin(nu) * r); craft.rotation.y = -nu; });
   nearLabel(craft, 'BepiColombo', 5, 'BepiColombo', 'craft', 3);
-  bodies.BepiColombo = { obj: craft, radius: 0.06, view: 0.38, dir: t => { const toSun = t.clone().negate().normalize(); craft.getWorldPosition(wp); merc.getWorldPosition(cp); return toSun.add(wp.sub(cp).normalize().multiplyScalar(0.3)).normalize(); } };
+  { const qq = new THREE.Quaternion(); bodies.BepiColombo = { obj: craft, radius: 0.06, view: 0.36, dir: () => V(1, 0.35, 1.2).normalize().applyQuaternion(craft.getWorldQuaternion(qq)) }; }   // the same three-quarter view as ESA's art
   info('BepiColombo', 'BepiColombo', 'Spacecraft · Mercury orbiters (ESA/JAXA)', 'arriving in orbit around Mercury', 'See card.');
 }
 
@@ -50,7 +50,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
   const didy = new THREE.Mesh(lumpy(0.06, 0.18, 31, [1, 0.85, 1], true), rock); g.add(didy);
   const dimo = new THREE.Mesh(lumpy(0.014, 0.35, 33, [1.3, 0.9, 1]), rock);
   const moon = new THREE.Group(); moon.add(dimo); dimo.position.x = 0.14; g.add(moon);
-  const hera = scaled(buildHera(), 0.009); hera.position.set(0.22, 0.07, 0.12); hera.lookAt(0, 0, 0); g.add(hera);
+  const hera = scaled(buildHera(), 0.014); hera.position.set(0.22, 0.07, 0.12); hera.lookAt(0, 0, 0); g.add(hera);
   for (const [x, y, z] of [[0.17, -0.05, -0.12], [-0.12, 0.08, 0.16]]) { const c = scaled(buildCubesat(), 0.03); c.position.set(x, y, z); g.add(c); }
   sim.push(dt => { moon.rotation.y += dt * 2.0; didy.rotation.y += dt * 10; });
   // Didymos: a 1.6442 AU, e 0.38385, i 3.408°, node 73.196°, peri 319.32°; perihelion about 3 Aug 2018, then every ~770 days
@@ -75,7 +75,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
   sim.push(() => { const t = Math.min(t1, Math.max(t0, SS.getDate())); const M = 2 * Math.PI * (t - tp) / P;
     const E = kepler(((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI), el.e); holder.position.copy(helioScene(el, nuOf(E, el.e))); craft.lookAt(0, 0, 0); });
   nearLabel(holder, 'Juice', 0.5, 'Juice', 'small', 90);
-  bodies.Juice = { obj: holder, radius: 0.3, view: 0.7, dir: t => t.clone().normalize().add(V(0, 0.5, 0)).normalize() };
+  bodies.Juice = { obj: holder, radius: 0.3, view: 0.5, dir: t => t.clone().normalize().negate().add(V(0.3, 0.6, 0)).normalize() };   // from the sunny side
   info('Juice', 'Juice', 'Spacecraft · Jupiter Icy Moons Explorer', 'on its way to Jupiter, arriving July 2031', 'See card.');
 }
 
@@ -118,7 +118,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
   const at = nu => { const r = a * (1 - e * e) / (1 + e * Math.cos(nu)); return V(Math.cos(nu + w), Math.sin(nu + w), 0).multiplyScalar(altS(r - 6371)); };
   const pts = []; for (let k = 0; k <= 200; k++) pts.push(at(k / 200 * Math.PI * 2));
   const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fe6c8, transparent: true, opacity: 0.4 })); plane.add(line);
-  const craft = scaled(buildSmile(), 0.008); plane.add(craft);
+  const craft = scaled(buildSmile(), 0.014); plane.add(craft);
   const P = 52 * 3600e3;
   sim.push(() => { const M = 2 * Math.PI * (SS.getDate() / P % 1); const E = kepler(M, e), nu = nuOf(E, e); craft.position.copy(at(nu)); bodies.Earth.obj.getWorldPosition(cp); craft.lookAt(cp); });
   nearLabel(craft, 'Smile', 12, 'Smile', 'craft', 2);
