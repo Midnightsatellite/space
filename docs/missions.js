@@ -237,3 +237,4 @@ Object.assign(D, {
       ['China built Tiangong on its own after being kept out of the International Space Station.', 'La Chine a construit Tiangong seule après avoir été tenue à l’écart de la Station spatiale internationale.']] },
 });
 await import('./ilrs.js' + new URL(import.meta.url).search);
+await import('./spacex.js' + new URL(import.meta.url).search);
