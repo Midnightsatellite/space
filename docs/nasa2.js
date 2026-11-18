@@ -107,7 +107,7 @@ const BUILD = {
     return g;
   },
 };
-Object.assign(BUILD, (await import('./sats.js' + new URL(import.meta.url).search)).SATS);   // detailed IXPE, SPHEREx, Pandora, SPARCS, CUTE
+Object.assign(BUILD, (await import('./sats.js' + new URL(import.meta.url).search)).SATS);   // detailed NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE
 const PROC = { NuSTAR: 'NuSTAR', IXPE: 'IXPE', SPHEREx: 'SPHEREx', Pandora: 'Pandora', SPARCS: 'SPARCS', CUTE: 'CUTE', NewHorizons: 'NewHorizons', Tiangong: 'Tiangong' };
 
 // ---------- swap: hide the old meshes, add the new model at the same size and centre ----------

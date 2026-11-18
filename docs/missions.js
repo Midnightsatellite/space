@@ -1,6 +1,6 @@
 // =====================================================================
 // Full mission cards (EN + FR) in the style of the NASA/IPAC mission pages:
-// IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler
+// Fermi, Swift, IXPE, SPHEREx, Pandora, SPARCS, CUTE, NuSTAR, Spitzer, Kepler, Chandra
 // =====================================================================
 const SS = window.SS;
 const T = (l, lf, v, vf) => [l, lf, v, vf];
@@ -118,17 +118,24 @@ Object.assign(D, {
       ['It was the first CubeSat to make detailed ultraviolet studies of planets, and trained more than 40 students and young engineers.', 'C’était le premier CubeSat à étudier en détail des planètes en ultraviolet, et il a formé plus de 40 étudiants et jeunes ingénieurs.'],
       ['Its final data came down through Germany’s Neumayer III research station in Antarctica.', 'Ses dernières données sont arrivées par la station de recherche allemande Neumayer III, en Antarctique.']] },
 
-  NuSTAR: { intro: ['The Nuclear Spectroscopic Telescope Array: the first space telescope to focus high-energy X-rays, the light that pours out of black holes and exploded stars.',
-      'Le Nuclear Spectroscopic Telescope Array : le premier télescope spatial à focaliser les rayons X de haute énergie, la lumière qui jaillit des trous noirs et des étoiles explosées.'],
-    tiles: [T('Launch', 'Lancement', '13 Jun 2012 · Pegasus XL, dropped from an airliner over the Pacific', '13 juin 2012 · Pegasus XL, largué d’un avion au-dessus du Pacifique'),
-      T('Orbit', 'Orbite', 'about 600 km, close to the equator', 'environ 600 km, près de l’équateur'),
-      T('Mast', 'Mât', '10 m, unfolded in space', '10 m, déployé dans l’espace'),
-      T('Light', 'Lumière', 'high-energy X-rays, 3 to 79 keV', 'rayons X de haute énergie, de 3 à 79 keV'),
-      T('Team', 'Équipe', 'PI Fiona Harrison, Caltech; managed by NASA JPL', 'Responsable Fiona Harrison, Caltech ; géré par le JPL de la NASA'),
+  NuSTAR: { intro: ['The Nuclear Spectroscopic Telescope Array, a NASA Small Explorer: the first telescope in orbit to focus high-energy X-rays (3 to 79 keV) into images. It studies black holes, exploding stars, neutron stars and even our own Sun.',
+      'Le Nuclear Spectroscopic Telescope Array, un petit explorateur de la NASA : le premier télescope en orbite à focaliser les rayons X de haute énergie (3 à 79 keV) pour en faire des images. Il étudie les trous noirs, les étoiles qui explosent, les étoiles à neutrons et même notre Soleil.'],
+    tiles: [T('Launch', 'Lancement', '13 Jun 2012 · Pegasus XL rocket, dropped from the Stargazer L-1011 airliner near Kwajalein Atoll, Pacific', '13 juin 2012 · fusée Pegasus XL, larguée de l’avion Stargazer (L-1011) près de l’atoll de Kwajalein, Pacifique'),
+      T('Orbit', 'Orbite', 'about 600 km, tilted only 6° to the equator, one lap every ~97 minutes', 'environ 600 km, inclinée de seulement 6° sur l’équateur, un tour toutes les ~97 minutes'),
+      T('Size', 'Taille', '10.9 m long in space, but under 2 m long at launch; 350 kg', '10,9 m de long dans l’espace, mais moins de 2 m au lancement ; 350 kg'),
+      T('Telescopes', 'Télescopes', '2 identical telescopes, each with 133 nested mirror shells', '2 télescopes identiques, chacun avec 133 coquilles de miroirs emboîtées'),
+      T('Focal length', 'Focale', '10.14 m, held by the deployable mast', '10,14 m, tenue par le mât déployable'),
+      T('Detectors', 'Détecteurs', 'cadmium zinc telluride (CdZnTe) chips, 2 × 2 in each focal plane', 'puces en tellurure de cadmium-zinc (CdZnTe), 2 × 2 dans chaque plan focal'),
+      T('Team', 'Équipe', 'PI Fiona Harrison, Caltech; managed by NASA JPL; flown from UC Berkeley', 'Responsable Fiona Harrison, Caltech ; géré par le JPL de la NASA ; piloté depuis l’université de Berkeley'),
+      T('Status', 'Statut', 'Active, open to astronomers worldwide, 14+ years in space', 'En activité, ouvert aux astronomes du monde entier, plus de 14 ans dans l’espace'),
       T('Data archive', 'Archives', 'HEASARC (NASA Goddard)', 'HEASARC (NASA Goddard)')],
-    facts: [['It has two telescopes, each made of 133 nested mirror shells; the long mast gives the X-rays room to come to a focus.', 'Il a deux télescopes, chacun fait de 133 coquilles de miroirs emboîtées ; le long mât laisse aux rayons X la place de converger.'],
-      ['It mapped radioactive titanium in the Cassiopeia A supernova remnant, showing the star blew up lopsided.', 'Il a cartographié le titane radioactif du reste de supernova Cassiopée A, montrant que l’étoile a explosé de façon asymétrique.'],
-      ['It found that a super-bright X-ray source in the galaxy M82 is a pulsar, far brighter than thought possible for a dead star.', 'Il a découvert qu’une source X ultra-brillante de la galaxie M82 est un pulsar, bien plus brillant qu’on ne le croyait possible pour une étoile morte.']] },
+    facts: [['High-energy X-rays only bounce off a mirror at a tiny grazing angle, so the mirrors must sit about 10 m from the detectors: far too long for the small Pegasus rocket.', 'Les rayons X de haute énergie ne rebondissent sur un miroir que sous un angle rasant minuscule : les miroirs doivent donc être à environ 10 m des détecteurs, bien trop long pour la petite fusée Pegasus.'],
+      ['The answer: a folding mast. On 21 June 2012, nine days after launch, it unfolded to its full 10 m, the first deployable mast ever used on a space telescope.', 'La solution : un mât pliant. Le 21 juin 2012, neuf jours après le lancement, il s’est déployé sur 10 m : le premier mât déployable jamais utilisé sur un télescope spatial.'],
+      ['The mast wobbles slightly, so lasers on the bus watch the optics bench and the computer corrects every picture for the movement.', 'Le mât bouge légèrement : des lasers sur la plateforme surveillent le banc optique et l’ordinateur corrige chaque image en conséquence.'],
+      ['Its mirrors are coated with ultra-thin layers of platinum, carbon, tungsten and silicon so they can reflect such energetic light.', 'Ses miroirs sont recouverts de couches ultrafines de platine, de carbone, de tungstène et de silicium pour réfléchir une lumière aussi énergétique.'],
+      ['It made the first precise measurement of a black hole’s spin, and mapped radioactive titanium in Cassiopeia A, showing how the star tore itself apart.', 'Il a fait la première mesure précise de la rotation d’un trou noir, et cartographié le titane radioactif de Cassiopée A, montrant comment l’étoile s’est déchirée.'],
+      ['It found a "shockingly bright" dead star in the galaxy M82: a pulsar giving off far more X-rays than thought possible.', 'Il a découvert une étoile morte « incroyablement brillante » dans la galaxie M82 : un pulsar émettant bien plus de rayons X qu’on ne le croyait possible.'],
+      ['It can even look at the Sun, catching tiny flares too faint for solar telescopes.', 'Il peut même regarder le Soleil et capter de minuscules éruptions trop faibles pour les télescopes solaires.']] },
 
   Spitzer: { closed: true, intro: ['NASA’s infrared Great Observatory (2003–2020), which saw through dust to newborn stars, distant galaxies and planets around other stars.',
       'Le grand observatoire infrarouge de la NASA (2003–2020), qui voyait à travers la poussière les étoiles naissantes, les galaxies lointaines et les planètes d’autres étoiles.'],

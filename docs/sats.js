@@ -1,6 +1,6 @@
 // =====================================================================
 // Detailed hand-built models for missions NASA has no 3D file for:
-// IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
+// NuSTAR, IXPE, SPHEREx, Pandora, SPARCS, CUTE  (built from NASA / JPL / ASU / LASP photos and diagrams)
 // =====================================================================
 import * as THREE from 'three';
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -41,6 +41,40 @@ function shells(R, n, m) { const g = new THREE.Group();
   return g; }
 
 export const SATS = {
+
+  // NuSTAR: 10.9 m long once deployed. One end: the optics bench with two X-ray telescopes (133 nested shells each).
+  // Middle: the 10 m deployable lattice mast. Other end: Orbital's spacecraft bus with the focal plane (CdZnTe detectors)
+  // and a single solar array wing.
+  NuSTAR: () => {
+    const g = new THREE.Group(), L = 9.6, w = 0.5;
+    // square lattice mast along +X
+    const m = new THREE.Group(), bays = 40, h = L / bays, c = [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([a, b]) => V(0, a * w / 2, b * w / 2));
+    for (const k of c) m.add(rod(k, k.clone().setX(L), 0.016, mat.alu));
+    for (let i = 0; i <= bays; i++) for (let j = 0; j < 4; j++) { const a = c[j].clone().setX(i * h), b = c[(j + 1) % 4].clone().setX(i * h); m.add(rod(a, b, 0.009, mat.alu));
+      if (i < bays) m.add(rod(a, c[(j + 1) % 4].clone().setX((i + 1) * h), 0.007, mat.alu)); }
+    m.position.x = -L / 2; g.add(m);
+    // optics bench at +X: gold-wrapped frame holding the two telescopes, fronts facing outwards
+    const ox = L / 2 + 0.35;
+    add(g, at(box(0.7, 1.15, 1.6, mat.gold), ox, 0, 0), at(box(0.04, 1.2, 1.65, mat.white), ox - 0.37, 0, 0));
+    for (const z of [-0.42, 0.42]) {
+      add(g, at(cyl(0.42, 0.42, 0.9, mat.gold, 6), ox + 0.15, 0, z, 0, 0, Math.PI / 2), at(cyl(0.43, 0.43, 0.05, mat.silver, 6), ox + 0.6, 0, z, 0, 0, Math.PI / 2));
+      const sh = shells(0.36, 7, mat.mirror); sh.rotation.z = -Math.PI / 2; sh.position.set(ox + 0.63, 0, z); g.add(sh);
+      add(g, at(cyl(0.36, 0.36, 0.01, mat.black, 6), ox + 0.62, 0, z, 0, 0, Math.PI / 2));
+    }
+    add(g, at(box(0.12, 0.12, 0.12, mat.black), ox - 0.2, 0.62, 0.7));   // metrology laser target
+    // spacecraft bus + focal plane bench at -X
+    const bx = -L / 2 - 0.55;
+    add(g, at(cyl(0.6, 0.6, 1.0, mat.gold, 8), bx, 0, 0, 0, 0, Math.PI / 2), at(cyl(0.61, 0.61, 0.05, mat.white, 8), bx + 0.52, 0, 0, 0, 0, Math.PI / 2));
+    add(g, at(box(0.3, 0.9, 1.2, mat.white), bx + 0.62, 0, 0));
+    for (const z of [-0.3, 0.3]) add(g, at(cyl(0.16, 0.16, 0.25, mat.dark, 20), bx + 0.85, 0, z, 0, 0, Math.PI / 2));   // the two focal plane modules
+    add(g, at(cyl(0.06, 0.08, 0.15, mat.black, 12), bx - 0.2, 0.62, 0.25), at(cyl(0.06, 0.08, 0.15, mat.black, 12), bx - 0.35, 0.62, -0.2));   // star trackers
+    add(g, at(box(0.15, 0.15, 0.15, mat.black), bx + 0.4, 0.55, -0.55));   // metrology laser
+    add(g, at(cyl(0.12, 0.12, 0.05, mat.white, 16), bx - 0.4, -0.6, 0));   // antenna
+    // one solar array wing, five panels, standing out from the bus
+    const p = panel(3.4, 1.0, 5, 2); p.rotation.z = Math.PI / 2 + 0.35; p.position.set(bx - 0.1, 0.6, 0); g.add(p);
+    add(g, at(box(0.06, 0.4, 0.06, mat.alu), bx - 0.05, 0.6, 0, 0, 0, 0.35));
+    return g;
+  },
   // IXPE: 5.2 m tall once its boom is out. Top: three mirror module assemblies (Marshall) on a triangular optics deck.
   // Middle: 4 m coilable boom. Bottom: Ball spacecraft bus with the three Italian detector units on top and two solar arrays.
   IXPE: () => {
