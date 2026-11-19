@@ -32,12 +32,12 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
 {
   const merc = PL.Mercury.holder, R = 0.38;
   const plane = new THREE.Group(); plane.rotation.set(0, 0.6, Math.PI / 2); merc.add(plane);   // a polar orbit
-  const craft = scaled(buildBepi(), 0.008); plane.add(craft);
+  const craft = scaled(buildBepi(), 0.008), sunW = V(); plane.add(craft);
   const a = R * 2.0, e = 0.35, P = 2.3;   // shown as a loose capture orbit (drawn larger than life)
   const pts = []; for (let k = 0; k <= 160; k++) { const nu = k / 160 * Math.PI * 2, r = a * (1 - e * e) / (1 + e * Math.cos(nu)); pts.push(V(Math.cos(nu) * r, 0, Math.sin(nu) * r)); }
   plane.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.35 })));
   sim.push(() => { const t = SS.getDate() / 864e5 / P * 2 * Math.PI; const E = kepler(t % (2 * Math.PI), e), nu = nuOf(E, e), r = a * (1 - e * Math.cos(E));
-    craft.position.set(Math.cos(nu) * r, 0, Math.sin(nu) * r); craft.rotation.y = -nu; });
+    craft.position.set(Math.cos(nu) * r, 0, Math.sin(nu) * r); craft.lookAt(bodies.Sun.obj.getWorldPosition(sunW)); });   // keep its front (+Z) turned to the Sun, so the three-quarter view is always sunlit
   nearLabel(craft, 'BepiColombo', 5, 'BepiColombo', 'craft', 3);
   { const qq = new THREE.Quaternion(); bodies.BepiColombo = { obj: craft, radius: 0.06, view: 0.36, dir: () => V(1, 0.35, 1.2).normalize().applyQuaternion(craft.getWorldQuaternion(qq)) }; }   // the same three-quarter view as ESA's art
   info('BepiColombo', 'BepiColombo', 'Spacecraft · Mercury orbiters (ESA/JAXA)', 'arriving in orbit around Mercury', 'See card.');

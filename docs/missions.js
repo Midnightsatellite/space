@@ -249,3 +249,4 @@ await import('./livespace.js' + new URL(import.meta.url).search);
 await import('./skycity.js' + new URL(import.meta.url).search);
 await import('./doc2.js' + new URL(import.meta.url).search);
 await import('./earthpins.js' + new URL(import.meta.url).search);
+await import('./animals.js' + new URL(import.meta.url).search);
