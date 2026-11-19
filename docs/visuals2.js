@@ -70,6 +70,9 @@ const $ = id => document.getElementById(id);
     }).catch(err => { console.warn('model', key, err); done[key] = false; });
   }
   const prev = SS.onFocus; SS.onFocus = key => { prev(key); if (MODELS[key]) swap(key); };
+  { const wp = new THREE.Vector3(); setInterval(() => {   // also load the real model when the camera simply comes close (e.g. passing the ISS while looking at Earth)
+      for (const key in MODELS) { if (done[key] || !bodies[key]) continue; const b = bodies[key];
+        if (SS.camera.position.distanceTo(b.obj.getWorldPosition(wp)) < Math.max(0.6, (b.view || 0.2) * 5)) swap(key); } }, 1000); }
   SS.more.nasaModels = { swap, onModel, done };
 }
 
