@@ -247,7 +247,8 @@ const ECL = Date.UTC(2027, 7, 2, 10, 7, 50);
     return `<div style="font-size:34px;line-height:1">${PH[0]}</div><b style="display:inline;font-size:13px">${F ? PH[2] : PH[1]}</b> · ${F ? `${nf(lit * 100)} % éclairée` : `${nf(lit * 100)}% lit`}
       <div style="margin-top:6px">🌆 <b style="display:inline;font-size:13px">${F ? 'Le soir' : 'Evening'}</b> ${F ? '(après le coucher du Soleil) :' : '(after sunset):'} ${list(eve)}</div>
       <div>🌅 <b style="display:inline;font-size:13px">${F ? 'Le matin' : 'Morning'}</b> ${F ? '(avant le lever du Soleil) :' : '(before sunrise):'} ${list(morn)}</div>
-      <div>☄ <b style="display:inline;font-size:13px">${F ? 'Étoiles filantes' : 'Meteors'}</b> : ${sh.length ? sh.join(', ') : (F ? 'pas de grande pluie en ce moment' : 'no major shower right now')}</div>
+      <div>☄ <b style="display:inline;font-size:13px">${F ? 'Étoiles filantes' : 'Meteors'}</b>${F ? ' :' : ':'} ${sh.length ? sh.join(', ') : (F ? 'pas de grande pluie en ce moment' : 'no major shower right now')}</div>
+      ${SS.tonightExtra ? SS.tonightExtra() : ''}
       <button type="button" id="tonightSky" style="margin-top:8px">${F ? '🔭 Voir le ciel de ce soir' : '🔭 See tonight\'s sky'}</button>`;
   }
   bodies.Tonight = { obj: bodies.Moon.obj, radius: 0.27, view: 1.4 };

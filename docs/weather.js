@@ -24,8 +24,8 @@ const when = (ms, F) => new Date(ms).toLocaleString(F ? 'fr-FR' : 'en-GB', { day
 const ago = (ms, F) => { const m = Math.max(0, Math.round((Date.now() - ms) / 60000)); return m < 60 ? t2(F, `${m} min ago`, `il y a ${m} min`) : t2(F, `${Math.round(m / 60)} h ago`, `il y a ${Math.round(m / 60)} h`); };
 
 const toNow = () => { SS.setDate(Date.now()); const sp = $('speed'); if (sp) { sp.value = '0.0000115741'; sp.dispatchEvent(new Event('change')); } };   // today, turning at its real speed
-const state = { clouds: false, radar: false, storms: false, tornado: false, cities: false };
-const status = { clouds: '', radar: '', storms: '', tornado: '' };
+const state = { clouds: false, radar: false, storms: false, tornado: false, cities: false, quakes: false, volcanoes: false, aurora: false };
+const status = { clouds: '', radar: '', storms: '', tornado: '', quakes: '', volcanoes: '', aurora: '' };
 let panelOpen = false;
 
 // ---------------------------------------------------------------- ☁ live clouds
@@ -158,7 +158,91 @@ function setTornado(on) { state.tornado = on; if (on) { earthMesh.add(tornGroup)
 setInterval(() => { if (state.clouds && Date.now() - cloudAt > 3 * 36e5) loadClouds(); if (state.radar) loadRadar();
   if (state.storms) loadStorms(); if (state.tornado) loadTornado(); }, 10 * 6e4);
 
-// ---------------------------------------------------------------- 📍 click Earth for the forecast (Open-Meteo)
+// ---------------------------------------------------------------- 🌍 Earth right now: earthquakes, volcanoes, aurora
+// 🔴 earthquakes of the last 24 hours, magnitude 2.5 and up (USGS)
+let quakeGroup = new THREE.Group(), quakeList = [], quakeAt = 0;
+const rings = [];
+sim.push(() => { const t = performance.now() / 1000; for (const r of rings) { const k = (t * 0.6 + r.userData.ph) % 1; r.scale.setScalar(1 + k * 3); r.material.opacity = 0.7 * (1 - k); } });
+const shortPlace = p => String(p || '').replace(/^.* of /, '');
+async function loadQuakes() {
+  status.quakes = '…'; render();
+  try {
+    const j = await (await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')).json();
+    earthMesh.remove(quakeGroup); quakeGroup = new THREE.Group(); rings.length = 0;
+    quakeList = j.features.filter(f => f.properties.mag != null).sort((a, b) => b.properties.mag - a.properties.mag).slice(0, 150);
+    quakeList.forEach((f, i) => {
+      const p = f.properties, [lon, lat, depth] = f.geometry.coordinates, key = 'WXQuake' + i, F = fr(), mag = p.mag;
+      const col = mag >= 6 ? 0xff3cc8 : mag >= 5 ? 0xff3030 : mag >= 4 ? 0xff9020 : 0xffd23a;
+      const up = local(lat, lon), m = new THREE.Group(); m.position.copy(up.clone().multiplyScalar(R * 1.002)); quakeGroup.add(m);
+      m.add(new THREE.Mesh(new THREE.SphereGeometry(R * 0.0035 * Math.pow(1.45, mag - 2.5), 10, 8), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.9 })));
+      if (mag >= 5) { const ring = new THREE.Mesh(new THREE.RingGeometry(R * 0.012, R * 0.015, 32), new THREE.MeshBasicMaterial({ color: col, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+        ring.quaternion.setFromUnitVectors(V(0, 0, 1), up); ring.userData.ph = Math.random(); m.add(ring); rings.push(ring); }
+      if (mag >= 4.5) nearLabel(m, `M${mag.toFixed(1)} · ${shortPlace(p.place)}`, R * 0.02, key, 'small', R * 10);
+      bodies[key] = { obj: m, radius: R * 0.02, view: R * 1.5, dir: outward(m) }; special[key] = () => flyTo(key);
+      info(key, `${t2(F, 'Earthquake', 'Séisme')} M${mag.toFixed(1)}`, t2(F, 'Live Earth · earthquake', 'Terre en direct · séisme'), esc(p.place || ''),
+        `<div>${ago(p.time, F)} · ${t2(F, 'depth', 'profondeur')} ${Math.round(depth)} km</div>
+         ${p.tsunami ? `<div style="margin-top:4px;color:#ffb070">🌊 ${t2(F, 'A tsunami message was issued: follow official advice.', 'Un message tsunami a été émis : suivez les consignes officielles.')}</div>` : ''}
+         <div style="margin-top:6px"><a href="${esc(p.url)}" target="_blank" rel="noopener">${t2(F, 'Details on USGS ↗', 'Détails sur l’USGS ↗')}</a></div>
+         <div style="font-size:11px;opacity:.65;margin-top:6px">${t2(F, 'Magnitude is on a log scale: each step up is about 32 times more energy.', 'La magnitude est logarithmique : chaque point de plus, c’est environ 32 fois plus d’énergie.')}</div>`);
+      f._key = key;
+    });
+    if (state.quakes) earthMesh.add(quakeGroup);
+    quakeAt = Date.now(); status.quakes = 'ok';
+  } catch (e) { status.quakes = 'err'; }
+  render();
+}
+function setQuakes(on) { state.quakes = on; if (on) { earthMesh.add(quakeGroup); if (Date.now() - quakeAt > 10 * 6e4) loadQuakes(); } else earthMesh.remove(quakeGroup); }
+
+// 🌋 volcanoes with an eruption going on (Smithsonian Global Volcanism Program, via NASA EONET)
+let volcGroup = new THREE.Group(), volcList = [], volcAt = 0;
+async function loadVolcanoes() {
+  status.volcanoes = '…'; render();
+  try {
+    const j = await (await fetch('https://eonet.gsfc.nasa.gov/api/v3/events?category=volcanoes&status=open&limit=80')).json();
+    earthMesh.remove(volcGroup); volcGroup = new THREE.Group();
+    volcList = j.events.map(e => { const g = e.geometry.at(-1); return { title: e.title.replace(/ Volcano/, ''), lat: g.coordinates[1], lon: g.coordinates[0], since: e.geometry[0].date, src: (e.sources.find(s => s.id === 'SIVolcano') || e.sources[0] || {}).url }; })
+      .sort((a, b) => new Date(b.since) - new Date(a.since));
+    volcList.forEach((v, i) => {
+      const key = 'WXVolc' + i, F = fr(), name = v.title.split(',')[0];
+      marker(volcGroup, key, v.lat, v.lon, '🌋', R * 0.045, '🌋 ' + name, R * 12);
+      info(key, `🌋 ${v.title}`, t2(F, 'Live Earth · volcano erupting', 'Terre en direct · volcan en éruption'), `${Math.abs(v.lat).toFixed(1)}°${v.lat >= 0 ? 'N' : 'S'} ${Math.abs(v.lon).toFixed(1)}°${v.lon >= 0 ? 'E' : (F ? 'O' : 'W')}`,
+        `<div>${t2(F, 'Erupting since', 'En éruption depuis le')} ${esc(new Date(v.since).toLocaleDateString(F ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</div>
+         ${v.src ? `<div style="margin-top:6px"><a href="${esc(v.src)}" target="_blank" rel="noopener">${t2(F, 'Smithsonian volcano page ↗', 'Fiche du volcan (Smithsonian) ↗')}</a></div>` : ''}
+         <div style="font-size:11px;opacity:.65;margin-top:6px">${t2(F, 'Some of these eruptions are long and slow, with small explosions on and off.', 'Certaines de ces éruptions sont longues et lentes, avec de petites explosions par intermittence.')}</div>`);
+      v._key = key;
+    });
+    if (state.volcanoes) earthMesh.add(volcGroup);
+    volcAt = Date.now(); status.volcanoes = 'ok';
+  } catch (e) { status.volcanoes = 'err'; }
+  render();
+}
+function setVolcanoes(on) { state.volcanoes = on; if (on) { earthMesh.add(volcGroup); if (Date.now() - volcAt > 60 * 6e4) loadVolcanoes(); } else earthMesh.remove(volcGroup); }
+
+// 🌌 aurora forecast for the next hour (NOAA SWPC OVATION model) and the Kp storm level
+const auroraCanvas = document.createElement('canvas'); auroraCanvas.width = 360; auroraCanvas.height = 181;
+const auroraTex = new THREE.CanvasTexture(auroraCanvas); auroraTex.colorSpace = THREE.SRGBColorSpace;
+const auroraMesh = new THREE.Mesh(new THREE.SphereGeometry(R * 1.018, 128, 64), new THREE.MeshBasicMaterial({ map: auroraTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+let auroraAt = 0, kp = null, auroraTime = '';
+const kpWords = (k, F) => k >= 9 ? t2(F, 'extreme storm (G5)', 'tempête extrême (G5)') : k >= 8 ? t2(F, 'severe storm (G4)', 'tempête sévère (G4)') : k >= 7 ? t2(F, 'strong storm (G3)', 'forte tempête (G3)')
+  : k >= 6 ? t2(F, 'moderate storm (G2)', 'tempête modérée (G2)') : k >= 5 ? t2(F, 'minor storm (G1)', 'tempête mineure (G1)') : k >= 4 ? t2(F, 'active', 'actif') : t2(F, 'quiet', 'calme');
+async function loadAurora() {
+  status.aurora = '…'; render();
+  try {
+    const [a, k] = await Promise.all([fetch('https://services.swpc.noaa.gov/json/ovation_aurora_latest.json').then(r => r.json()), fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json').then(r => r.json()).catch(() => null)]);
+    const g = auroraCanvas.getContext('2d'), img = g.createImageData(360, 181);
+    for (const [lon, lat, v] of a.coordinates) { if (v < 3) continue;
+      const x = Math.round(lon + 180) % 360, y = 90 - lat, i = (y * 360 + x) * 4, t = Math.min(1, v / 60);
+      img.data[i] = 60 + 195 * Math.max(0, t - 0.6) * 2.5; img.data[i + 1] = 255 * Math.min(1, 0.4 + t); img.data[i + 2] = 120 * t; img.data[i + 3] = 255 * Math.min(1, 0.15 + t * 1.2); }
+    g.putImageData(img, 0, 0); auroraTex.needsUpdate = true;
+    if (Array.isArray(k) && k.length) { const last = k.at(-1); kp = typeof last.Kp === 'number' ? last.Kp : parseFloat(Array.isArray(last) ? last[1] : last.Kp); }
+    auroraTime = a['Forecast Time'] || ''; auroraAt = Date.now(); status.aurora = 'ok';
+  } catch (e) { status.aurora = 'err'; }
+  render();
+}
+function setAurora(on) { state.aurora = on; if (on) { earthMesh.add(auroraMesh); if (Date.now() - auroraAt > 10 * 6e4) loadAurora(); } else earthMesh.remove(auroraMesh); }
+setInterval(() => { if (state.quakes) loadQuakes(); if (state.aurora) loadAurora(); if (state.volcanoes && Date.now() - volcAt > 60 * 6e4) loadVolcanoes(); }, 10 * 6e4);
+
+// ---------------------------------------------------------------- 📍 the forecast for a place (Open-Meteo)
 const WMO = { 0: ['☀️', 'Clear sky', 'Ciel dégagé'], 1: ['🌤', 'Mainly clear', 'Plutôt dégagé'], 2: ['⛅', 'Partly cloudy', 'Partiellement nuageux'], 3: ['☁️', 'Overcast', 'Couvert'],
   45: ['🌫', 'Fog', 'Brouillard'], 48: ['🌫', 'Freezing fog', 'Brouillard givrant'], 51: ['🌦', 'Light drizzle', 'Bruine légère'], 53: ['🌦', 'Drizzle', 'Bruine'], 55: ['🌧', 'Heavy drizzle', 'Forte bruine'],
   56: ['🌧', 'Freezing drizzle', 'Bruine verglaçante'], 57: ['🌧', 'Freezing drizzle', 'Bruine verglaçante'], 61: ['🌦', 'Light rain', 'Pluie faible'], 63: ['🌧', 'Rain', 'Pluie'], 65: ['🌧', 'Heavy rain', 'Forte pluie'],
@@ -258,6 +342,15 @@ function render() {
   h += row('tornado', state.tornado, '🌪 ' + t2(F, 'Tornado reports (USA, last 3 days)', 'Tornades signalées (États-Unis, 3 derniers jours)') + dot(status.tornado),
     status.tornado === 'err' ? t2(F, 'Couldn’t load the reports.', 'Rapports indisponibles.') : state.tornado && status.tornado === 'ok' ? (tornList.length ? `${tornList.length} ${t2(F, 'reports', 'rapports')}` : t2(F, 'No tornadoes reported in the last 3 days', 'Aucune tornade signalée ces 3 derniers jours')) : t2(F, 'Preliminary reports from the US weather service', 'Rapports préliminaires du service météo américain'));
   if (state.tornado && tornList.length) h += tornList.slice(0, 8).map(t => `<div style="margin:3px 0 0 26px;font-size:12px"><a href="#" data-go="${t._key}">${esc(t._kind[F ? 1 : 0])} · ${esc(t.properties.loc_desc)}, ${esc(t.properties.state)}</a> <span style="opacity:.65">${ago(t.properties.lsr_validtime, F)}</span></div>`).join('');
+  h += `<div style="margin-top:10px;padding-top:6px;border-top:1px solid rgba(140,160,255,.2);font-size:12px;opacity:.75">🌍 ${t2(F, 'Earth right now', 'La Terre en ce moment')}</div>`;
+  h += row('quakes', state.quakes, '🔴 ' + t2(F, 'Earthquakes (last 24 h)', 'Séismes (dernières 24 h)') + dot(status.quakes),
+    status.quakes === 'err' ? t2(F, 'Couldn’t load the list.', 'Liste indisponible.') : state.quakes && status.quakes === 'ok' ? `${quakeList.length} ${t2(F, 'of magnitude 2.5 or more', 'de magnitude 2,5 ou plus')}` : t2(F, 'Every quake of magnitude 2.5 or more, sized by strength', 'Chaque séisme de magnitude 2,5 ou plus, à sa taille'));
+  if (state.quakes && quakeList.length) h += quakeList.slice(0, 5).map(q => `<div style="margin:3px 0 0 26px;font-size:12px"><a href="#" data-go="${q._key}">M${q.properties.mag.toFixed(1)} · ${esc(shortPlace(q.properties.place))}</a> <span style="opacity:.65">${ago(q.properties.time, F)}</span></div>`).join('');
+  h += row('volcanoes', state.volcanoes, '🌋 ' + t2(F, 'Volcanoes erupting now', 'Volcans en éruption') + dot(status.volcanoes),
+    status.volcanoes === 'err' ? t2(F, 'Couldn’t load the list.', 'Liste indisponible.') : state.volcanoes && status.volcanoes === 'ok' ? `${volcList.length} ${t2(F, 'ongoing eruptions', 'éruptions en cours')}` : t2(F, 'Ongoing eruptions around the world', 'Éruptions en cours dans le monde'));
+  if (state.volcanoes && volcList.length) h += volcList.slice(0, 5).map(v => `<div style="margin:3px 0 0 26px;font-size:12px"><a href="#" data-go="${v._key}">🌋 ${esc(v.title)}</a></div>`).join('');
+  h += row('aurora', state.aurora, '🌌 ' + t2(F, 'Aurora forecast', 'Prévision des aurores') + dot(status.aurora),
+    status.aurora === 'err' ? t2(F, 'Couldn’t load the forecast.', 'Prévision indisponible.') : state.aurora && kp != null ? `Kp ${kp.toFixed(1)} · ${kpWords(kp, F)} · ${t2(F, 'the green ring shows where the northern and southern lights may be seen in the next hour', 'l’anneau vert montre où les aurores pourraient être visibles dans l’heure')}` : t2(F, 'Where the northern and southern lights are expected in the next hour', 'Où les aurores sont attendues dans l’heure'));
   h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(140,160,255,.2)"><b>🔎 ${t2(F, 'Forecast for a city', 'Météo d’une ville')}</b>
     <input id="wxSearch" type="search" autocomplete="off" placeholder="${t2(F, 'Type a city… (London, Tokyo, Dakar)', 'Tapez une ville… (Paris, Tokyo, Dakar)')}" style="display:block;width:100%;box-sizing:border-box;margin-top:5px;background:#141a33;color:#e6ebff;border:1px solid #2c3766;border-radius:6px;padding:5px 8px;font-size:13px">
     ${search.busy ? `<div style="font-size:12px;opacity:.6;margin-top:3px">⏳</div>` : ''}
@@ -285,14 +378,14 @@ function render() {
   h += `<div style="font-size:10.5px;opacity:.55;margin-top:9px;line-height:1.35">${t2(F, 'Sources', 'Sources')}: ${t2(F, 'clouds', 'nuages')} <a href="https://github.com/matteason/live-cloud-maps" target="_blank" rel="noopener">live-cloud-maps</a> (${t2(F, 'contains modified EUMETSAT data', 'contient des données EUMETSAT modifiées')}) ·
     ${t2(F, 'Weather data by', 'Données radar par')} <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a> ·
     ${t2(F, 'cyclones', 'cyclones')} <a href="https://www.gdacs.org" target="_blank" rel="noopener">GDACS</a> · ${t2(F, 'tornadoes', 'tornades')} <a href="https://www.weather.gov" target="_blank" rel="noopener">NOAA/NWS</a> ·
-    ${t2(F, 'forecasts', 'prévisions')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> · ${t2(F, 'city search', 'recherche de villes')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> / <a href="https://www.geonames.org" target="_blank" rel="noopener">GeoNames</a>.
+    ${t2(F, 'forecasts', 'prévisions')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> · ${t2(F, 'earthquakes', 'séismes')} <a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a> · ${t2(F, 'volcanoes', 'volcans')} <a href="https://volcano.si.edu" target="_blank" rel="noopener">Smithsonian GVP</a> via <a href="https://eonet.gsfc.nasa.gov" target="_blank" rel="noopener">NASA EONET</a> · ${t2(F, 'aurora', 'aurores')} <a href="https://www.swpc.noaa.gov" target="_blank" rel="noopener">NOAA SWPC</a> · ${t2(F, 'city search', 'recherche de villes')} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> / <a href="https://www.geonames.org" target="_blank" rel="noopener">GeoNames</a>.
     ${t2(F, 'For official warnings, follow your national weather service.', 'Pour les alertes officielles, suivez votre service météo national.')}</div>`;
   const old = $('wxSearch'), focused = document.activeElement === old, pos = old?.selectionStart;
   panel.innerHTML = h;
   const ni = $('wxSearch'); if (ni) { ni.value = search.q; if (focused) { ni.focus(); try { ni.setSelectionRange(pos, pos); } catch (e) { } } }
 }
 panel.addEventListener('change', e => { const k = e.target.dataset?.wx; if (!k) return; const on = e.target.checked;
-  ({ clouds: setClouds, radar: setRadar, storms: setStorms, tornado: setTornado, cities: setCities })[k](on); render(); });
+  ({ clouds: setClouds, radar: setRadar, storms: setStorms, tornado: setTornado, cities: setCities, quakes: setQuakes, volcanoes: setVolcanoes, aurora: setAurora })[k](on); render(); });
 panel.addEventListener('input', e => { if (e.target.id !== 'wxSearch') return; search.q = e.target.value; clearTimeout(searchTimer); const q = search.q; searchTimer = setTimeout(() => runSearch(q), 350); });
 panel.addEventListener('keydown', e => { if (e.target.id === 'wxSearch') { e.stopPropagation(); if (e.key === 'Enter' && search.results[0]) { const r = search.results[0]; search.results = []; search.q = ''; goPlace(r.lat, r.lon, r.name); } } });
 panel.addEventListener('click', e => {
@@ -310,7 +403,7 @@ setInterval(() => {   // sit under the info card; if there's no room, put the ca
   if (innerHeight - top - 64 < 180 && shown) { i.style.display = 'none'; top = 44; }
   panel.style.top = top + 'px'; panel.style.maxHeight = (innerHeight - top - 64) + 'px';
 }, 300);
-{ const prev = SS.setLang; SS.setLang = (...a) => { const r = prev(...a); if (state.storms && stormAt) loadStorms(); if (state.tornado && tornAt) loadTornado(); render(); return r; }; }
+{ const prev = SS.setLang; SS.setLang = (...a) => { const r = prev(...a); if (state.storms && stormAt) loadStorms(); if (state.tornado && tornAt) loadTornado(); if (state.quakes && quakeAt) loadQuakes(); if (state.volcanoes && volcAt) loadVolcanoes(); render(); return r; }; }
 
 // button in the main panel, and an entry in the menu
 { const row = $('factBtn')?.parentElement; if (row) { const b = document.createElement('button'); b.type = 'button'; b.id = 'wxBtn'; b.textContent = '🌦 Live weather'; row.appendChild(b);
@@ -322,7 +415,7 @@ special.LiveWeather = () => { toNow();
   if (!state.clouds) setClouds(true); if (!state.storms) setStorms(true); openPanel(); flyTo('LiveWeather'); };
 { const views = focusSel.querySelector('optgroup'), o = document.createElement('option'); o.value = 'LiveWeather'; o.textContent = '🌦 Live weather on Earth';
   const after = views.querySelector('option[value="SkyMonth"]') || views.querySelector('option[value="Tonight"]'); after ? after.after(o) : views.appendChild(o); }
-SS.weather = { openPanel, closePanel, setClouds, setRadar, setStorms, setTornado, setCities, forecast, goPlace, runSearch, state, status, search };
+SS.weather = { setQuakes, setVolcanoes, setAurora, loadAurora, openPanel, closePanel, setClouds, setRadar, setStorms, setTornado, setCities, forecast, goPlace, runSearch, state, status, search };
 SS.i18nAdd?.({
   ui: { '🌦 Live weather': '🌦 Météo en direct', '🌦 Live weather on Earth': '🌦 Météo en direct sur Terre' },
   name: { '🌦 Live weather on Earth': '🌦 Météo en direct sur Terre', 'Live weather on Earth': 'Météo en direct sur Terre' },

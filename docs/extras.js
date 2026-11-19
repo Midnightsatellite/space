@@ -436,7 +436,7 @@ let pendingFly = null;
 // =====================================================================
 // 8. NIGHT SKY FROM LONDON
 // =====================================================================
-const LONDON = { lat: 51.5074, lon: -0.1278 };
+const LONDON = { lat: 51.5074, lon: -0.1278, name: 'London', nameFr: 'Londres' };   // the observer: London unless the visitor picks another city
 let nightOn = false, az = 180, alt = 22, fovNight = 60; const nightHidden = [];
 const ground = new THREE.Group(); ground.visible = false; scene.add(ground);
 const GR = 0.0058;
@@ -493,9 +493,8 @@ function nightCam() {
 }
 function enterNight() {
   if (nightOn) return; nightOn = true;
-  const london = new Date(simMs).toLocaleString('en-GB', { timeZone: 'Europe/London', hour: 'numeric', hour12: false });
-  const hr = parseInt(london, 10);
-  if (hr >= 7 && hr < 17) { const dd = new Date(simMs); simMs = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth(), dd.getUTCDate(), 21, 30); }
+  const off = LONDON.lon / 15, hr = ((new Date(simMs).getUTCHours() + new Date(simMs).getUTCMinutes() / 60 + off) % 24 + 24) % 24;   // local solar time
+  if (hr >= 7 && hr < 17) { const dd = new Date(simMs); simMs = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth(), dd.getUTCDate(), 21, 30) - off * 36e5; }
   rateSel.value = '0.000694';
   for (const a of PL.Earth.holder.children) if (a.userData?.isAtmo) a.visible = false;
   earthClouds.visible = false;
@@ -506,8 +505,12 @@ function enterNight() {
   for (const ch of PL.Earth.holder.children) if (ch.type === 'Group' && ch !== PL.Earth.tilted && ch !== moonPivot) hideN(ch);
   controls.enabled = false; camera.near = 0.0004; camera.updateProjectionMatrix();
   SS.cancelTween(); SS.cameraOverride = nightCam;
-  showInfo('Night sky from London', 'View from the ground', 'Drag to look around · scroll to zoom',
+  if (LONDON.name === 'London') showInfo('Night sky from London', 'View from the ground', 'Drag to look around · scroll to zoom',
     'The real sky over London for the date and time shown at the top: stars, planets and the Moon in their true places. Turn on Constellations or Zodiac to trace the patterns.');
+  else if (SS.lang === 'fr') showInfo('Le ciel nocturne depuis ' + LONDON.nameFr, 'Vue depuis le sol', 'Faites glisser pour regarder autour · molette pour zoomer',
+    'Le vrai ciel au-dessus de ' + LONDON.nameFr + ' à la date et à l’heure affichées en haut : étoiles, planètes et Lune à leur vraie place. Activez Constellations ou Zodiaque pour suivre les figures.');
+  else showInfo('Night sky from ' + LONDON.name, 'View from the ground', 'Drag to look around · scroll to zoom',
+    'The real sky over ' + LONDON.name + ' for the date and time shown at the top: stars, planets and the Moon in their true places. Turn on Constellations or Zodiac to trace the patterns.');
 }
 function exitNight() {
   if (!nightOn) return; nightOn = false;
@@ -715,5 +718,5 @@ sim.push(() => {
 { const layer = [...document.body.children].find(el => el.querySelector && el.querySelector('.lbl')); if (layer) layer.id = 'labelLayer'; }
 
 SS.go = go; SS.stopTour = stopTour;
-SS.extras = { addMoon, smallBody, exoPlanet, paint, lumpy, auToScene, addGroup, nearLabel, scaleHide, PL, EVENTS, TOUR, showInfo, litMaterial, dps, J2000, getTour: () => tour };
+SS.extras = { observer: LONDON, enterNight: () => go('night'), addMoon, smallBody, exoPlanet, paint, lumpy, auToScene, addGroup, nearLabel, scaleHide, PL, EVENTS, TOUR, showInfo, litMaterial, dps, J2000, getTour: () => tour };
 await import('./documentary.js' + new URL(import.meta.url).search);
