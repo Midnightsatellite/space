@@ -41,10 +41,22 @@ function routeCraft(key, legs, model, scale, color, label) {
 const kleg = (el, tp, t1, t2) => ({ t1, t2, pos: t => keplerAU(el, tp, t) });
 
 // ---------------------------------------------------------------- 1. Europa Clipper: Mars (1 Mar 2025) → Earth (3 Dec 2026) → Jupiter (11 Apr 2030)
+// NASA's own 3D model loads the first time Clipper is chosen; far away, the light hand-built model is drawn instead
+const clipHand = buildClipper(), clipModel = new THREE.Group(); clipModel.add(clipHand);
+{ let state = 0;
+  const load = async () => { if (state) return; state = 1;
+    const [{ GLTFLoader }, { DRACOLoader }] = await Promise.all([import('three/addons/loaders/GLTFLoader.js'), import('three/addons/loaders/DRACOLoader.js')]);
+    const l = new GLTFLoader(), d = new DRACOLoader(); d.setDecoderPath('three/examples/jsm/libs/draco/gltf/'); l.setDRACOLoader(d);
+    l.load('models/clipper.glb', g => { const m = g.scene; m.rotation.x = -Math.PI / 2;   // NASA's model has its arrays facing +Z; ours face +Y
+      m.traverse(o => { if (!o.isMesh) return; for (const mt of [].concat(o.material)) { mt.metalness = Math.min(mt.metalness ?? 0, 0.35); mt.emissive?.setHex(0x161616); } });
+      const lod = new THREE.LOD(); clipModel.remove(clipHand); lod.addLevel(m, 0); lod.addLevel(clipHand, 3); clipModel.add(lod); state = 2;
+    }, undefined, () => { state = 0; }); };
+  const prev = SS.onFocus; SS.onFocus = key => { if (key === 'Clipper') load(); prev(key); }; }
 routeCraft('Clipper', [
   kleg({ a: 1.5990, e: 0.4754, i: 2.043, node: 71.437, peri: 302.428 }, 1728957974649, 1740851820000, 1796332500000),
   kleg({ a: 3.2289, e: 0.7108, i: 2.744, node: 71.414, peri: 330.730 }, 1794501066905, 1796332500000, 1902096000000),
-], buildClipper(), 0.012, 0x8fd0ff, 'Europa Clipper');
+], clipModel, 0.012, 0x8fd0ff, 'Europa Clipper');
+bodies.Clipper.dir = t => t.clone().normalize().negate().add(V(0.35, 0.55, 0.2)).normalize();   // look from the sunny side
 info('Clipper', 'Europa Clipper', 'Spacecraft · NASA, to Jupiter’s moon Europa', 'on its way to Jupiter, arriving April 2030', 'See card.');
 
 // ---------------------------------------------------------------- 2. Psyche: a spiral out from Mars (15 May 2026) to the asteroid Psyche (2029)
