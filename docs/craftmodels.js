@@ -128,28 +128,70 @@ const drum = (r, h, m, n = 8) => cyl(r, r, h, m, n);
 // BepiColombo, the cruise stack as in ESA's art: MTM at the bottom (+ two long wings), MPO, MOSIF sunshade, Mio inside
 // stack axis +Y, MTM wings along ±X
 // =====================================================================
+// BepiColombo's two kinds of array, drawn from ESA's renders:
+// MTM wings: grey high-temperature cells, a thin red border, little red connector pads, gold hinges between panels
+const mtmCells = () => tex(512, 512, (c, w, h) => {
+  c.fillStyle = '#2e3138'; c.fillRect(0, 0, w, h);
+  const cols = 22, rows = 14, cw = (w - 20) / cols, ch = (h - 20) / rows;
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) { const v = 78 + Math.floor(rnd() * 22); c.fillStyle = `rgb(${v},${v + 3},${v + 9})`; c.fillRect(10 + i * cw + 1, 10 + j * ch + 1, cw - 2, ch - 2); }
+  c.fillStyle = '#b3261e'; c.fillRect(0, 0, w, 6); c.fillRect(0, h - 6, w, 6);                    // red edge strips
+  for (const [x, y] of [[0.22, 0.3], [0.7, 0.25], [0.45, 0.62], [0.2, 0.82], [0.78, 0.78]]) { c.fillStyle = '#d8d8d8'; c.fillRect(x * w - 9, y * h - 6, 18, 12); c.fillStyle = '#b3261e'; c.fillRect(x * w - 5, y * h - 3, 10, 6); }
+  c.strokeStyle = '#c9cdd4'; c.lineWidth = 5; c.strokeRect(2, 2, w - 4, h - 4);
+});
+// MPO wing: dark panels covered in red-orange wiring, round tan pads and a few gold blocks along the edge
+const mpoCells = () => tex(512, 512, (c, w, h) => {
+  c.fillStyle = '#16171c'; c.fillRect(0, 0, w, h);
+  c.strokeStyle = '#c4382a'; c.lineWidth = 2.2; c.globalAlpha = 0.9;
+  for (let k = 0; k < 26; k++) { let x = 20 + rnd() * (w - 40), y = 20 + rnd() * (h - 40); c.beginPath(); c.moveTo(x, y);
+    for (let j = 0; j < 4; j++) { if (j % 2) y = Math.min(h - 14, Math.max(14, y + (rnd() - 0.5) * 200)); else x = Math.min(w - 14, Math.max(14, x + (rnd() - 0.5) * 200)); c.lineTo(x, y); } c.stroke(); }
+  c.globalAlpha = 1;
+  for (const [x, y] of [[0.3, 0.28], [0.7, 0.28], [0.3, 0.72], [0.7, 0.72]]) { c.fillStyle = '#8a6a3a'; c.beginPath(); c.arc(x * w, y * h, 15, 0, 7); c.fill();
+    c.fillStyle = '#d9b27a'; c.beginPath(); c.arc(x * w, y * h, 10, 0, 7); c.fill(); }
+  c.fillStyle = '#d8a83c'; for (let y = 30; y < h; y += 46) c.fillRect(w - 16, y, 10, 14);
+  c.fillStyle = '#b3261e'; for (let x = 20; x < w; x += 22) c.fillRect(x, h - 9, 10, 4);
+  c.strokeStyle = '#c9cdd4'; c.lineWidth = 5; c.strokeRect(2, 2, w - 4, h - 4);
+});
+let _bk = null;
+const BK = () => _bk || (_bk = {
+  mtm: S({ map: mtmCells(), color: 0xffffff, metalness: 0.5, roughness: 0.32, emissive: 0x16181c, side: THREE.DoubleSide }),
+  mpo: S({ map: mpoCells(), color: 0xffffff, metalness: 0.45, roughness: 0.3, emissive: 0x0e0606, side: THREE.DoubleSide }),
+  hinge: S({ color: 0xd9a640, metalness: 0.7, roughness: 0.3, emissive: 0x3a2808 }),
+  louvre: S({ color: 0x9aa0a8, metalness: 0.8, roughness: 0.22, emissive: 0x24272c }),
+  plume: new THREE.MeshBasicMaterial({ color: 0x3f9bff, transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }),
+});
+// a BepiColombo wing along +X: yoke, n panels with gold hinge blocks between them
+function bepiWing(n, w, d, m, yoke) {
+  const g = new THREE.Group(), k = K(), b = BK();
+  g.add(rod(V(0, 0, 0), V(yoke, 0, d * 0.32), 0.045, k.metal), rod(V(0, 0, 0), V(yoke, 0, -d * 0.32), 0.045, k.metal), at(box(0.12, 0.12, d * 0.7, k.metal), yoke, 0, 0));
+  for (let i = 0; i < n; i++) { const x = yoke + 0.06 + w / 2 + i * (w + 0.1); g.add(at(panel(w, d, m, 0.035), x, 0, 0));
+    if (i) for (const z of [-d * 0.32, d * 0.32]) g.add(at(box(0.1, 0.07, 0.22, b.hinge), x - w / 2 - 0.05, 0, z)); }
+  return g;
+}
 export function buildBepi() {
-  const k = K(), g = new THREE.Group();
-  // Mercury Transfer Module: box with a white shield, four ion thrusters underneath (glowing)
-  add(g, at(box(3.6, 2.2, 3.4, k.white), 0, 1.1, 0), at(box(3.62, 0.25, 3.42, k.metal), 0, 2.25, 0));
-  add(g, at(box(0.03, 1.6, 2.6, k.radiator), 1.82, 1.1, 0), at(box(0.03, 1.6, 2.6, k.radiator), -1.82, 1.1, 0));
-  for (const [x, z] of [[-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]]) {
-    add(g, at(cyl(0.32, 0.36, 0.25, k.dark, 24), x, -0.1, z), at(cyl(0.3, 0.3, 0.02, k.metal, 24), x, -0.24, z));
-    const plume = lathe([[0.27, 0], [0.33, -0.3], [0.42, -0.9], [0.46, -1.5], [0.38, -2.1], [0.2, -2.5], [0.0, -2.7]], k.glow, 24); plume.position.set(x, -0.25, z); g.add(plume);
+  const k = K(), b = BK(), g = new THREE.Group();
+  // Mercury Transfer Module (bottom): white blanketed box, a ribbed grey radiator face, four ion thrusters underneath (two firing)
+  add(g, at(box(3.6, 2.3, 3.5, k.white), 0, 1.15, 0), at(box(3.64, 0.18, 3.54, k.metal), 0, 2.33, 0), at(box(3.3, 0.12, 3.2, k.grey), 0, -0.06, 0));
+  add(g, at(box(0.04, 1.9, 2.9, b.louvre), 1.82, 1.15, 0));
+  for (let j = 0; j < 9; j++) g.add(at(box(0.08, 1.85, 0.05, k.metal), 1.86, 1.15, -1.3 + j * 0.325));
+  for (const [x, z, on] of [[-0.75, -0.75, 1], [0.75, -0.75, 0], [-0.75, 0.75, 0], [0.75, 0.75, 1]]) {
+    add(g, at(cyl(0.3, 0.34, 0.22, k.dark, 24), x, -0.2, z), at(cyl(0.27, 0.27, 0.02, k.mirror, 24), x, -0.32, z));
+    if (on) for (const [sc, len] of [[1, 1.3], [0.62, 1.9]]) { const pl = lathe([[0.25 * sc, 0], [0.29 * sc, -0.2 * len], [0.3 * sc, -0.5 * len], [0.22 * sc, -0.8 * len], [0.0, -len]], b.plume, 24); pl.position.set(x, -0.33, z); g.add(pl); }   // two nested soft glows
   }
-  for (const sx of [1, -1]) {   // two 14 m wings of five panels, rotated a little toward the Sun
-    const w = wing(5, 2.55, 2.2, k.cellsGold, { yoke: 1.1, gap: 0.12 }); w.position.set(sx * 1.8, 1.1, 0); w.rotation.set(0.35, sx > 0 ? 0 : PI, 0); g.add(w);
+  for (const sx of [1, -1]) {   // two wings of five grey panels (about 14 m each), turned to the Sun
+    const w = bepiWing(5, 2.5, 2.05, b.mtm, 1.0); w.position.set(sx * 1.8, 1.2, 0); w.rotation.set(0.5, sx > 0 ? 0 : PI, 0); g.add(w);
   }
-  // Mercury Planetary Orbiter: silver blanket box, big radiator with fins, one three-panel wing, steerable dish on a mast
-  add(g, at(box(2.4, 1.8, 2.2, k.silver), 0, 3.3, 0), at(box(0.04, 1.7, 2.1, k.radiator), -1.22, 3.3, 0));
-  for (let j = 0; j < 7; j++) g.add(at(box(0.5, 0.02, 2.0, k.metal), -1.47, 2.55 + j * 0.25, 0));
-  { const w = wing(3, 2.4, 1.9, k.cellsCopper, { yoke: 0.7 }); w.position.set(1.2, 3.6, 0.6); w.rotation.set(1.1, 0, 0.55); g.add(w);   // the MPO wing, tilted up as in the art
-    for (let i = 0; i < 3; i++) { const sh = at(box(2.4, 0.02, 0.35, k.mirror), 0.7 + 1.2 + i * 2.48, 0.03, 0.95); w.add(sh); } }    // optical solar reflector strips
-  { const mast = rod(V(0.5, 4.2, -0.8), V(0.5, 5.2, -1.6), 0.05, k.metal); const d = dish(0.5, 0.16); d.position.set(0.5, 5.25, -1.65); d.rotation.set(-0.9, 0, 0.3); g.add(mast, d); }
-  g.add(rod(V(-0.9, 4.1, 0.6), V(-3.6, 4.6, 0.6), 0.03, k.metal), at(box(0.18, 0.18, 0.18, k.white), -3.6, 4.6, 0.6));   // magnetometer boom
-  // MOSIF: the white cone sunshade over Mio (octagonal)
-  add(g, at(cyl(1.1, 1.75, 1.9, k.white, 8), 0, 5.2, 0), at(cyl(1.12, 1.12, 0.06, k.metal, 8), 0, 6.15, 0), at(cyl(1.78, 1.78, 0.08, k.metal, 8), 0, 4.25, 0));
-  add(g, at(cyl(0.9, 0.9, 0.25, k.dark, 8), 0, 6.3, 0), at(cyl(0.25, 0.25, 0.35, k.metal, 16), 0, 6.55, 0));   // top of Mio peeking out
+  // Mercury Planetary Orbiter: white crinkled box, big louvred radiator on one side, one three-panel dark wing tilted up
+  add(g, at(box(2.5, 2.0, 2.3, k.white), 0, 3.45, 0), at(box(2.54, 0.12, 2.34, k.metal), 0, 2.48, 0));
+  add(g, at(box(0.05, 1.8, 2.1, b.louvre), -1.28, 3.45, 0));
+  for (let j = 0; j < 8; j++) g.add(at(box(0.55, 0.03, 2.05, k.metal), -1.55, 2.65 + j * 0.23, 0));   // radiator fins
+  { const w = bepiWing(3, 2.3, 1.85, b.mpo, 0.8); w.position.set(1.25, 3.7, 0.5); w.rotation.set(1.05, 0, 0.5); g.add(w); }
+  // magnetometer boom with its two sensor heads, and the medium-gain antenna on its mast
+  g.add(rod(V(-0.9, 4.25, 0.7), V(-4.2, 4.75, 0.7), 0.035, k.metal), at(box(0.2, 0.2, 0.2, k.white), -2.7, 4.53, 0.7), at(box(0.22, 0.22, 0.22, k.white), -4.2, 4.75, 0.7));
+  g.add(rod(V(0.7, 4.4, -0.9), V(1.4, 7.3, -1.2), 0.05, k.metal), at(cyl(0.14, 0.14, 0.45, k.white, 16), 1.42, 7.45, -1.2, 0, 0, -0.2), at(cyl(0.1, 0.1, 0.04, k.dark, 16), 1.47, 7.68, -1.2, 0, 0, -0.2));
+  // MOSIF: the round white sunshade over Mio, slightly tapered, with metal rims
+  add(g, at(cyl(1.05, 1.3, 2.4, k.white, 32), 0, 5.65, 0), at(cyl(1.07, 1.07, 0.06, k.metal, 32), 0, 6.86, 0), at(cyl(1.33, 1.33, 0.08, k.metal, 32), 0, 4.45, 0));
+  for (let j = 0; j < 8; j++) { const a = j * PI / 4; g.add(rod(V(Math.cos(a) * 1.28, 4.47, Math.sin(a) * 1.28), V(Math.cos(a) * 1.06, 6.84, Math.sin(a) * 1.06), 0.02, k.metal, 4)); }   // seams
+  add(g, at(cyl(0.95, 0.95, 0.06, k.dark, 8), 0, 6.9, 0), at(cyl(0.2, 0.2, 0.3, k.metal, 16), 0, 7.05, 0));   // top of Mio inside
   return g;
 }
 

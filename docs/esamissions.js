@@ -5,7 +5,7 @@
 // =====================================================================
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { buildBepi, buildHera, buildCubesat, buildJuice, buildSolarOrbiter, buildEuclid, buildGaia, buildSmile, buildAriane6, buildRosetta, buildPhilae } from './craftmodels.js?v=42';
+import { buildBepi, buildHera, buildCubesat, buildJuice, buildSolarOrbiter, buildEuclid, buildGaia, buildSmile, buildAriane6, buildRosetta, buildPhilae } from './craftmodels.js?v=49';
 const SS = window.SS;
 const { bodies, sim, flyTo, focusSel } = SS;
 const { info } = SS.cosmos;

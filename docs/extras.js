@@ -16,7 +16,10 @@ function nearLabel(obj, text, y, key, cls, range) { const l = addLabel(obj, text
 function limitExisting(obj, range) { for (const c of obj.children) if (c.isCSS2DObject) nearLabels.push([c, obj, range]); }
 { const a = V(), b = V();
   sim.push(() => { const on = $('labels').checked; camera.getWorldPosition(a);
-    for (const [l, o, r] of nearLabels) l.visible = on && o.getWorldPosition(b).distanceTo(a) < r; }); }
+    // a label only shows while its object is really in the scene and every parent is visible (a removed or hidden group takes its names with it)
+    const shown = o => { for (let p = o; p; p = p.parent) { if (!p.visible) return false; if (p.isScene) return true; } return false; };
+    for (const [l, o, r] of nearLabels) { const s = shown(o); l.visible = on && s && o.getWorldPosition(b).distanceTo(a) < r;
+      if (!s && l.element.style.display !== 'none') l.element.style.display = 'none'; } }); }   // the label renderer never visits a detached label, so hide its element here
 
 // =====================================================================
 // 1. TIME: a simulated clock driving real positions
