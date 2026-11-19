@@ -247,4 +247,5 @@ await import('./skymonth.js' + new URL(import.meta.url).search);
 await import('./weather.js' + new URL(import.meta.url).search);
 await import('./livespace.js' + new URL(import.meta.url).search);
 await import('./skycity.js' + new URL(import.meta.url).search);
+await import('./doc2.js' + new URL(import.meta.url).search);
 await import('./earthpins.js' + new URL(import.meta.url).search);

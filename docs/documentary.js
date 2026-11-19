@@ -9,7 +9,7 @@ const NOW = () => { SS.setDate(Date.now()); rate('0.0416667'); };   // today, 1 
 // ---------------------------------------------------------------------------
 // The script
 // ---------------------------------------------------------------------------
-const CHAPTERS = [
+const FILM1 = [
   { key: 'overview', title: 'A Journey Through Space', sub: 'From our Sun to the edge of the observable universe', pre: NOW,
     text: `Welcome to a journey through space. We begin at home, in our Solar System: one star, eight planets, five dwarf planets, and countless moons, comets and asteroids. Everything you see is placed in its true direction in the sky, and the planets sit where they really are today. The distances, though, have been squeezed, so that we can travel between them. If space were shown at its true scale, almost all of it would be empty darkness. So let's set off, and see what is out there.` },
   { key: 'Sun', title: 'The Sun', sub: 'Our star',
@@ -77,6 +77,7 @@ const CHAPTERS = [
 // ---------------------------------------------------------------------------
 const css = document.createElement('style');
 css.textContent = `
+body.doc #wxPanel{display:none!important}
 #docbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:20;display:none;align-items:center;gap:8px;background:rgba(10,14,30,.82);backdrop-filter:blur(8px);border:1px solid rgba(140,160,255,.22);border-radius:12px;padding:8px 12px;font-size:13px;color:#dfe6ff;transition:opacity .6s}
 #docbar button,#docbar select{background:#24306a;color:#fff;border:1px solid #3a4aa0;border-radius:6px;padding:4px 9px;font-size:13px;cursor:pointer}
 #docbar .meta{min-width:230px;max-width:300px}
@@ -104,11 +105,14 @@ bar.innerHTML = `<button id="dPrev" title="Previous chapter">⏮</button><button
 document.body.appendChild(bar);
 const titleEl = document.createElement('div'); titleEl.id = 'doctitle'; titleEl.innerHTML = '<div class="n"></div><div class="t"></div><div class="s"></div>'; document.body.appendChild(titleEl);
 const subEl = document.createElement('div'); subEl.id = 'docsub'; document.body.appendChild(subEl);
-CHAPTERS.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${i + 1}. ${c.title}`; $('dChap').appendChild(o); });
+// several films share this player: the original journey, and others added later (SS.documentary.playFilm)
+let CHAPTERS = FILM1, AUDIO = 'narration/space-doc-', TIMINGS_URL = 'narration/timings.json', filmId = 'journey';
+function fillChapters() { $('dChap').innerHTML = ''; CHAPTERS.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${i + 1}. ${c.title}`; $('dChap').appendChild(o); }); }
+fillChapters();
 
 // panel button
 { const btn = document.createElement('button'); btn.type = 'button'; btn.id = 'docBtn'; btn.textContent = '🎬 Documentary (~20 min)';
-  $('tourBtn').parentElement.appendChild(btn); btn.onclick = () => start(0); }
+  $('tourBtn').parentElement.appendChild(btn); btn.onclick = () => start(0, FILMS.journey); }
 
 // ---------------------------------------------------------------------------
 // Voices
@@ -134,12 +138,18 @@ $('dSubs').onclick = () => { subsOn = !subsOn; $('dSubs').style.opacity = subsOn
 // ---------------------------------------------------------------------------
 // Recorded narration (Ming TTS): narration/space-doc-01.m4a … one file per chapter
 // ---------------------------------------------------------------------------
-const audioFor = i => `narration/space-doc-${String(i + 1).padStart(2, '0')}.mp3`;
-const audioOK = []; let anyAudio = false;
-Promise.all(CHAPTERS.map((_, i) => fetch(audioFor(i), { method: 'HEAD' }).then(r => audioOK[i] = r.ok).catch(() => audioOK[i] = false)))
-  .then(() => { anyAudio = audioOK.some(Boolean); if (anyAudio) { $('dVoice').textContent = '🔊 Narration'; voiceOn = true; $('dVoiceSel').style.display = 'none'; } });
+const audioFor = i => `${AUDIO}${String(i + 1).padStart(2, '0')}.mp3`;
+let audioOK = [], anyAudio = false;
+function checkAudio() {
+  const film = filmId; audioOK = []; anyAudio = false;
+  Promise.all(CHAPTERS.map((_, i) => fetch(audioFor(i), { method: 'HEAD' }).then(r => audioOK[i] = r.ok && /audio|mpeg|octet/.test(r.headers.get('content-type') || 'audio')).catch(() => audioOK[i] = false)))
+    .then(() => { if (film !== filmId) return; anyAudio = audioOK.some(Boolean);
+      if (anyAudio) { $('dVoice').textContent = '🔊 Narration'; voiceOn = true; $('dVoiceSel').style.display = 'none'; }
+      else { voiceOn = false; synth?.cancel(); $('dVoice').textContent = '🔇 Voice'; if (synth) $('dVoiceSel').style.display = ''; } });   // no recordings: subtitles only until the visitor turns the browser voice on
+}
+checkAudio();
 const player = new Audio(); player.preload = 'auto';
-let TIMINGS = null; fetch('narration/timings.json').then(r => r.ok ? r.json() : null).then(j => TIMINGS = j).catch(() => {});
+let TIMINGS = null; const loadTimings = () => { TIMINGS = null; fetch(TIMINGS_URL).then(r => r.ok ? r.json() : null).then(j => TIMINGS = j).catch(() => {}); }; loadTimings();
 
 // ---------------------------------------------------------------------------
 // Player
@@ -154,7 +164,13 @@ let token = 0;
 
 function totalMinutes() { const w = CHAPTERS.reduce((a, c) => a + c.text.split(/\s+/).length, 0); return Math.round((w / WPS + CHAPTERS.length * (FLY + HOLD_END)) / 60); }
 
-function start(i) {
+function useFilm(f) {
+  if (filmId === f.id) return; filmId = f.id; CHAPTERS = f.chapters; AUDIO = f.audio; TIMINGS_URL = f.timings; fillChapters(); checkAudio(); loadTimings();
+  $('dTime').textContent = ` · about ${totalMinutes()} min`;
+}
+const FILMS = { journey: { id: 'journey', chapters: FILM1, audio: 'narration/space-doc-', timings: 'narration/timings.json' } };
+function start(i, f) {
+  useFilm(f || FILMS.journey);
   SS.stopTour?.();
   try { player.muted = true; player.src = audioFor(Math.max(0, i)); const p = player.play(); p?.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); } catch (e) { player.muted = false; }
   if (!state) { pathsWere = $('paths').checked; if (pathsWere) $('paths').click(); }
@@ -271,6 +287,6 @@ addEventListener('keydown', e => {
 { let idle; const wake = () => { bar.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => state?.playing && bar.classList.add('idle'), 2500); };
   addEventListener('pointermove', wake); addEventListener('keydown', wake); }
 
-SS.documentary = { CHAPTERS, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
+SS.documentary = { FILMS, playFilm: f => { FILMS[f.id] = f; start(0, f); }, totalMinutes, get CHAPTERS() { return CHAPTERS; }, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
 
 await import('./more.js' + new URL(import.meta.url).search);
