@@ -117,22 +117,18 @@ fillChapters();
 // ---------------------------------------------------------------------------
 // Voices
 // ---------------------------------------------------------------------------
-const synth = window.speechSynthesis;
-let voices = [], voice = null, voiceOn = false, subsOn = true;
-function loadVoices() {
-  if (!synth) return;
-  voices = synth.getVoices().filter(v => /^en/i.test(v.lang));
-  const pref = ['Daniel', 'Google UK English Male', 'Arthur', 'Oliver', 'Serena', 'Kate', 'Google UK English Female', 'Alex', 'Samantha'];
-  voices.sort((a, b) => { const ia = pref.findIndex(p => a.name.includes(p)), ib = pref.findIndex(p => b.name.includes(p)); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
-  const sel = $('dVoiceSel'); sel.innerHTML = '';
-  voices.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${v.name} (${v.lang})`; sel.appendChild(o); });
-  if (!voice && voices.length) voice = voices[0];
-  if (voice) sel.value = voices.indexOf(voice);
-}
-if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; } else { $('dVoice').disabled = true; $('dVoiceSel').style.display = 'none'; }
-$('dVoice').textContent = '🔇 Voice';
-$('dVoiceSel').onchange = e => { voice = voices[+e.target.value]; };
-$('dVoice').onclick = () => { voiceOn = !voiceOn; $('dVoice').textContent = voiceOn ? '🔊 Voice' : '🔇 Voice'; if (!voiceOn) synth?.cancel(); };
+const synth = null;                       // no browser voices: only the two recorded narrators below
+let voice = null, voiceOn = true, subsOn = true;
+// recorded narrators: a US woman and a US man (the man's files carry "m-" in their names)
+let narrator = 'f'; try { narrator = localStorage.getItem('msNarrator') === 'm' ? 'm' : 'f'; } catch (e) {}
+let baseAudio = AUDIO, baseTimings = TIMINGS_URL;
+const applyNarrator = () => { AUDIO = baseAudio + (narrator === 'm' ? 'm-' : ''); TIMINGS_URL = narrator === 'm' ? baseTimings.replace(/\.json$/, '-m.json') : baseTimings; };
+applyNarrator();
+{ const sel = $('dVoiceSel'); sel.innerHTML = '<option value="f">♀ Woman (US)</option><option value="m">♂ Man (US)</option>'; sel.value = narrator; }
+$('dVoice').textContent = '🔊 Narration';
+$('dVoiceSel').onchange = e => { narrator = e.target.value === 'm' ? 'm' : 'f'; try { localStorage.setItem('msNarrator', narrator); } catch (er) {}
+  applyNarrator(); checkAudio(); loadTimings(); if (state) { const i = state.i; setTimeout(() => start(i, FILMS[filmId]), 300); } };   // restart the chapter in the new voice
+$('dVoice').onclick = () => { voiceOn = !voiceOn; player.muted = !voiceOn; $('dVoice').textContent = voiceOn ? '🔊 Narration' : '🔇 Narration'; };   // mute only: the recording still keeps time for the subtitles
 $('dSubs').onclick = () => { subsOn = !subsOn; $('dSubs').style.opacity = subsOn ? 1 : 0.45; if (!subsOn) subEl.style.opacity = 0; };
 
 // ---------------------------------------------------------------------------
@@ -144,8 +140,7 @@ function checkAudio() {
   const film = filmId; audioOK = []; anyAudio = false;
   Promise.all(CHAPTERS.map((_, i) => fetch(audioFor(i), { method: 'HEAD' }).then(r => audioOK[i] = r.ok && /audio|mpeg|octet/.test(r.headers.get('content-type') || 'audio')).catch(() => audioOK[i] = false)))
     .then(() => { if (film !== filmId) return; anyAudio = audioOK.some(Boolean);
-      if (anyAudio) { $('dVoice').textContent = '🔊 Narration'; voiceOn = true; $('dVoiceSel').style.display = 'none'; }
-      else { voiceOn = false; synth?.cancel(); $('dVoice').textContent = '🔇 Voice'; if (synth) $('dVoiceSel').style.display = ''; } });   // no recordings: subtitles only until the visitor turns the browser voice on
+      $('dVoice').style.display = $('dVoiceSel').style.display = anyAudio ? '' : 'none'; });   // no recordings: subtitles only
 }
 checkAudio();
 const player = new Audio(); player.preload = 'auto';
@@ -165,14 +160,14 @@ let token = 0;
 function totalMinutes() { const w = CHAPTERS.reduce((a, c) => a + c.text.split(/\s+/).length, 0); return Math.round((w / WPS + CHAPTERS.length * (FLY + HOLD_END)) / 60); }
 
 function useFilm(f) {
-  if (filmId === f.id) return; filmId = f.id; CHAPTERS = f.chapters; AUDIO = f.audio; TIMINGS_URL = f.timings; fillChapters(); checkAudio(); loadTimings();
+  if (filmId === f.id) return; filmId = f.id; CHAPTERS = f.chapters; baseAudio = f.audio; baseTimings = f.timings; applyNarrator(); fillChapters(); checkAudio(); loadTimings();
   $('dTime').textContent = ` · about ${totalMinutes()} min`;
 }
 const FILMS = { journey: { id: 'journey', chapters: FILM1, audio: 'narration/space-doc-', timings: 'narration/timings.json' } };
 function start(i, f) {
   useFilm(f || FILMS.journey);
   SS.stopTour?.();
-  try { player.muted = true; player.src = audioFor(Math.max(0, i)); const p = player.play(); p?.then(() => { player.pause(); player.muted = false; }).catch(() => { player.muted = false; }); } catch (e) { player.muted = false; }
+  try { player.muted = true; player.src = audioFor(Math.max(0, i)); const p = player.play(); p?.then(() => { player.pause(); player.muted = !voiceOn; }).catch(() => { player.muted = !voiceOn; }); } catch (e) { player.muted = !voiceOn; }
   if (!state) { pathsWere = $('paths').checked; if (pathsWere) $('paths').click(); }
   document.body.classList.add('doc'); bar.style.display = 'flex';
   controls.autoRotate = true; controls.autoRotateSpeed = 0.35;
@@ -236,7 +231,7 @@ SS.sim.push(() => {
     state.phase = 'talk';
     const tmR = TIMINGS?.[String(state.i + 1).padStart(2, '0')];
     if (RENDER && tmR) { state.audio = true; state.virtual = true; state.talkStart = state.t; state.talkDur = tmR.duration; state.si = -1; LOG[state.i].talk = frame; }
-    else if (voiceOn && audioOK[state.i]) {           // recorded narration drives the timing
+    else if (audioOK[state.i]) {           // recorded narration drives the timing (muted or not)
       state.audio = true; state.virtual = false; const my = token;
       player.currentTime = 0; player.play().catch(() => {});
       player.onended = () => { if (my === token && state) { state.phase = 'hold'; state.holdStart = state.t; subEl.style.opacity = 0; } };
