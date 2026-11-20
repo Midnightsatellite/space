@@ -62,6 +62,9 @@ const CHAPTERS = [
     text: `From the Moon to interstellar space, we now have robot explorers almost everywhere we look. Many of them are too far or too small to see. But some are not. On a clear evening, the Space Station sweeps across the sky like a bright, steady star, with people on board. The planets those missions are flying to shine above us too. So tonight, if the sky is clear, step outside and look up. Somewhere out there, our spacecraft are still flying.` },
 ];
 
+// craft in low orbit (around Earth, the Moon or Mars) would whizz round at 1 hour per second: play those chapters in real time
+const SLOW = new Set(['ISS', 'ESA_Columbus', 'Dragon', 'Starlink', 'LRO', 'MRO']);
+for (const c of CHAPTERS) { const pre = c.pre; c.pre = () => { pre?.(); rate(SLOW.has(c.key) ? '0.0000115741' : '0.0416667'); }; }
 const FILM = { id: 'missions', chapters: CHAPTERS, audio: 'narration/missions-doc-', timings: 'narration/missions-timings.json' };
 { const btn = document.createElement('button'); btn.type = 'button'; btn.id = 'doc2Btn';
   const after = $('docBtn'); (after ? after.parentElement : $('tourBtn').parentElement).appendChild(btn);

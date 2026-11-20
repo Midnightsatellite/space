@@ -107,7 +107,9 @@ const titleEl = document.createElement('div'); titleEl.id = 'doctitle'; titleEl.
 const subEl = document.createElement('div'); subEl.id = 'docsub'; document.body.appendChild(subEl);
 // several films share this player: the original journey, and others added later (SS.documentary.playFilm)
 let CHAPTERS = FILM1, AUDIO = 'narration/space-doc-', TIMINGS_URL = 'narration/timings.json', filmId = 'journey';
-function fillChapters() { $('dChap').innerHTML = ''; CHAPTERS.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${i + 1}. ${c.title}`; $('dChap').appendChild(o); }); }
+const FR = () => SS.lang === 'fr';
+const L = i => { const c = CHAPTERS[i], f = FR() && SS.docFR?.[filmId]?.[i]; return f ? { title: f[0], sub: f[1], text: f[2] } : c; };   // the chapter in the visitor's language
+function fillChapters() { $('dChap').innerHTML = ''; CHAPTERS.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = `${i + 1}. ${L(i).title}`; $('dChap').appendChild(o); }); }
 fillChapters();
 
 // panel button
@@ -122,9 +124,13 @@ let voice = null, voiceOn = true, subsOn = true;
 // recorded narrators: a US woman and a US man (the man's files carry "m-" in their names)
 let narrator = 'f'; try { narrator = localStorage.getItem('msNarrator') === 'm' ? 'm' : 'f'; } catch (e) {}
 let baseAudio = AUDIO, baseTimings = TIMINGS_URL;
-const applyNarrator = () => { AUDIO = baseAudio + (narrator === 'm' ? 'm-' : ''); TIMINGS_URL = narrator === 'm' ? baseTimings.replace(/\.json$/, '-m.json') : baseTimings; };
+const applyNarrator = () => { const tag = (FR() ? 'fr-' : '') + (narrator === 'm' ? 'm-' : '');   // e.g. space-doc-fr-m-01.mp3 and timings-fr-m.json
+  AUDIO = baseAudio + tag; TIMINGS_URL = tag ? baseTimings.replace(/\.json$/, '-' + tag.slice(0, -1) + '.json') : baseTimings; };
+const voiceLabels = () => { const o = $('dVoiceSel').options; o[0].textContent = FR() ? '♀ Femme (FR)' : '♀ Woman (US)'; o[1].textContent = FR() ? '♂ Homme (FR)' : '♂ Man (US)'; };
 applyNarrator();
-{ const sel = $('dVoiceSel'); sel.innerHTML = '<option value="f">♀ Woman (US)</option><option value="m">♂ Man (US)</option>'; sel.value = narrator; }
+{ const sel = $('dVoiceSel'); sel.innerHTML = '<option value="f">♀ Woman (US)</option><option value="m">♂ Man (US)</option>'; sel.value = narrator; voiceLabels(); }
+const onLang = () => { voiceLabels(); applyNarrator(); checkAudio(); loadTimings(); fillChapters();   // French narration and text when the site is in French (hooked to SS.setLang by docfr.js)
+  if (state) { const i = state.i; setTimeout(() => start(i, FILMS[filmId]), 300); } };
 $('dVoice').textContent = '🔊 Narration';
 $('dVoiceSel').onchange = e => { narrator = e.target.value === 'm' ? 'm' : 'f'; try { localStorage.setItem('msNarrator', narrator); } catch (er) {}
   applyNarrator(); checkAudio(); loadTimings(); if (state) { const i = state.i; setTimeout(() => start(i, FILMS[filmId]), 300); } };   // restart the chapter in the new voice
@@ -186,14 +192,14 @@ function setChapter(i) {
   if (i >= CHAPTERS.length) { finish(); return; }
   i = Math.max(0, i);
   const c = CHAPTERS[i];
-  Object.assign(state, { i, t: 0, phase: 'fly', sentences: sentencesOf(c.text), si: -1, sStart: 0, speaking: false });
+  Object.assign(state, { i, t: 0, phase: 'fly', sentences: sentencesOf(L(i).text), si: -1, sStart: 0, speaking: false });
   c.pre?.();
   if (audioOK[i] && !RENDER) { player.src = audioFor(i); player.load(); }
   LOG[i] = { start: frame, date: SS.getDate() };
   SS.focusSel.value = c.key; SS.go(c.key);
-  $('dChap').value = i; $('dName').textContent = `${i + 1}/${CHAPTERS.length} · ${c.title}`;
+  $('dChap').value = i; $('dName').textContent = `${i + 1}/${CHAPTERS.length} · ${L(i).title}`;
   titleEl.querySelector('.n').textContent = `Chapter ${i + 1}`;
-  titleEl.querySelector('.t').textContent = c.title; titleEl.querySelector('.s').textContent = c.sub;
+  titleEl.querySelector('.t').textContent = L(i).title; titleEl.querySelector('.s').textContent = L(i).sub;
   titleEl.style.opacity = 0; subEl.style.opacity = 0;
 }
 function finish() {
@@ -282,6 +288,6 @@ addEventListener('keydown', e => {
 { let idle; const wake = () => { bar.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => state?.playing && bar.classList.add('idle'), 2500); };
   addEventListener('pointermove', wake); addEventListener('keydown', wake); }
 
-SS.documentary = { FILMS, playFilm: f => { FILMS[f.id] = f; start(0, f); }, totalMinutes, get CHAPTERS() { return CHAPTERS; }, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
+SS.documentary = { onLang, FILMS, playFilm: f => { FILMS[f.id] = f; start(0, f); }, totalMinutes, get CHAPTERS() { return CHAPTERS; }, start, stop, LOG, getState: () => state, getFrame: () => frame, setFrame: f => { frame = f; }, timingsReady: () => !!TIMINGS };
 
 await import('./more.js' + new URL(import.meta.url).search);
