@@ -338,15 +338,18 @@ exoPlanet({ hostKey: 'AUMic', key: 'AUMicb', name: 'AU Mic b', r: 0.45, dist: 3.
   const ghostTex = paint(751, '#2a2a34', '#7a7a8a', 2.2, 60);
   for (const [k, nm, r, d, per, fact] of [
     ['Draugr', 'Draugr', 0.12, 2.4, 25.3, 'One of the smallest planets known, about twice the mass of our Moon, bathed in the pulsar\'s deadly radiation.'],
-    ['Poltergeist', 'Poltergeist', 0.3, 3.6, 66.5, 'A "zombie world" circling a dead star. It was among the first planets ever discovered beyond our Solar System.'],
-    ['Phobetor', 'Phobetor', 0.29, 4.6, 98.2, 'Named after a Greek god of nightmares. It and its neighbours may have formed from the wreckage of the star\'s explosion.']]) {
+    ['Poltergeist', 'Poltergeist', 0.3, 3.6, 66.5, 'A "zombie world" circling a dead star. Found in 1992 by Polish astronomer Aleksander Wolszczan by timing the pulsar\'s beats, it shares with Phobetor the title of the first planets discovered beyond our Solar System. A super-Earth about 4 times Earth\'s mass, it circles Lich every 66.5 days.'],
+    ['Phobetor', 'Phobetor', 0.29, 4.6, 98.2, 'The outermost planet of the pulsar Lich, a super-Earth 1.5 times Earth\'s size and 3.9 times its mass, frozen at about −104 °C. It takes 98.2 days to circle Lich. Discovered on 22 January 1992 by Aleksander Wolszczan, it was named in 2015 after Phobetor, a son of Sleep in Ovid\'s Metamorphoses who appears in dreams as a beast.']]) {
     const piv = new THREE.Group(); piv.rotation.set(0.2, hash(d, r) * 6.28, 0); holder.add(piv);
-    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), SS.extras.litMaterial(ghostTex, out => holder.getWorldPosition(out))); m.material.uniforms.tint.value.set(0xa8b8ff); m.position.x = d; piv.add(m);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 64, 32), SS.extras.litMaterial(k === 'Draugr' ? ghostTex : loadTex(`tex/${k.toLowerCase()}.jpg`), out => holder.getWorldPosition(out))); m.material.uniforms.tint.value.set(k === 'Draugr' ? 0xa8b8ff : 0xffffff); m.position.x = d; piv.add(m);
     const pts = Array.from({ length: 96 }, (_, i) => V(Math.cos(i / 96 * 6.283) * d, 0, Math.sin(i / 96 * 6.283) * d));
     { const ol = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fb0ff, transparent: true, opacity: 0.22 })); piv.add(ol); SS.orbitLines.push(ol); }
     sim.push(() => { piv.rotation.y += Math.min(1.2, 2 * Math.PI / per * dps()) * SS.frameDt; });
     deepLabel(m, nm, r + 0.4, k, 'exo', 60);
-    bodies[k] = { obj: m, radius: r, view: Math.max(1.4, r * 6) }; info(k, nm, 'Exoplanet · pulsar planet', 'about 2,300 light-years away', fact);
+    bodies[k] = { obj: m, radius: r, view: Math.max(1.4, r * 6) };
+    if (k !== 'Draugr') bodies[k].dir = () => { const pw = m.getWorldPosition(V()), toL = holder.getWorldPosition(V()).sub(pw).normalize();   // from the pulsar-lit side, three-quarters lit
+      const side = V(0, 1, 0).cross(toL).normalize(); return toL.multiplyScalar(0.72).addScaledVector(side, 0.66).add(V(0, 0.12, 0)).normalize(); };
+    info(k, nm, 'Exoplanet · pulsar planet', 'about 2,300 light-years away', fact);
   }
 }
 // Kepler-70 b: a world that may have survived a trip inside its star

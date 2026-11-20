@@ -135,6 +135,10 @@ function swap(key) {
 }
 // hand-built ones straight away; NASA models when visited, then the rest quietly in the background
 for (const k of Object.keys(PROC)) swap(k);
+if (bodies.SPARCS) { const sp = V(), su = V(), eo = V();   // SPARCS: look at its sunlit side (it flies a dawn-dusk orbit, always in sunlight)
+  bodies.SPARCS.dir = () => { const o = bodies.SPARCS.obj; o.getWorldPosition(sp); bodies.Sun.obj.getWorldPosition(su); bodies.Earth?.obj.getWorldPosition(eo);
+    const toSun = su.sub(sp).normalize(), out = sp.clone().sub(eo).normalize();
+    return toSun.multiplyScalar(0.75).addScaledVector(out, 0.55).add(V(0, 0.15, 0)).normalize(); }; }
 { const prev = SS.onFocus; SS.onFocus = k => { prev(k); if (GLB[k]) swap(k); }; }
 setTimeout(() => { let i = 0; const keys = Object.keys(GLB); const next = () => { if (i < keys.length) { swap(keys[i++]); setTimeout(next, 1500); } }; next(); }, 12000);
 SS.more.nasa2 = { swap, BUILD };
