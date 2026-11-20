@@ -275,18 +275,37 @@ export const SATS = {
 
   // SPARCS: a 6U CubeSat (about 10 × 22 × 37 cm) from Arizona State. Anodised aluminium frame, a 9 cm UV telescope
   // looking out of one end, Blue Canyon XB1 avionics, two star trackers and long deployable solar panels.
-  SPARCS: () => {
+  SPARCS: () => {   // 6U CubeSat (36.6 × 22.6 × 10 cm) from Arizona State University, drawn from the mission's renders
     const g = new THREE.Group(), L = 3.66, W = 2.26, H = 1.0;
-    add(g, box(W, H, L, mat.alu));
-    for (const x of [-1, 1]) for (const y of [-1, 1]) g.add(at(box(0.08, 0.08, L + 0.02, mat.silver), x * W / 2, y * H / 2, 0));   // rails
-    add(g, at(box(W * 0.8, 0.01, L * 0.75, mat.silver), 0, H / 2 + 0.005, 0), at(box(W * 0.3, 0.02, L * 0.3, mat.white), -0.4, H / 2 + 0.01, -0.6));
-    // telescope end: round 9 cm aperture with a dark baffle, plus the star tracker windows
-    add(g, at(cyl(0.48, 0.48, 0.06, mat.dark, 40), 0.35, 0, L / 2 + 0.03, Math.PI / 2, 0, 0), at(cyl(0.4, 0.4, 0.07, mat.black, 40), 0.35, 0, L / 2 + 0.04, Math.PI / 2, 0, 0));
-    add(g, at(cyl(0.11, 0.11, 0.08, mat.alu, 20), 0.35, 0, L / 2 + 0.06, Math.PI / 2, 0, 0));   // secondary mirror holder
-    add(g, at(cyl(0.18, 0.18, 0.1, mat.black, 20), -0.7, 0.2, L / 2 + 0.04, Math.PI / 2, 0, 0), at(cyl(0.18, 0.18, 0.1, mat.black, 20), -0.7, 0.2, -L / 2 - 0.04, Math.PI / 2, 0, 0));
-    add(g, at(box(0.5, 0.4, 0.02, mat.gold), -0.2, 0.05, -L / 2 - 0.01));
-    // two long solar panels deployed out from the bottom edges
-    for (const s of [1, -1]) { const p = panel(4.2, L * 0.95, 6, 3); p.rotation.y = s > 0 ? 0 : Math.PI; p.position.set(s * W / 2, -H / 2, 0); g.add(p); }
+    const cv = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+    // brushed-aluminium skin with fastener rows
+    const skin = new THREE.MeshStandardMaterial({ map: cv(256, 256, (c, w, h) => { const gr = c.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#c9ccd1'); gr.addColorStop(1, '#e3e5e8');
+        c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(90,94,100,0.6)'; for (let x = 8; x < w; x += 20) { c.fillRect(x, 5, 2, 2); c.fillRect(x, h - 7, 2, 2); }
+        c.strokeStyle = 'rgba(120,124,130,0.5)'; c.strokeRect(3, 3, w - 6, h - 6); }), color: 0xffffff, metalness: 0.55, roughness: 0.35, emissive: 0x2a2c30 });
+    // the solar wings: light grey with faint cell seams (as seen in the renders)
+    const wingMat = new THREE.MeshStandardMaterial({ map: cv(256, 256, (c, w, h) => { c.fillStyle = '#a9adb3'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(140,144,150,0.6)';
+        for (let x = 0; x <= w; x += w / 6) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } c.strokeStyle = 'rgba(200,204,210,0.8)'; c.lineWidth = 4; c.strokeRect(2, 2, w - 4, h - 4); }),
+      color: 0xffffff, metalness: 0.4, roughness: 0.45, emissive: 0x24262a, side: THREE.DoubleSide });
+    const copper = M(0xc8642c, 0.6, 0.35, 0x3a1a08);
+    add(g, box(W, H, L, skin));
+    for (const x of [-1, 1]) for (const y of [-1, 1]) g.add(at(box(0.1, 0.1, L + 0.04, mat.silver), x * W / 2, y * H / 2, 0));   // corner rails
+    for (const z of [-1.2, 0, 1.2]) add(g, at(box(W + 0.02, H + 0.02, 0.03, mat.alu), 0, 0, z));                                  // frame ribs
+    // front end (+Z): the round telescope cover with radial vanes, and a small port below
+    { const f = new THREE.Group(); f.position.z = L / 2 + 0.02; g.add(f);
+      add(f, box(W * 0.92, H * 0.92, 0.04, mat.alu), at(cyl(0.44, 0.44, 0.06, mat.dark, 40), 0.25, 0.08, 0.03, Math.PI / 2, 0, 0), at(cyl(0.38, 0.38, 0.07, mat.black, 40), 0.25, 0.08, 0.04, Math.PI / 2, 0, 0));
+      for (let i = 0; i < 12; i++) { const v = box(0.36, 0.025, 0.02, mat.alu); v.position.set(0.25, 0.08, 0.08); v.rotation.z = i * Math.PI / 12; f.add(v); }
+      add(f, at(cyl(0.09, 0.09, 0.08, mat.alu, 20), 0.25, 0.08, 0.09, Math.PI / 2, 0, 0), at(cyl(0.12, 0.12, 0.06, mat.black, 20), -0.65, -0.25, 0.04, Math.PI / 2, 0, 0)); }
+    // back end (−Z): the open electronics frame with its copper bracket, camera port and connectors
+    { const k = new THREE.Group(); k.position.z = -L / 2 - 0.02; g.add(k);
+      add(k, box(W * 0.95, H * 0.95, 0.05, mat.dark), at(box(1.0, 0.12, 0.08, copper), -0.2, -0.36, -0.04), at(box(0.12, 0.6, 0.08, copper), -0.7, -0.1, -0.04));
+      add(k, at(cyl(0.2, 0.2, 0.1, mat.alu, 24), 0.1, 0.05, -0.05, Math.PI / 2, 0, 0), at(cyl(0.13, 0.13, 0.12, mat.black, 24), 0.1, 0.05, -0.06, Math.PI / 2, 0, 0));
+      for (let i = 0; i < 4; i++) k.add(at(box(0.1, 0.07, 0.06, mat.silver), 0.55 + i * 0.12, 0.3, -0.03)); }
+    // two long wings, three hinged panels each, folded out from the sides
+    for (const sx of [1, -1]) { const w = new THREE.Group(); w.position.set(sx * W / 2, 0, 0); w.rotation.z = sx * 0.05; g.add(w);
+      const pw = L * 0.82, pl = L * 0.9;
+      for (let i = 0; i < 3; i++) { const x = sx * (0.12 + pl / 2 + i * (pl + 0.1)); w.add(at(box(pl, 0.04, pw, wingMat), x, 0, 0));
+        for (const z of [-pw * 0.3, pw * 0.3]) w.add(at(box(0.1, 0.08, 0.14, mat.alu), sx * (0.07 + i * (pl + 0.1)), 0, z)); } }
     return g;
   },
 
