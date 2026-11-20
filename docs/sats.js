@@ -42,35 +42,72 @@ function shells(R, n, m) { const g = new THREE.Group();
 
 export const SATS = {
 
-  // Tiangong today: a T shape. Tianhe core module (16.6 m) with its docking hub at the front, the Wentian and Mengtian lab
-  // modules (about 17.9 m each) on either side of the hub, each with a pair of huge flexible solar wings, plus Tianhe's own two
-  // wings at the back. Visiting ships: a Shenzhou crew capsule at the front and underneath, a Tianzhou cargo ship at the back.
+  // Tiangong today: a T shape, drawn from the China Manned Space Engineering Office renders. Tianhe core module (16.6 m) with its
+  // docking hub at the front; the Wentian and Mengtian labs (about 17.9 m each) on either side of the hub, each ending in a long
+  // truss mast with two pairs of flexible solar blankets (dark cells on an orange frame, grey hinge bands) above and below;
+  // Tianhe's own two orange wings behind the T; a Shenzhou at the front and one underneath, a Tianzhou cargo ship at the back.
   Tiangong: () => {
-    const g = new THREE.Group(), wh = mat.white, band = M(0xc9cdd3, 0.3, 0.5, 0x2a2c30);
+    const g = new THREE.Group(), band = M(0xc9cdd3, 0.3, 0.5, 0x2a2c30);
+    const cv = (w, h, draw, rep = [1, 1]) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(...rep); return t; };
+    let sd = 11; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    // white module skin: panel seams, handrails and little boxes, like the renders
+    const wh = new THREE.MeshStandardMaterial({ map: cv(512, 256, (c, w, h) => { c.fillStyle = '#f1f1ee'; c.fillRect(0, 0, w, h);
+        c.strokeStyle = 'rgba(120,124,130,0.45)'; c.lineWidth = 1.5; for (let x = 0; x <= w; x += w / 12) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
+        for (let y = 0; y <= h; y += h / 3) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+        c.strokeStyle = 'rgba(200,160,60,0.7)'; c.lineWidth = 2; for (let k = 0; k < 6; k++) { const x = rnd() * w, y = rnd() * h; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 30 + rnd() * 40, y); c.stroke(); }
+        for (let k = 0; k < 14; k++) { c.fillStyle = rnd() < 0.3 ? 'rgba(60,64,72,0.75)' : 'rgba(170,174,182,0.7)'; c.fillRect(rnd() * w, rnd() * h, 8 + rnd() * 22, 6 + rnd() * 14); } }, [2, 1]),
+      color: 0xffffff, metalness: 0.1, roughness: 0.55, emissive: 0x3c3c3a });
+    // flexible solar blanket: dark cells on an orange grid, orange ends, two grey hinge bands
+    const blanketMap = cv(256, 1024, (c, w, h) => { c.fillStyle = '#d4742c'; c.fillRect(0, 0, w, h);
+      const cols = 5, rows = 34, cw = (w - 12) / cols, ch = (h - 60) / rows;
+      for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) { const v = 26 + Math.floor(rnd() * 10); c.fillStyle = `rgb(${v + 8},${v},${v - 4})`; c.fillRect(6 + i * cw + 1.5, 30 + j * ch + 1.5, cw - 3, ch - 3); }
+      c.fillStyle = '#e8792a'; c.fillRect(0, 0, w, 30); c.fillRect(0, h - 30, w, 30);
+      c.fillStyle = '#b4b8be'; c.fillRect(0, h * 0.22, w, ch * 1.6); });
+    const blanket = new THREE.MeshStandardMaterial({ map: blanketMap, color: 0xffffff, metalness: 0.3, roughness: 0.45, emissive: 0xffffff, emissiveMap: blanketMap, emissiveIntensity: 0.32, side: THREE.DoubleSide });   // glows a little so the orange grid still shows on the shaded side
+    const flag = new THREE.MeshBasicMaterial({ map: cv(96, 64, (c, w, h) => { c.fillStyle = '#de2910'; c.fillRect(0, 0, w, h); c.fillStyle = '#ffde00';
+      const star = (x, y, r) => { c.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.4 : r; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.fill(); };
+      star(16, 16, 10); for (const [x, y] of [[32, 6], [38, 13], [38, 22], [32, 28]]) star(x, y, 3.2); }), polygonOffset: true, polygonOffsetFactor: -2 });
     const along = (o, axis) => { if (axis === 'x') o.rotation.z = Math.PI / 2; else if (axis === 'z') o.rotation.x = Math.PI / 2; return o; };
-    const tube = (r1, r2, len, axis, x, y, z, m = wh) => { const c = along(cyl(r1, r2, len, m, 32), axis); c.position.set(x, y, z); g.add(c); return c; };
-    const ring = (r, axis, x, y, z) => tube(r * 1.02, r * 1.02, 0.12, axis, x, y, z, band);
-    // a flexible solar wing: a long blanket of cells on a thin mast, along +dir from p
-    const flexWing = (p, dir, len, wid, normal) => { const w = new THREE.Group(), n = 10;
-      for (let i = 0; i < n; i++) w.add(at(box(len / n * 0.97, 0.03, wid, mat.cell), (i + 0.5) * len / n, 0, 0));
-      w.add(at(box(len, 0.06, 0.08, mat.goldD), len / 2, 0, 0)); w.add(at(box(0.3, 0.12, wid, mat.alu), len, 0, 0));
-      w.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(dir, normal, dir.clone().cross(normal))); w.position.copy(p); g.add(w); return w; };
-    // Tianhe core: hub sphere at z = 0, then the narrow cabin, a cone, the wide cabin and the aft service section
-    g.add(new THREE.Mesh(new THREE.SphereGeometry(1.45, 32, 20), wh));
+    const tube = (r1, r2, len, axis, x, y, z, m = wh) => { const c = along(cyl(r1, r2, len, m, 40), axis); c.position.set(x, y, z); g.add(c); return c; };
+    const ring = (r, axis, x, y, z) => tube(r * 1.02, r * 1.02, 0.14, axis, x, y, z, band);
+    const decal = (w, h, x, y, z, ry, rx = 0) => { const d = new THREE.Mesh(new THREE.PlaneGeometry(w, h), flag); d.position.set(x, y, z); d.rotation.set(rx, ry, 0); g.add(d); };
+    // a blanket wing: one long sheet from p along dir, facing normal
+    const sheet = (p, dir, len, wid, normal) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(wid, len), blanket);
+      const side = dir.clone().cross(normal).normalize(); m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side, dir, normal));
+      m.position.copy(p).addScaledVector(dir, len / 2); g.add(m); return m; };
+    // Tianhe core: hub sphere at z = 0, narrow cabin, cone, wide cabin, aft service section
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(1.45, 40, 24), wh));
     tube(1.4, 1.4, 5.0, 'z', 0, 0, 3.9); tube(1.4, 2.1, 1.2, 'z', 0, 0, 7.0); tube(2.1, 2.1, 4.6, 'z', 0, 0, 9.9); tube(1.4, 1.4, 1.6, 'z', 0, 0, 13.0);
     for (const z of [2.0, 4.2, 6.3, 8.0, 10.2, 12.1]) ring(z < 7.5 ? 1.4 : 2.1, 'z', 0, 0, z);
-    // Tianhe's own two wings at the back, out to the sides
-    for (const sx of [1, -1]) flexWing(V(sx * 2.1, 0, 12.4), V(sx, 0, 0), 11, 3.0, V(0, 1, 0));
-    // robotic arm folded along the core
-    g.add(rod(V(1.3, 1.5, 3.0), V(1.6, 1.9, 9.0), 0.1, mat.alu)); g.add(rod(V(1.6, 1.9, 9.0), V(1.0, 2.4, 11.5), 0.1, mat.alu));
-    // the two lab modules on the sides of the hub, each with two giant wings near its far end
+    for (const sx of [1, -1]) g.add(at(box(0.08, 2.4, 3.8, mat.alu), sx * 2.15, 0.4, 9.9));          // radiators on the wide cabin
+    decal(0.9, 0.6, 0, 1.425, 5.0, 0, -Math.PI / 2);                                                 // flag on Tianhe
+    // Tianhe's own two orange wings, sticking out sideways behind the T
+    for (const sx of [1, -1]) { g.add(at(box(2.2, 0.25, 0.25, mat.alu), sx * 3.2, 0, 12.4)); sheet(V(sx * 4.2, 0, 12.4), V(sx, 0, 0), 12, 3.2, V(0, 1, 0)); }
+    // the big robotic arm, raised over the core, with its joints
+    { const a = V(0.9, 1.3, 2.8), b = V(1.8, 4.6, 6.2), c = V(1.4, 3.3, 10.6);
+      g.add(rod(a, b, 0.17, wh), rod(b, c, 0.17, wh), at(new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), mat.alu), b.x, b.y, b.z),
+        at(new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 12), mat.alu), a.x, a.y, a.z), at(cyl(0.35, 0.35, 0.5, mat.alu, 16), c.x, c.y, c.z)); }
+    // a small dish antenna on the hub
+    { const d = cyl(0.7, 0.15, 0.3, mat.mirror, 24, true); d.position.set(-0.6, 2.3, 0.4); d.rotation.x = -0.4; g.add(d, rod(V(-0.5, 1.4, 0.2), V(-0.6, 2.2, 0.4), 0.06, mat.alu)); }
+    // the two lab modules on the sides of the hub, each ending in a truss mast with four solar blankets
     for (const sx of [1, -1]) {
       tube(1.4, 1.4, 2.2, 'x', sx * 2.5, 0, 0); tube(1.4, 2.1, 1.2, 'x', sx * 4.2, 0, 0); tube(2.1, 2.1, 11.5, 'x', sx * 10.6, 0, 0); tube(1.6, 1.6, 1.4, 'x', sx * 17.0, 0, 0);
+      tube(1.2, 1.6, 1.0, 'x', sx * 18.2, 0, 0); tube(1.2, 1.2, 0.8, 'x', sx * 19.1, 0, 0, mat.alu);
       for (const x of [5.5, 8.5, 11.5, 14.5]) ring(2.1, 'x', sx * x, 0, 0);
-      g.add(at(box(2.4, 0.15, 2.6, mat.alu), sx * 12.5, 2.2, 0));                           // exposed experiment platform
-      for (const sz of [1, -1]) flexWing(V(sx * 17.0, 0, sz * 1.6), V(0, 0, sz), 25, 4.2, V(1, 0, 0));
+      decal(0.9, 0.6, sx * 9.0, 0.3, 2.105, sx > 0 ? 0 : 0);                                         // flag on each lab
+      // exposed experiment platform: a white grid of payload boxes (Wentian) or a dark payload rack (Mengtian)
+      if (sx > 0) for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) g.add(at(box(0.95, 0.95, 0.95, wh), sx * (15.6 + i * 1.0), 2.6, -0.5 + j * 1.0));
+      else g.add(at(box(2.6, 1.2, 1.8, mat.dark), sx * 15.2, 2.5, 0.6), at(box(2.4, 0.15, 2.6, mat.alu), sx * 15.2, 1.95, 0.6));
+      g.add(at(box(1.8, 0.1, 2.2, mat.alu), sx * 13.6, -2.2, 0));                                    // small radiator / platform underneath
+      // the mast: a lattice truss up and down from the far end, two blankets on each side of it
+      for (const sy of [1, -1]) {
+        const m = mast(27, 0.35, 18, 0.03); m.position.set(sx * 17.0, sy * 1.7, 0); if (sy < 0) m.rotation.z = Math.PI; g.add(m);
+        for (const dz of [-2.55, 2.55]) sheet(V(sx * 17.0, sy * 3.0, dz), V(0, sy, 0), 25, 4.6, V(0, 0, 1));
+        g.add(at(box(0.6, 0.6, 0.6, mat.alu), sx * 17.0, sy * 1.9, 0));
+      }
     }
-    // a Shenzhou: orbital module, re-entry capsule, service module with four panels
+    // a Shenzhou: orbital module, re-entry capsule, service module with its two blue panels
     const shenzhou = (p, dir, up) => { const s = new THREE.Group();
       s.add(at(new THREE.Mesh(new THREE.SphereGeometry(1.1, 24, 16), wh), 0, 1.3, 0)); s.add(at(cyl(1.25, 0.9, 2.2, M(0x8a8f96, 0.4, 0.5, 0x202226), 24), 0, 3.3, 0));
       s.add(at(cyl(1.4, 1.4, 2.9, wh, 24), 0, 5.9, 0)); s.add(at(cyl(1.45, 1.45, 0.1, band, 24), 0, 4.45, 0));
@@ -78,7 +115,7 @@ export const SATS = {
       s.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(up.clone().cross(dir), dir, up)); s.position.copy(p); g.add(s); };
     shenzhou(V(0, 0, -1.2), V(0, 0, -1), V(0, 1, 0));            // front port
     shenzhou(V(0, -1.2, 0), V(0, -1, 0), V(0, 0, 1));            // radial port underneath
-    // a Tianzhou cargo ship at the back
+    // a Tianzhou cargo ship at the back, with its blue panels
     tube(1.7, 1.7, 9.0, 'z', 0, 0, 18.4); tube(1.4, 1.7, 0.8, 'z', 0, 0, 13.6);
     for (const sx of [1, -1]) { const p3 = panel(6.5, 2.4, 3, 1); p3.rotation.y = sx > 0 ? 0 : Math.PI; p3.position.set(sx * 1.7, 0, 20); g.add(p3); }
     return g;
