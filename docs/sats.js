@@ -314,17 +314,41 @@ export const SATS = {
 
   // CUTE: a 6U CubeSat (about 36 cm long) from Colorado. Inside, a rectangular 20.6 × 8.4 cm Cassegrain telescope
   // feeds a near-ultraviolet spectrograph. Blue Canyon XB1 bus, two long deployable solar panels.
-  CUTE: () => {
+  CUTE: () => {   // drawn from the University of Colorado render: open aluminium frame, circuit boards inside, grey wings on the upper half
     const g = new THREE.Group(), L = 3.55, W = 2.26, H = 1.0;
-    add(g, box(W, H, L, mat.goldD));
-    for (const x of [-1, 1]) for (const y of [-1, 1]) g.add(at(box(0.08, 0.08, L + 0.02, mat.alu), x * W / 2, y * H / 2, 0));
-    add(g, at(box(W * 0.9, 0.012, L * 0.85, mat.kapton), 0, H / 2 + 0.006, 0), at(box(W * 0.9, 0.012, L * 0.85, mat.kapton), 0, -H / 2 - 0.006, 0));
-    // telescope end: the rectangular aperture behind a door
-    add(g, at(box(2.06, 0.84, 0.05, mat.dark), 0, 0, L / 2 + 0.025), at(box(1.9, 0.72, 0.06, mat.black), 0, 0, L / 2 + 0.03), at(box(0.42, 0.22, 0.07, mat.alu), 0, 0, L / 2 + 0.04));
-    add(g, at(cyl(0.15, 0.15, 0.08, mat.black, 20), 0.75, 0.2, -L / 2 - 0.04, Math.PI / 2, 0, 0), at(box(0.6, 0.3, 0.02, mat.white), -0.4, 0, -L / 2 - 0.01));
-    add(g, at(box(0.03, 0.02, 1.2, mat.alu), -0.9, H / 2 + 0.02, 0));   // UHF antenna
-    // two long panels, hinged along the long edges and swung out
-    for (const s of [1, -1]) { const p = panel(3.4, L * 0.95, 6, 2); p.rotation.y = s > 0 ? 0 : Math.PI; p.rotation.x = 0; p.rotation.z = s * 0.12; p.position.set(s * W / 2, H / 2, 0); g.add(p); }
+    const cv = (w, h, draw) => { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+    const lit = (map, ei, extra = {}) => { const m = new THREE.MeshStandardMaterial({ map, color: 0xffffff, metalness: 0.35, roughness: 0.5, emissive: 0xffffff, emissiveIntensity: ei, ...extra }); m.emissiveMap = map; return m; };
+    const frameM = M(0xd8dbe0, 0.4, 0.4, 0x8c9096), inner = M(0x6a6e75, 0.3, 0.6, 0x2a2c30), brass = M(0xd9c8a0, 0.3, 0.5, 0x6e6450), blk = M(0x18191c, 0.3, 0.6, 0x0a0a0c);
+    // circuit boards: green with chips and traces
+    const pcb = lit(cv(128, 128, (c, w, h) => { c.fillStyle = '#2f9a3c'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(190,230,170,0.5)'; for (let i = 0; i < 14; i++) { c.beginPath(); c.moveTo(Math.random() * w, Math.random() * h); c.lineTo(Math.random() * w, Math.random() * h); c.stroke(); }
+      for (let i = 0; i < 6; i++) { c.fillStyle = i % 2 ? '#1c1c1c' : '#c8c8c8'; c.fillRect(10 + Math.random() * 90, 10 + Math.random() * 90, 14 + Math.random() * 16, 10 + Math.random() * 12); } }), 0.35);
+    const wingM = lit(cv(256, 256, (c, w, h) => { c.fillStyle = '#a4a8ae'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(128,132,138,0.55)';
+      for (let x = 0; x <= w; x += w / 5) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } for (let y = 0; y <= h; y += h / 4) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+      c.strokeStyle = 'rgba(200,204,210,0.9)'; c.lineWidth = 5; c.strokeRect(2, 2, w - 4, h - 4); }), 0.3, { side: THREE.DoubleSide });
+    add(g, box(W * 0.8, H * 0.55, L * 0.97, inner));                                                               // dark interior seen through the frame
+    for (const x of [-1, 1]) for (const y of [-1, 1]) g.add(at(box(0.11, 0.11, L, frameM), x * W / 2, y * H / 2, 0));   // the four corner rails
+    for (let i = 0; i <= 6; i++) { const z = -L / 2 + i * L / 6;                                                  // cross ribs all round
+      add(g, at(box(W, 0.07, 0.07, frameM), 0, H / 2, z), at(box(W, 0.07, 0.07, frameM), 0, -H / 2, z), at(box(0.07, H, 0.07, frameM), W / 2, 0, z), at(box(0.07, H, 0.07, frameM), -W / 2, 0, z)); }
+    for (const x of [-1, 1]) add(g, at(box(0.03, H * 0.9, L * 0.42, frameM), x * (W / 2 + 0.01), 0, -L * 0.2));   // side plates on the lower half
+    // boards and parts showing through the open broad faces
+    for (const [x, z, w, l] of [[-0.5, 1.15, 0.9, 0.5], [0.5, 1.0, 0.8, 0.4], [-0.45, 0.4, 0.8, 0.4], [0.5, 0.25, 0.7, 0.35], [-0.55, -0.45, 0.8, 0.45], [0.45, -0.8, 0.8, 0.5], [-0.2, -1.35, 0.7, 0.35]])
+      for (const y of [1, -1]) g.add(at(box(w, 0.03, l, pcb), x, y * (H * 0.28 + 0.02), z));
+    for (const [y, z] of [[0.15, 0.9], [-0.15, 0.1], [0.1, -0.9]]) for (const x of [1, -1]) g.add(at(box(0.03, 0.35, 0.5, pcb), x * (W * 0.4 + 0.02), y, z));
+    for (const [x, z] of [[0.1, 0.65], [-0.2, -0.1], [0.25, -1.2]]) for (const y of [1, -1]) g.add(at(box(0.32, 0.06, 0.22, M(0xbfc3c9, 0.5, 0.4, 0x50545a)), x, y * (H * 0.28 + 0.06), z));
+    // top end (+Z): the round tan aperture disc on an aluminium plate, small green parts beside it
+    { const f = new THREE.Group(); f.position.z = L / 2; g.add(f);
+      add(f, box(W * 0.94, H * 0.94, 0.05, frameM), at(cyl(0.42, 0.42, 0.06, brass, 40), -0.15, 0, 0.04, Math.PI / 2, 0, 0), at(cyl(0.46, 0.46, 0.04, frameM, 40, true), -0.15, 0, 0.05, Math.PI / 2, 0, 0));
+      add(f, at(box(0.22, 0.18, 0.08, pcb), 0.7, 0.2, 0.05), at(box(0.18, 0.18, 0.08, pcb), 0.75, -0.22, 0.05), at(cyl(0.08, 0.08, 0.08, blk, 16), 0.45, 0.25, 0.05, Math.PI / 2, 0, 0)); }
+    // bottom end (−Z): a dark camera barrel and a silver bracket
+    { const k = new THREE.Group(); k.position.z = -L / 2; g.add(k);
+      add(k, box(W * 0.94, H * 0.94, 0.05, frameM), at(cyl(0.2, 0.2, 0.3, frameM, 24), 0.2, 0, -0.12, Math.PI / 2, 0, 0), at(cyl(0.14, 0.14, 0.32, blk, 24), 0.2, 0, -0.14, Math.PI / 2, 0, 0), at(box(0.5, 0.35, 0.12, frameM), -0.55, 0.1, -0.06)); }
+    add(g, at(box(0.03, 0.02, 1.2, frameM), -0.9, H / 2 + 0.03, -0.6));   // UHF antenna
+    // two wings on the upper half, three panels each, slightly faceted like the render
+    for (const sx of [1, -1]) { const w = new THREE.Group(); w.position.set(sx * W / 2, 0, L * 0.2); w.rotation.z = sx * 0.06; g.add(w);
+      const pl = L * 0.55, pw = L * 0.52;
+      for (let i = 0; i < 3; i++) { const p = at(box(pl, 0.03, pw, wingM), sx * (0.1 + pl / 2 + i * (pl + 0.08)), 0, 0); p.rotation.x = (i % 2 ? 1 : -1) * 0.07; w.add(p);
+        w.add(at(box(0.08, 0.06, pw * 0.9, frameM), sx * (0.06 + i * (pl + 0.08)), 0, 0)); } }
     return g;
   },
 };
