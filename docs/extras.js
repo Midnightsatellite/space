@@ -337,7 +337,7 @@ function exoPlanet({ hostKey, key, name, r, dist, period, tex, cat, distStr, fac
   const mat = litMaterial(tex, out => host.getWorldPosition(out)); if (tint) mat.uniforms.tint.value.set(tint);
   const p = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 24), mat); p.position.x = dist; piv.add(p);
   const pts = Array.from({ length: 128 }, (_, i) => V(Math.cos(i / 128 * 6.283) * dist, 0, Math.sin(i / 128 * 6.283) * dist));
-  const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0a0, transparent: true, opacity: 0.25 })); piv.add(ln);
+  const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0a0, transparent: true, opacity: 0.25 })); piv.add(ln); SS.orbitLines.push(ln);
   sim.push(() => { piv.rotation.y += Math.min(1.2, 2 * Math.PI / period * dps()) * SS.frameDt; p.rotation.y += SS.frameDt * 0.2; });
   deepLabel(p, name, r + 0.45, key, 'exo', labelRange);
   const hp = V();

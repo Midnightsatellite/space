@@ -35,7 +35,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
   const craft = scaled(buildBepi(), 0.008), sunW = V(); plane.add(craft);
   const a = R * 2.0, e = 0.35, P = 2.3;   // shown as a loose capture orbit (drawn larger than life)
   const pts = []; for (let k = 0; k <= 160; k++) { const nu = k / 160 * Math.PI * 2, r = a * (1 - e * e) / (1 + e * Math.cos(nu)); pts.push(V(Math.cos(nu) * r, 0, Math.sin(nu) * r)); }
-  plane.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.35 })));
+  { const ol = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.35 })); plane.add(ol); SS.orbitLines?.push(ol); }
   sim.push(() => { const t = SS.getDate() / 864e5 / P * 2 * Math.PI; const E = kepler(t % (2 * Math.PI), e), nu = nuOf(E, e), r = a * (1 - e * Math.cos(E));
     craft.position.set(Math.cos(nu) * r, 0, Math.sin(nu) * r); craft.lookAt(bodies.Sun.obj.getWorldPosition(sunW)); });   // keep its front (+Z) turned to the Sun, so the three-quarter view is always sunlit
   nearLabel(craft, 'BepiColombo', 5, 'BepiColombo', 'craft', 3);
@@ -117,7 +117,7 @@ const sideView = (obj, centre, up = 0.35) => () => { obj.getWorldPosition(wp); c
   const a = (5000 + 121000) / 2 + 6371, e = (121000 - 5000) / (121000 + 5000 + 2 * 6371), w = -110 * D2R;   // apogee near 70° N
   const at = nu => { const r = a * (1 - e * e) / (1 + e * Math.cos(nu)); return V(Math.cos(nu + w), Math.sin(nu + w), 0).multiplyScalar(altS(r - 6371)); };
   const pts = []; for (let k = 0; k <= 200; k++) pts.push(at(k / 200 * Math.PI * 2));
-  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fe6c8, transparent: true, opacity: 0.4 })); plane.add(line);
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fe6c8, transparent: true, opacity: 0.4 })); plane.add(line); SS.orbitLines?.push(line);
   const craft = scaled(buildSmile(), 0.014); plane.add(craft);
   const P = 52 * 3600e3;
   sim.push(() => { const M = 2 * Math.PI * (SS.getDate() / P % 1); const E = kepler(M, e), nu = nuOf(E, e); craft.position.copy(at(nu)); bodies.Earth.obj.getWorldPosition(cp); craft.lookAt(cp); });

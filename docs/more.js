@@ -302,7 +302,7 @@ star({ key: 'HD80606', name: 'HD 80606', ra: 140.656, dec: 50.604, ly: 217, bv: 
   const p = new THREE.Mesh(new THREE.SphereGeometry(0.85, 48, 24), SS.extras.litMaterial(jupTex, out => host.getWorldPosition(out))); p.material.uniforms.tint.value.set(0xff9a60); piv.add(p);
   const a = 7, e = 0.93, b = a * Math.sqrt(1 - e * e);
   const pts = []; for (let k = 0; k <= 240; k++) { const E = k / 240 * 6.2832; pts.push(V(a * (Math.cos(E) - e), 0, b * Math.sin(E))); }
-  const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xff9a60, transparent: true, opacity: 0.35 })); piv.add(ln);
+  const ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xff9a60, transparent: true, opacity: 0.35 })); piv.add(ln); SS.orbitLines.push(ln);
   const glow = glowSprite(3, 'rgba(255,120,60,0.8)', 'rgba(0,0,0,0)', 0.7); p.add(glow);
   let M = 2.5; sim.push(dt => { M += Math.min(1.2, 2 * Math.PI / 111.4 * dps()) * SS.frameDt; let E = M; for (let i = 0; i < 25; i++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
     p.position.set(a * (Math.cos(E) - e), 0, b * Math.sin(E)); const r = p.position.length(); glow.material.opacity = Math.max(0, Math.min(0.9, (1.6 - r) / 1.2)); p.rotation.y += SS.frameDt * 0.3; });
@@ -343,7 +343,7 @@ exoPlanet({ hostKey: 'AUMic', key: 'AUMicb', name: 'AU Mic b', r: 0.45, dist: 3.
     const piv = new THREE.Group(); piv.rotation.set(0.2, hash(d, r) * 6.28, 0); holder.add(piv);
     const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), SS.extras.litMaterial(ghostTex, out => holder.getWorldPosition(out))); m.material.uniforms.tint.value.set(0xa8b8ff); m.position.x = d; piv.add(m);
     const pts = Array.from({ length: 96 }, (_, i) => V(Math.cos(i / 96 * 6.283) * d, 0, Math.sin(i / 96 * 6.283) * d));
-    piv.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fb0ff, transparent: true, opacity: 0.22 })));
+    { const ol = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0x9fb0ff, transparent: true, opacity: 0.22 })); piv.add(ol); SS.orbitLines.push(ol); }
     sim.push(() => { piv.rotation.y += Math.min(1.2, 2 * Math.PI / per * dps()) * SS.frameDt; });
     deepLabel(m, nm, r + 0.4, k, 'exo', 60);
     bodies[k] = { obj: m, radius: r, view: Math.max(1.4, r * 6) }; info(k, nm, 'Exoplanet · pulsar planet', 'about 2,300 light-years away', fact);

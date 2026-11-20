@@ -118,7 +118,7 @@ info('Lucy', 'Lucy', 'Spacecraft · NASA, to Jupiter’s Trojan asteroids', 'hea
   const at = nu => { const r = a * (1 - e * e) / (1 + e * Math.cos(nu)); return V(Math.cos(nu + w) * r, Math.sin(nu + w) * r, 0); };
   const pts = []; for (let k = 0; k <= 160; k++) pts.push(at(k / 160 * 2 * Math.PI));
   plane.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xbfbfff, dashSize: 0.03, gapSize: 0.03, transparent: true, opacity: 0.45 })));
-  plane.children[0].computeLineDistances();
+  plane.children[0].computeLineDistances(); SS.orbitLines?.push(plane.children[0]);
   const gw = scaled(buildGateway(), 0.0013); plane.add(gw);
   const P = 6.6 * 864e5;
   sim.push(() => { grp.position.copy(moon.position); const M = 2 * Math.PI * ((SS.getDate() / P) % 1), E = kepler(M, e);
