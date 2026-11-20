@@ -13,22 +13,8 @@ const special = SS.more.special;
 const BECOME = 'https://www.nasa.gov/humans-in-space/astronauts/';
 const link = (t) => ` <a href="${BECOME}" target="_blank" rel="noopener" style="color:#ffd27a">${t}</a>`;
 
-// ---------- the Orion spacecraft ----------
-function buildOrion() {
-  const g = new THREE.Group();
-  const white = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5, metalness: 0.2, emissive: 0x555555 });
-  const grey = new THREE.MeshStandardMaterial({ color: 0x9aa0a8, roughness: 0.6, metalness: 0.4, emissive: 0x3a3e44 });
-  const panel = new THREE.MeshStandardMaterial({ color: 0x1a2a5a, roughness: 0.4, metalness: 0.6, emissive: 0x1a2a6a, side: THREE.DoubleSide });
-  const capsule = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 1, 1, 24), grey); capsule.position.y = 1.1; g.add(capsule);
-  const heat = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.08, 24), new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 1 })); heat.position.y = 0.58; g.add(heat);
-  const sm = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 1.2, 24), white); sm.position.y = -0.05; g.add(sm);
-  const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.5, 16, 1, true), grey); nozzle.position.y = -0.85; nozzle.rotation.x = Math.PI; g.add(nozzle);
-  for (let k = 0; k < 4; k++) {                                 // the four X-shaped solar wings
-    const arm = new THREE.Group(); arm.rotation.y = k * Math.PI / 2 + Math.PI / 4; g.add(arm);
-    const w = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.7), panel); w.position.set(2.6, -0.2, 0); w.rotation.x = -Math.PI / 2; arm.add(w);
-  }
-  return g;
-}
+// ---------- the Orion spacecraft: detailed model (crew module + European Service Module) ----------
+import { buildOrion } from './craftmodels.js?v=54';
 
 // ---------- Artemis II: launch 1 Apr 2026, around the Moon 6 Apr, splashdown 10 Apr ----------
 const LAUNCH = Date.UTC(2026, 3, 1, 22, 35), FLYBY = Date.UTC(2026, 3, 6, 23, 0), SPLASH = Date.UTC(2026, 3, 11, 0, 7);
@@ -45,7 +31,7 @@ const LAUNCH = Date.UTC(2026, 3, 1, 22, 35), FLYBY = Date.UTC(2026, 3, 6, 23, 0)
   let uFar = 0, best = -1; for (let i = 0; i <= 400; i++) if (pts[i].x > best) { best = pts[i].x; uFar = i / 400; }   // the point farthest from Earth
   const uHeo = 1 / 15 * 4;                                      // end of the first day in a high orbit around Earth
   const orion = buildOrion(); orion.scale.setScalar(0.012); frame.add(orion);
-  const trail = glowSprite(6, 'rgba(255,200,120,0.9)', 'rgba(0,0,0,0)', 0.8); orion.add(trail);
+  const trail = glowSprite(6, 'rgba(255,200,120,0.9)', 'rgba(0,0,0,0)', 0.8); trail.visible = false;   // (the old glow hid the new model, so it is no longer attached)
   nearLabel(orion, 'Orion · Artemis II', 0.07 / 0.012, 'OrionCraft', 'craft', 12);
   const progress = ms => {                                      // where Orion is on the path at a given time
     if (ms <= LAUNCH || ms >= SPLASH) return uFar;              // outside the mission, park it at the Moon flyby
@@ -64,7 +50,12 @@ const LAUNCH = Date.UTC(2026, 3, 1, 22, 35), FLYBY = Date.UTC(2026, 3, 6, 23, 0)
     trail.visible = live; line.material.opacity = live ? 0.9 : 0.55;
   });
   const wp = V(), mp = V();
-  bodies.OrionCraft = { obj: orion, radius: 0.03, view: 1.4, dir: () => { orion.getWorldPosition(wp); moon.getWorldPosition(mp); return wp.sub(mp).normalize().add(V(0, 1.6, 0)).normalize(); } };
+  const sw = V(), ox = V();   // close up, from the sunlit side, with the Moon behind the spacecraft
+  bodies.OrionCraft = { obj: orion, radius: 0.03, view: 0.11, dir: () => { orion.getWorldPosition(wp); moon.getWorldPosition(mp); bodies.Sun.obj.getWorldPosition(sw);
+    const toSun = sw.sub(wp).normalize(), out = wp.clone().sub(mp).normalize(); ox.set(1, 0, 0).applyQuaternion(orion.getWorldQuaternion(new THREE.Quaternion()));
+    const ax = V(0, 1, 0).applyQuaternion(orion.getWorldQuaternion(new THREE.Quaternion()));   // the spacecraft's long axis
+    const side = toSun.clone().addScaledVector(ax, -toSun.dot(ax)); if (side.lengthSq() < 0.05) side.copy(ox);   // look at its sunlit side, not down its nose
+    return side.normalize().multiplyScalar(0.85).addScaledVector(ax, -0.45).addScaledVector(out, 0.12).normalize(); } };   // a little from behind, like ESA's pictures
   info('OrionCraft', 'Orion · Artemis II', 'Crewed spacecraft · April 2026', 'flew about 6,500 km behind the Moon',
     'The first people to travel to the Moon since 1972. Reid Wiseman (commander), Victor Glover (pilot), Christina Koch and Jeremy Hansen of Canada launched on 1 April 2026, swung around the far side of the Moon on 6 April, and splashed down in the Pacific on 10 April, after 10 days. They travelled 406,771 km (252,756 miles) from Earth, the farthest humans have ever been, and saw parts of the Moon that no human eyes had seen before.' + link('Become an astronaut ›'));
   // a whole-trip view, from high above Earth and the Moon

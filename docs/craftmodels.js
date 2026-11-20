@@ -485,4 +485,62 @@ export function buildSOHO() {
   return g;
 }
 
+
+// ---------------------------------------------------------------- Orion (Artemis): crew module + European Service Module, from ESA's renders
+// Metres, stack along +Y (capsule on top, main engine at the bottom), then scaled down to the size the scenes expect.
+let _ok = null;
+const OK = () => _ok || (_ok = {
+  paint: S({ map: tex(512, 512, (c, w, h) => {          // smooth white paint with faint panel seams and fasteners
+      c.fillStyle = '#eeeeea'; c.fillRect(0, 0, w, h); c.strokeStyle = 'rgba(120,124,130,0.35)'; c.lineWidth = 1.5;
+      for (let x = 0; x <= w; x += w / 8) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
+      for (let y = 0; y <= h; y += h / 3) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+      c.fillStyle = 'rgba(110,114,120,0.6)'; for (let x = 8; x < w; x += 16) for (const y of [6, h / 3 + 6, 2 * h / 3 + 6]) c.fillRect(x, y, 2, 2);
+      c.fillStyle = 'rgba(70,74,80,0.5)'; for (let k = 0; k < 10; k++) c.fillRect(rnd() * w, rnd() * h, 14 + rnd() * 20, 8 + rnd() * 10);
+    }, [3, 1]), color: 0xffffff, metalness: 0.1, roughness: 0.55, emissive: 0x3a3a38 }),
+  shell: S({ map: tex(512, 512, (c, w, h) => {          // crew-module back shell: silvery tiles with dark seams
+      c.fillStyle = '#4a4e56'; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 16; i++) for (let j = 0; j < 12; j++) { const v = 140 + Math.floor(rnd() * 40); c.fillStyle = `rgb(${v},${v + 4},${v + 10})`; c.fillRect(i * 32 + 1, j * (h / 12) + 1, 30, h / 12 - 2); }
+    }, [2, 1]), color: 0xffffff, metalness: 0.65, roughness: 0.32, emissive: 0x24272c }),
+  heat: S({ color: 0x5b4636, metalness: 0.2, roughness: 0.85, emissive: 0x140e0a }),
+  plate: S({ map: tex(256, 256, (c, w, h) => { c.fillStyle = '#a7abb2'; c.fillRect(0, 0, w, h); c.fillStyle = '#7a7e86';
+      for (let x = 6; x < w; x += 12) for (let y = 6; y < h; y += 12) c.fillRect(x, y, 2, 2); }, [2, 2]), color: 0xffffff, metalness: 0.55, roughness: 0.45, emissive: 0x24262a }),
+  wing: S({ map: cells({ cell: '#1f2b5c', cell2: '#2d3c78', gap: '#8f93a2', frame: '#b8a46c', cols: 6, rows: 4 }), color: 0xffffff, metalness: 0.35, roughness: 0.35, emissive: 0x121e44, side: THREE.DoubleSide }),
+  logo: new THREE.MeshBasicMaterial({ map: tex(256, 128, (c, w, h) => { c.clearRect(0, 0, w, h);
+      c.fillStyle = '#d0261c'; c.font = 'bold 64px Arial Rounded MT Bold, Arial, sans-serif'; c.textAlign = 'center'; c.fillText('NASA', w / 2, 64);
+      c.fillStyle = '#1b3f8f'; c.font = 'bold 36px Arial, sans-serif'; c.fillText('esa', w / 2, 110); }), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }),
+});
+export function buildOrion() {
+  const k = K(), o = OK(), g = new THREE.Group(), m = new THREE.Group(); g.add(m);
+  // European Service Module and the crew-module adapter above it
+  add(m, at(cyl(2.05, 2.05, 2.6, o.paint, 48), 0, -0.8, 0), at(cyl(2.5, 2.05, 0.9, o.paint, 48), 0, 0.95, 0),
+    at(cyl(2.08, 2.08, 0.08, k.metal, 48), 0, 0.5, 0), at(cyl(2.53, 2.53, 0.1, k.metal, 48), 0, 1.4, 0));
+  // crew module: brown heat-shield rim, tiled cone, docking hatch on top, four small windows
+  m.add(at(cyl(2.52, 2.52, 0.12, o.heat, 48), 0, 1.51, 0));
+  m.add(at(lathe([[2.5, 0], [2.48, 0.18], [2.35, 0.32], [0.82, 2.95], [0.66, 3.1], [0, 3.1]], o.shell, 48), 0, 1.57, 0));
+  add(m, at(cyl(0.6, 0.66, 0.35, k.metal, 32), 0, 4.82, 0), at(cyl(0.45, 0.45, 0.1, k.dark, 32), 0, 5.02, 0));
+  for (const a of [-0.45, -0.15, 0.15, 0.45]) { const w = box(0.32, 0.26, 0.05, k.lens); const r = 1.95, y = 2.55;
+    w.position.set(Math.sin(a) * r, y, Math.cos(a) * r); w.rotation.set(-0.55, a, 0, 'YXZ'); m.add(w); }
+  { const d = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), o.logo); d.position.set(0, 0.95, 2.29); d.rotation.x = -0.27; m.add(d); }   // NASA and ESA logos on the adapter
+  // aft end: thrust plate, the big main engine, eight auxiliary thrusters
+  m.add(at(cyl(2.05, 2.05, 0.1, o.plate, 48), 0, -2.15, 0));
+  { const bell = lathe([[0.28, 0], [0.3, -0.25], [0.42, -0.6], [0.62, -1.1], [0.7, -1.3]], k.nozzle, 32); bell.position.y = -2.25; m.add(bell, at(cyl(0.35, 0.3, 0.3, k.dark, 24), 0, -2.15, 0)); }
+  for (let i = 0; i < 8; i++) { const a = (i + 0.5) / 8 * Math.PI * 2, x = Math.cos(a) * 1.35, z = Math.sin(a) * 1.35;
+    const n = lathe([[0.06, 0], [0.09, -0.15], [0.14, -0.36]], k.nozzle, 16); n.position.set(x, -2.2, z); m.add(n); }
+  // four RCS thruster pods around the service module
+  for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + Math.PI / 4, x = Math.cos(a) * 2.12, z = Math.sin(a) * 2.12;
+    const pod = new THREE.Group(); pod.position.set(x, -0.35, z); pod.rotation.y = -a; m.add(pod);
+    add(pod, box(0.22, 0.42, 0.42, k.metal));
+    for (const [dy, dz] of [[0.16, 0.25], [-0.16, 0.25], [0.16, -0.25], [-0.16, -0.25]]) { const n = cyl(0.03, 0.06, 0.14, k.nozzle, 10); n.position.set(0.08, dy, dz); n.rotation.x = Math.PI / 2 * Math.sign(dz); pod.add(n); } }
+  // four solar wings in an X, three panels each (about 7 m long), on hinged arms at the back of the service module
+  for (let i = 0; i < 4; i++) {
+    const a = i / 4 * Math.PI * 2, arm = new THREE.Group(); arm.position.y = -1.75; arm.rotation.y = a; m.add(arm);
+    arm.add(rod(V(1.95, 0, 0.25), V(3.0, 0.15, 0.0), 0.05, k.metal), rod(V(1.95, 0, -0.25), V(3.0, 0.15, 0.0), 0.05, k.metal), at(box(0.18, 0.18, 0.5, k.metal), 2.0, 0, 0));
+    const wing = new THREE.Group(); wing.position.set(3.0, 0.15, 0); wing.rotation.x = Math.PI - 0.55; arm.add(wing);   // cells face backwards and a little out, as in ESA's pictures
+    for (let j = 0; j < 3; j++) { wing.add(at(panel(2.25, 2.0, o.wing, 0.04), 1.2 + j * 2.32, 0, 0));
+      if (j) for (const z of [-0.7, 0.7]) wing.add(at(box(0.08, 0.06, 0.18, k.gold), 0.04 + j * 2.32, 0, z)); }
+  }
+  m.scale.setScalar(0.42); m.position.y = -0.2;   // keeps the size and centre the scenes were drawn for
+  return g;
+}
+
 export { buildGateway } from './flyermodels.js?v=40';
