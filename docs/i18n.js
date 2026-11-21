@@ -45,7 +45,7 @@ const NAME = {
   "Parker Solar Probe": "Sonde solaire Parker", "Perseverance rover": "Rover Perseverance", "Tiangong (Space Station)": "Tiangong (station spatiale)",
   "Roman Space Telescope (2026)": "Télescope spatial Roman (2026)", "Nancy Grace Roman Space Telescope": "Télescope spatial Nancy Grace Roman", "Roman": "Roman",
   "Alpha Centauri A & B": "Alpha du Centaure A et B", "Alpha Centauri": "Alpha du Centaure", "Alpha Centauri B": "Alpha du Centaure B", "Barnard's Star": "Étoile de Barnard",
-  "Sirius B (white dwarf)": "Sirius B (naine blanche)", "Vega": "Véga", "Spica": "L'Épi (Spica)", "Polaris": "Étoile polaire", "Betelgeuse": "Bételgeuse", "Antares": "Antarès", "Aldebaran": "Aldébaran",
+  "Sirius B (white dwarf)": "Sirius B (naine blanche)", "WD J1011+2845 (pink star)": "WD J1011+2845 (étoile rose)", "WD J1330+6435 (green star)": "WD J1330+6435 (étoile verte)", "Vega": "Véga", "Spica": "L'Épi (Spica)", "Polaris": "Étoile polaire", "Betelgeuse": "Bételgeuse", "Antares": "Antarès", "Aldebaran": "Aldébaran",
   "Regulus": "Régulus", "Canopus": "Canopus", "UY Scuti (giant)": "UY Scuti (géante)",
   "TRAPPIST-1 system": "Système TRAPPIST-1", "HD 189733 b (blue)": "HD 189733 b (bleue)", "55 Cancri e (lava)": "55 Cancri e (lave)", "Kepler-7b (puffy)": "Kepler-7b (gonflée)",
   "Pleiades": "Pléiades", "Pleiades (Seven Sisters)": "Pléiades (les Sept Sœurs)", "Helix Nebula": "Nébuleuse de l'Hélice", "Orion Nebula": "Nébuleuse d'Orion", "The Orion Nebula": "La nébuleuse d'Orion",
@@ -76,7 +76,7 @@ function trName(s) {
 
 // ---------- Info cards ----------
 const CAT = {
-  "Star": "Étoile", "Star · red dwarf": "Étoile · naine rouge", "Star system": "Système stellaire", "Star · orange giant": "Étoile · géante orange", "Star · red giant": "Étoile · géante rouge",
+  "Star": "Étoile", "Star · red dwarf": "Étoile · naine rouge", "Star · white dwarf": "Étoile · naine blanche", "Star system": "Système stellaire", "Star · orange giant": "Étoile · géante orange", "Star · red giant": "Étoile · géante rouge",
   "Star · blue giant": "Étoile · géante bleue", "Star · giant": "Étoile · géante", "Star · supergiant": "Étoile · supergéante", "Star · red supergiant": "Étoile · supergéante rouge",
   "Star · blue supergiant": "Étoile · supergéante bleue", "Star · white supergiant": "Étoile · supergéante blanche", "Star · ultra-cool red dwarf": "Étoile · naine rouge ultra-froide", "Star · orange dwarf": "Étoile · naine orange",
   "Star cluster": "Amas d'étoiles", "Planetary nebula": "Nébuleuse planétaire", "Star-forming nebula": "Nébuleuse de formation d'étoiles", "Supernova remnant": "Rémanent de supernova", "Dark nebula": "Nébuleuse obscure",
@@ -134,6 +134,8 @@ function trDist(s) {
   return s;
 }
 const FACT = {
+  GreenDwarf: "La première étoile connue qui paraîtrait verte à nos yeux. Cette étoile morte a avalé les débris rocheux de ses anciennes planètes, et le sodium qu'ils contiennent absorbe une grande partie de sa lumière.",
+  PinkDwarf: "Une étoile morte qui paraîtrait rose saumon de près, peut-être l'étoile la plus rouge connue. Du carbone remonté de son intérieur change sa lumière.",
   Proxima: "L'étoile la plus proche du Soleil. Elle possède au moins une planète à peu près de la taille de la Terre dans sa zone habitable.",
   AlphaCen: "Une étoile semblable au Soleil avec une partenaire orange. Avec Proxima, c'est notre système stellaire le plus proche.",
   Barnard: "L'étoile qui se déplace le plus vite dans notre ciel : elle avance d'une largeur de Lune tous les 180 ans environ.",

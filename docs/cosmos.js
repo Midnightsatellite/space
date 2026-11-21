@@ -240,9 +240,9 @@ function starMaterial(color) {
       }`
   });
 }
-function star({ key, name, ra, dec, ly, bv, R, cat = 'Star', dist, fact, companion = null }) {
+function star({ key, name, ra, dec, ly, bv, R, cat = 'Star', dist, fact, companion = null, color = null }) {
   const holder = new THREE.Group(); holder.position.copy(place(ra, dec, ly)); scene.add(holder);
-  const col = bvToColor(bv);
+  const col = color ? new THREE.Color(color) : bvToColor(bv);
   const r = 2.2 * Math.pow(R, 0.33);
   const body = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 24), starMaterial(col));
   holder.add(body);
@@ -276,9 +276,15 @@ star({ key: 'Fomalhaut', name: 'Fomalhaut', ...S('Fomalhaut'), ly: 25, R: 1.84, 
 star({ key: 'Pollux', name: 'Pollux', ...S('Pollux'), ly: 34, R: 9, dist: '34 light-years', cat: 'Star · orange giant', fact: 'The closest giant star to the Sun.' });
 star({ key: 'Arcturus', name: 'Arcturus', ...S('Arcturus'), ly: 36.7, R: 25, dist: '36.7 light-years', cat: 'Star · orange giant', fact: 'The brightest star in the northern half of the sky.' });
 star({ key: 'Capella', name: 'Capella', ...S('Capella'), ly: 42.9, R: 12, dist: '42.9 light-years', cat: 'Star system', fact: 'Looks like one star, but is really two pairs of stars.' });
+// two white dwarfs whose colour comes from their atmosphere (University of Warwick study, Oct 2026); positions from their names (J2000)
+star({ key: 'PinkDwarf', name: 'WD J1011+2845 (pink star)', ra: 152.8, dec: 28.75, ly: 48, R: 0.012, color: 0xffa99a, cat: 'Star · white dwarf', dist: '48 light-years',
+  fact: 'A dead star that would look salmon pink up close, perhaps the reddest star known. Carbon welling up from inside it changes its light.' });
 star({ key: 'Aldebaran', name: 'Aldebaran', ...S('Aldebaran'), ly: 65, R: 44, dist: '65 light-years', cat: 'Star · red giant', fact: 'The orange "eye" of Taurus the Bull.' });
 star({ key: 'Regulus', name: 'Regulus', ...S('Regulus'), ly: 79, R: 3.1, dist: '79 light-years', cat: 'Star', fact: 'Spins so quickly it is close to flying apart.' });
 star({ key: 'Spica', name: 'Spica', ...S('Spica'), ly: 250, R: 7.5, dist: '250 light-years', cat: 'Star · blue giant', fact: 'Actually two hot blue stars orbiting each other every four days.' });
+star({ key: 'GreenDwarf', name: 'WD J1330+6435 (green star)', ra: 202.5, dec: 64.58, ly: 280, R: 0.012, color: 0xcdf28c, cat: 'Star · white dwarf', dist: 'about 280 light-years',
+  fact: 'The first known star that would look green to our eyes. This dead star swallowed rocky debris from its old planets, and the sodium in it soaks up much of its light.' });
+bodies.GreenDwarf.view = bodies.PinkDwarf.view = 2.8;   // Earth-sized dead stars: come in closer
 star({ key: 'Canopus', name: 'Canopus', ...S('Canopus'), ly: 310, R: 71, dist: '310 light-years', cat: 'Star · giant', fact: 'The second-brightest star in the night sky, used by spacecraft to navigate.' });
 star({ key: 'Polaris', name: 'Polaris', ...S('Polaris'), ly: 433, R: 46, dist: '433 light-years', cat: 'Star · supergiant', fact: 'The North Star: it sits almost exactly above Earth\'s north pole.' });
 star({ key: 'Betelgeuse', name: 'Betelgeuse', ...S('Betelgeuse'), ly: 550, R: 760, dist: 'about 550 light-years', cat: 'Star · red supergiant', fact: 'Orion\'s shoulder. If placed where the Sun is, it would reach past Mars. It will one day explode as a supernova.' });
@@ -668,7 +674,7 @@ ss('Eris', 'Eris', 'Dwarf planet', 'about 10 billion km from the Sun (average)',
     ['The Sun & planets', ['Sun', 'Mercury', 'Venus', 'Earth', 'Moon', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune']],
     ['Dwarf planets', ['Ceres', 'Pluto', 'Haumea', 'Makemake', 'Eris']],
     ['Spacecraft', [['ISS', 'ISS (Space Station)'], 'Hubble', ['Satellite', 'Comms satellite'], ['JWST', 'James Webb Telescope'], 'New Horizons|NewHorizons', 'Voyager 2|Voyager2', 'Voyager 1|Voyager1']],
-    ['Stars (nearest first)', ['Proxima Centauri|Proxima', 'Alpha Centauri|AlphaCen', "Barnard's Star|Barnard", 'Sirius', 'Procyon', 'Altair', 'Vega', 'Fomalhaut', 'Pollux', 'Arcturus', 'Capella', 'Aldebaran', 'Regulus', 'Spica', 'Canopus', 'Polaris', 'Betelgeuse', 'Antares', 'Rigel', 'Deneb']],
+    ['Stars (nearest first)', ['Proxima Centauri|Proxima', 'Alpha Centauri|AlphaCen', "Barnard's Star|Barnard", 'Sirius', 'Procyon', 'Altair', 'Vega', 'Fomalhaut', 'Pollux', 'Arcturus', 'Capella', 'WD J1011+2845 (pink star)|PinkDwarf', 'Aldebaran', 'Regulus', 'Spica', 'WD J1330+6435 (green star)|GreenDwarf', 'Canopus', 'Polaris', 'Betelgeuse', 'Antares', 'Rigel', 'Deneb']],
     ['Star clusters & nebulae', ['Pleiades', 'Helix Nebula|Helix', 'Orion Nebula|Orion', 'Ring Nebula|Ring', 'Crab Nebula|Crab', 'Eagle Nebula|Eagle', 'Carina Nebula|Carina']],
     ['Black holes', ['Gaia BH1|GaiaBH1', 'Cygnus X-1|CygX1', 'Sagittarius A* (our galaxy)|SgrA', 'M87*|M87BH']],
     ['Zodiac (star signs)', ZODIAC.map(z => [`Z_${z[0]}`, `${z[2]}\uFE0E ${z[1]}`])],
