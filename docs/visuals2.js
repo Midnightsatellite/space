@@ -50,7 +50,7 @@ const $ = id => document.getElementById(id);
 {
   const loader = new GLTFLoader();
   loader.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));
-  const MODELS = { Voyager1: 'models/voyager.glb', Voyager2: 'models/voyager.glb', Hubble: 'models/hubble.glb', ISS: 'models/iss.glb', JWST: 'models/jwst.glb' };
+  const MODELS = { Voyager1: 'models/voyager.glb', Voyager2: 'models/voyager.glb', Hubble: 'models/hubble.glb', ISS: 'models/iss.glb?v=61', JWST: 'models/jwst.glb' };
   const done = {}, cache = {}, onModel = {};
   const box = new THREE.Box3(), size = new THREE.Vector3();
   const worldSize = o => { box.makeEmpty(); o.updateWorldMatrix(true, true); o.traverse(c => { let k = false; for (let p = c; p && p !== o; p = p.parent) if (p.userData.keep) k = true; if (c.isMesh && c.visible && !k) box.expandByObject(c, false); }); return box.isEmpty() ? 0 : box.getSize(size).length(); };
@@ -69,6 +69,37 @@ const $ = id => document.getElementById(id);
       done[key] = m; for (const f of (onModel[key] || [])) f(m);
     }).catch(err => { console.warn('model', key, err); done[key] = false; });
   }
+  // ISS: NASA's full station model, with the eight main solar-array blades in their real copper-gold colour
+  { const b = bodies.ISS; if (b) { const V = () => new THREE.Vector3();   // fly in from the sunlit side, a little above, so the copper blades face the camera
+      b.dir = () => { const p = b.obj.getWorldPosition(V()), su = bodies.Sun.obj.getWorldPosition(V()).sub(p).normalize(), out = p.clone().sub(bodies.Earth.obj.getWorldPosition(V())).normalize();
+        return su.multiplyScalar(0.6).addScaledVector(out, 0.7).normalize(); }; } }
+  onModel.ISS = [m => {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 1024; const x = c.getContext('2d');
+    const gr = x.createLinearGradient(0, 0, 256, 0); gr.addColorStop(0, '#8c3f1c'); gr.addColorStop(0.5, '#b35d2c'); gr.addColorStop(1, '#93441f');
+    x.fillStyle = gr; x.fillRect(0, 0, 256, 1024);
+    for (let i = 0; i < 6000; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '255,190,130' : '60,20,5'},0.06)`; x.fillRect(Math.random() * 256, Math.random() * 1024, 3, 2); }
+    x.fillStyle = 'rgba(55,22,8,0.75)'; for (let y = 0; y < 1024; y += 8) x.fillRect(0, y, 256, 1);          // rows of cells
+    x.fillStyle = 'rgba(55,22,8,0.5)'; for (let u = 0; u < 256; u += 32) x.fillRect(u, 0, 1, 1024);
+    x.fillStyle = 'rgba(40,16,6,0.9)'; for (let y = 0; y < 1024; y += 128) x.fillRect(0, y, 256, 3);        // panel joints
+    x.fillStyle = 'rgba(225,215,200,0.9)'; x.fillRect(0, 0, 256, 6); x.fillRect(0, 1018, 256, 6); x.fillRect(0, 0, 4, 1024); x.fillRect(252, 0, 4, 1024);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    const copper = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.45, roughness: 0.38, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.3, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });   // drawn in front of the grey backing sheet
+    const bb = new THREE.Box3(), sz = new THREE.Vector3();
+    m.traverse(o => {
+      if (!o.isMesh || o.material?.name !== 'shiny_panel') return;
+      const g = o.geometry; g.computeBoundingBox(); bb.copy(g.boundingBox); bb.getSize(sz);
+      const ax = [0, 1, 2].sort((a, b) => sz.getComponent(b) - sz.getComponent(a));   // long axis, short axis
+      if (sz.getComponent(ax[0]) < 20) return;                                       // only the big blades
+      const pos = g.attributes.position, uv = new Float32Array(pos.count * 2);
+      for (let i = 0; i < pos.count; i++) {
+        uv[2 * i] = (pos.getComponent(i, ax[1]) - bb.min.getComponent(ax[1])) / sz.getComponent(ax[1]);
+        uv[2 * i + 1] = (pos.getComponent(i, ax[0]) - bb.min.getComponent(ax[0])) / sz.getComponent(ax[0]); }
+      o.geometry = g.clone(); o.geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); o.material = copper;
+    });
+    // the rest of the station: keep it readable on the night side too
+    m.traverse(o => { if (o.isMesh && o.material !== copper) for (const mt of [].concat(o.material)) if (mt.emissive && mt.emissive.getHex() === 0) {
+      if (mt.map) { mt.emissive.set(0xffffff); mt.emissiveMap = mt.map; } else mt.emissive.copy(mt.color); mt.emissiveIntensity = 0.12; } });
+  }];
   const prev = SS.onFocus; SS.onFocus = key => { prev(key); if (MODELS[key]) swap(key); };
   { const wp = new THREE.Vector3(); setInterval(() => {   // also load the real model when the camera simply comes close (e.g. passing the ISS while looking at Earth)
       for (const key in MODELS) { if (done[key] || !bodies[key]) continue; const b = bodies[key];
