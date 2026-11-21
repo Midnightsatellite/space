@@ -50,7 +50,8 @@ const $ = id => document.getElementById(id);
 {
   const loader = new GLTFLoader();
   loader.setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/').setDecoderConfig({ type: 'wasm' }));
-  const MODELS = { Voyager1: 'models/voyager.glb', Voyager2: 'models/voyager.glb', Hubble: 'models/hubble.glb', ISS: 'models/iss.glb?v=61', JWST: 'models/jwst.glb' };
+  const MODELS = { Voyager1: 'models/voyager.glb', Voyager2: 'models/voyager.glb', Hubble: 'models/hubble.glb', ISS: 'models/iss.glb?v=61', JWST: 'models/jwst.glb',
+    NewHorizons: 'models/newhorizons.glb' };
   const done = {}, cache = {}, onModel = {};
   const box = new THREE.Box3(), size = new THREE.Vector3();
   const worldSize = o => { box.makeEmpty(); o.updateWorldMatrix(true, true); o.traverse(c => { let k = false; for (let p = c; p && p !== o; p = p.parent) if (p.userData.keep) k = true; if (c.isMesh && c.visible && !k) box.expandByObject(c, false); }); return box.isEmpty() ? 0 : box.getSize(size).length(); };

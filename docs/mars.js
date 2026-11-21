@@ -2,6 +2,9 @@
 // Mars up close: detailed Perseverance & Curiosity, Ingenuity, landing sites and landmarks
 // =====================================================================
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+let LOAD_PERSEVERANCE = null;
 const SS = window.SS;
 const { scene, camera, bodies, sim, flyTo, focusSel, glowSprite } = SS;
 const { info } = SS.cosmos;
@@ -104,7 +107,15 @@ const wp = V(), mp = V();
 for (const [k, name, lat, lon, kind, model, cat, where, fact] of SITES) {
   const n = surf(lat, lon);
   const pin = new THREE.Group(); pin.position.copy(n).multiplyScalar(R * 1.001); pin.quaternion.setFromUnitVectors(V(0, 1, 0), n); mars.add(pin);
-  if (model === 'rover') { const r = buildRover(); r.scale.setScalar(0.0085); r.rotation.y = lon * 0.1; pin.add(r); }
+  if (model === 'rover') { const r = buildRover(); r.scale.setScalar(0.0085); r.rotation.y = lon * 0.1; pin.add(r);
+    if (k === 'Perseverance') { const ry = r.rotation.y; LOAD_PERSEVERANCE = () => {   // NASA's full model, loaded on the first visit; it is in metres like ours
+      if (r.userData.real) return; r.userData.real = true;
+      new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/')).load('models/perseverance.glb', gl => {
+        const m = gl.scene, bb = new THREE.Box3().setFromObject(m), c = bb.getCenter(V());
+        m.position.set(-c.x, -bb.min.y, -c.z);                                     // wheels on the ground, centred
+        const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.0085); holder.rotation.y = ry;
+        m.traverse(o => { if (o.isMesh) for (const mt of [].concat(o.material)) if (mt.emissive && mt.emissive.getHex() === 0) { mt.emissive.set(0xffffff); if (mt.map) mt.emissiveMap = mt.map; else mt.emissive.copy(mt.color); mt.emissiveIntensity = 0.1; } });
+        r.visible = false; pin.add(holder); }); }; } }
   else if (model === 'heli') { const h = buildIngenuity(); h.scale.setScalar(0.0085); h.position.set(0.045, 0, 0.02); pin.add(h); }
   pin.add(glowSprite(model === 'pin' ? 0.012 : 0.006, COL[kind], 'rgba(0,0,0,0)', 0.9));
   if (model === 'pin') cyl(0.0004, 0.0004, 0.012, M(0xffffff), 0, 0.006, 0, pin, 6);
@@ -135,7 +146,7 @@ sim.push(() => {
   const sunLon = Math.atan2(-sl.z, sl.x);
   mars.rotation.y = sunLon - 0.45 - lockLon * D2R;
 });
-{ const prev = SS.onFocus; SS.onFocus = key => { prev(key); lockLon = key in lockFor ? lockFor[key] : null; }; }
+{ const prev = SS.onFocus; SS.onFocus = key => { prev(key); lockLon = key in lockFor ? lockFor[key] : null; if (key === 'Perseverance') LOAD_PERSEVERANCE?.(); }; }
 const visit = k => () => { lockLon = lockFor[k]; $('speed').value = '0.000694'; const au = $('auto'); if (au.checked) { au.checked = false; au.dispatchEvent(new Event('change')); } SS.controls.autoRotate = false; setTimeout(() => flyTo(k), 250); };
 for (const k in lockFor) special[k] = visit(k);
 

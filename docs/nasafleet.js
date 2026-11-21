@@ -110,6 +110,9 @@ function orbiter({ key, host, file, size, rp, ra, P, rot = [0, 0, 0], w = 0, pha
   const grp = new THREE.Group(); moon.parent.add(grp); sim.push(() => grp.position.copy(moon.position));
   orbiter({ key: 'LRO', host: grp, file: 'lro.glb', size: 0.016, rp: R * 1.03, ra: R * 1.1, P: 2 / 24, rot: [Math.PI / 2, 0.5, 0], color: 0xd0d8ff, label: 'LRO', range: 2, view: 0.07 });
   info('LRO', 'Lunar Reconnaissance Orbiter', 'Spacecraft · NASA Moon orbiter', 'in a low polar orbit around the Moon', 'See card.');
+  // Clementine (1994): BMDO/NASA, polar orbit about 430 × 2,950 km, every 5 hours; shown in its 1994 orbit
+  orbiter({ key: 'Clementine', host: grp, file: 'clementine.glb', size: 0.014, rp: R * (1 + 430 / 1737), ra: R * (1 + 2950 / 1737), P: 5 / 24, rot: [Math.PI / 2, 1.9, 0], w: 2.4, phase: 0.3, color: 0xffd09a, label: 'Clementine (1994)', range: 2, view: 0.06, opacity: 0.2 });
+  info('Clementine', 'Clementine', 'Spacecraft · US Moon orbiter, 1994', 'shown in its 1994 orbit around the Moon', 'See card.');
 }
 
 // ---------------------------------------------------------------- 3. Cassini at Saturn (2004–2017) and Galileo at Jupiter (1995–2003): historic
@@ -237,6 +240,18 @@ Object.assign(D, {
     facts: [['In shadowed craters near the poles it measured temperatures around −240 °C, colder than Pluto’s surface.', 'Dans des cratères à l’ombre près des pôles, il a mesuré des températures d’environ −240 °C, plus froides que la surface de Pluton.'],
       ['Its photos show the tracks the Apollo astronauts left on foot and in their Moon buggies.', 'Ses photos montrent les traces laissées par les astronautes d’Apollo à pied et en jeep lunaire.']] },
 
+  Clementine: { closed: true, intro: ['Clementine was a small spacecraft built by the US Naval Research Laboratory for the Ballistic Missile Defense Organization, with NASA, to test new lightweight cameras and sensors. In about two months over the Moon’s poles it mapped the whole surface in many colours, measured its shape, and found the first hints of water ice in craters near the south pole that never see sunlight.',
+      'Clementine était un petit engin construit par le Naval Research Laboratory américain pour l’Organisation de défense antimissile (BMDO), avec la NASA, afin de tester de nouvelles caméras et capteurs légers. En deux mois environ au-dessus des pôles de la Lune, il a cartographié toute la surface en plusieurs couleurs, mesuré son relief, et trouvé les premiers indices de glace d’eau dans des cratères près du pôle Sud qui ne voient jamais le Soleil.'],
+    tiles: [T('Launch', 'Lancement', '25 Jan 1994 · Titan II, Vandenberg, California', '25 janv. 1994 · Titan II, Vandenberg, Californie'),
+      T('At the Moon', 'À la Lune', '19 Feb to 3 May 1994, 297 orbits', '19 févr. au 3 mai 1994, 297 orbites'),
+      T('Orbit', 'Orbite', 'over the poles, about 430 to 2,950 km up, every 5 hours', 'au-dessus des pôles, environ 430 à 2 950 km, en 5 heures'),
+      T('Mass', 'Masse', 'about 424 kg', 'environ 424 kg'),
+      T('Built by', 'Construit par', 'Naval Research Laboratory; cameras by Lawrence Livermore', 'Naval Research Laboratory ; caméras de Lawrence Livermore'),
+      T('Model', 'Modèle', 'NASA 3D Resources', 'NASA 3D Resources')],
+    facts: [['Its radar, bounced off the Moon and caught on Earth, gave the first signs of ice in the dark south-pole craters, which later missions confirmed.', 'Son radar, renvoyé par la Lune et capté sur Terre, a donné les premiers signes de glace dans les cratères sombres du pôle Sud, confirmés plus tard par d’autres missions.'],
+      ['It left the Moon on 3 May 1994 to visit the asteroid Geographos, but a few days later a computer fault fired a thruster, used up its fuel and set it spinning, so the asteroid visit was called off.', 'Il a quitté la Lune le 3 mai 1994 pour visiter l’astéroïde Geographos, mais quelques jours plus tard une panne d’ordinateur a allumé un propulseur, vidé son carburant et l’a mis en rotation : la visite a été annulée.'],
+      ['Its height map revealed in full the South Pole–Aitken basin, one of the largest and deepest impact craters in the Solar System.', 'Sa carte du relief a révélé en entier le bassin Pôle Sud–Aitken, l’un des plus grands et plus profonds cratères d’impact du Système solaire.']] },
+
   Cassini: { closed: true, intro: ['Cassini spent 13 years orbiting Saturn. It dropped Europe’s Huygens probe onto Titan, found geysers of water on the little moon Enceladus, and ended by diving 22 times between Saturn and its rings before plunging into the planet on 15 September 2017. Choosing it takes you back to its time at Saturn.',
       'Cassini a passé 13 ans en orbite autour de Saturne. Il a largué la sonde européenne Huygens sur Titan, découvert des geysers d’eau sur la petite lune Encelade, puis a plongé 22 fois entre Saturne et ses anneaux avant de se jeter dans la planète le 15 septembre 2017. Le choisir vous ramène à son époque autour de Saturne.'],
     tiles: [T('Launch', 'Lancement', '15 Oct 1997 · Titan IVB, Cape Canaveral', '15 oct. 1997 · Titan IVB, cap Canaveral'),
@@ -334,7 +349,7 @@ Object.assign(D, {
   const groups = [...focusSel.querySelectorAll('optgroup')], after = groups.find(g => g.label === '🛸 Missions in flight');
   const og = document.createElement('optgroup'); og.label = '🛰 NASA science fleet';
   after ? after.after(og) : focusSel.appendChild(og);
-  for (const [k, t] of [['NewTour', '▶ Tour: the new missions'], ['MRO', 'Mars Reconnaissance Orbiter'], ['Odyssey', '2001 Mars Odyssey'], ['MAVEN', 'MAVEN (silent since 2025)'], ['LRO', 'Lunar Reconnaissance Orbiter'],
+  for (const [k, t] of [['NewTour', '▶ Tour: the new missions'], ['MRO', 'Mars Reconnaissance Orbiter'], ['Odyssey', '2001 Mars Odyssey'], ['MAVEN', 'MAVEN (silent since 2025)'], ['LRO', 'Lunar Reconnaissance Orbiter'], ['Clementine', 'Clementine at the Moon (1994)'],
     ['OSIRISAPEX', 'OSIRIS-APEX, to Apophis'], ['Dawn', 'Dawn at Ceres (silent)'], ['Wind', 'Wind at L1'], ['DSCOVR', 'DSCOVR at L1'], ['STEREOA', 'STEREO-A, ahead of Earth'],
     ['Ulysses', 'Ulysses, over the Sun’s poles (silent)'], ['Cassini', 'Cassini at Saturn (1997–2017)'], ['Galileo', 'Galileo at Jupiter (1989–2003)'], ['MESSENGER', 'MESSENGER at Mercury (2004–2015)']]) {
     if (k !== 'NewTour' && !bodies[k]) continue; const o = document.createElement('option'); o.value = k; o.textContent = t; og.appendChild(o); }
@@ -375,14 +390,14 @@ SS.i18nAdd?.({
   name: { '🛰 NASA science fleet': '🛰 Flotte scientifique de la NASA', '▶ Tour: the new missions': '▶ Visite : les nouvelles missions', 'MAVEN (silent since 2025)': 'MAVEN (silencieux depuis 2025)', 'MAVEN (silent)': 'MAVEN (silencieux)',
     'OSIRIS-APEX, to Apophis': 'OSIRIS-APEX, vers Apophis', 'Dawn at Ceres (silent)': 'Dawn à Cérès (silencieux)', 'Dawn (silent)': 'Dawn (silencieux)', 'Wind at L1': 'Wind au point L1', 'DSCOVR at L1': 'DSCOVR au point L1',
     'STEREO-A, ahead of Earth': 'STEREO-A, en avance sur la Terre', 'Ulysses, over the Sun’s poles (silent)': 'Ulysses, au-dessus des pôles du Soleil (silencieux)', 'Ulysses (silent)': 'Ulysses (silencieux)',
-    'Cassini at Saturn (1997–2017)': 'Cassini à Saturne (1997–2017)', 'Galileo at Jupiter (1989–2003)': 'Galileo à Jupiter (1989–2003)', 'MESSENGER at Mercury (2004–2015)': 'MESSENGER à Mercure (2004–2015)' },
-  cat: { 'Spacecraft · NASA Mars orbiter': 'Engin spatial · orbiteur martien de la NASA', 'Spacecraft · NASA Mars orbiter, contact lost': 'Engin spatial · orbiteur martien de la NASA, contact perdu',
+    'Cassini at Saturn (1997–2017)': 'Cassini à Saturne (1997–2017)', 'Galileo at Jupiter (1989–2003)': 'Galileo à Jupiter (1989–2003)', 'MESSENGER at Mercury (2004–2015)': 'MESSENGER à Mercure (2004–2015)', 'Clementine at the Moon (1994)': 'Clementine à la Lune (1994)', 'Clementine (1994)': 'Clementine (1994)' },
+  cat: { 'Spacecraft · US Moon orbiter, 1994': 'Engin spatial · orbiteur lunaire américain, 1994', 'Spacecraft · NASA Mars orbiter': 'Engin spatial · orbiteur martien de la NASA', 'Spacecraft · NASA Mars orbiter, contact lost': 'Engin spatial · orbiteur martien de la NASA, contact perdu',
     'Spacecraft · NASA Moon orbiter': 'Engin spatial · orbiteur lunaire de la NASA', 'Spacecraft · NASA/ESA/ASI Saturn orbiter (1997–2017)': 'Engin spatial · orbiteur de Saturne NASA/ESA/ASI (1997–2017)',
     'Spacecraft · NASA Jupiter orbiter (1989–2003)': 'Engin spatial · orbiteur de Jupiter de la NASA (1989–2003)', 'Spacecraft · NASA Mercury orbiter (2004–2015)': 'Engin spatial · orbiteur de Mercure de la NASA (2004–2015)',
     'Spacecraft · NASA, Vesta and Ceres (2007–2018)': 'Engin spatial · NASA, Vesta et Cérès (2007–2018)', 'Spacecraft · NASA, to the asteroid Apophis': 'Engin spatial · NASA, vers l’astéroïde Apophis',
     'Spacecraft · NASA Sun observatory': 'Engin spatial · observatoire solaire de la NASA', 'Spacecraft · ESA/NASA solar polar explorer (1990–2009)': 'Engin spatial · explorateur des pôles solaires ESA/NASA (1990–2009)',
     'Spacecraft · NASA solar wind monitor': 'Engin spatial · sentinelle du vent solaire de la NASA', 'Spacecraft · NOAA/NASA space weather and Earth camera': 'Engin spatial · météo spatiale et caméra terrestre NOAA/NASA' },
-  dist: { 'in a low orbit around Mars, about 300 km up': 'en orbite basse autour de Mars, à environ 300 km', 'in orbit around Mars since October 2001': 'en orbite autour de Mars depuis octobre 2001',
+  dist: { 'shown in its 1994 orbit around the Moon': 'montré sur son orbite de 1994 autour de la Lune', 'in a low orbit around Mars, about 300 km up': 'en orbite basse autour de Mars, à environ 300 km', 'in orbit around Mars since October 2001': 'en orbite autour de Mars depuis octobre 2001',
     'still circling Mars, silent since 6 Dec 2025': 'tourne toujours autour de Mars, silencieux depuis le 6 déc. 2025', 'in a low polar orbit around the Moon': 'en orbite polaire basse autour de la Lune',
     'orbited Saturn 2004–2017; shown on its last loops': 'en orbite autour de Saturne de 2004 à 2017 ; montré sur ses dernières boucles', 'orbited Jupiter 1995–2003': 'en orbite autour de Jupiter de 1995 à 2003',
     'orbited Mercury 2011–2015': 'en orbite autour de Mercure de 2011 à 2015', 'still circling Ceres, silent since 2018': 'tourne toujours autour de Cérès, silencieux depuis 2018',
