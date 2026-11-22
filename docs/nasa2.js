@@ -10,7 +10,7 @@ const { bodies } = SS;
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
 const GLB = { TESS: 'models/tess.glb', Kepler: 'models/kepler.glb', Spitzer: 'models/spitzer.glb', Chandra: 'models/chandra.glb', Fermi: 'models/fermi.glb',
-  Swift: 'models/swift.glb', Juno: 'models/juno.glb', Satellite: 'models/tdrs.glb' };
+  Swift: 'models/swift.glb', Juno: 'models/juno.glb', Satellite: 'models/tdrs.glb', SOHO: 'models/soho.glb' };
 
 // ---------- materials and parts for the hand-built ones ----------
 const M = (color, metal = 0.5, rough = 0.45, emi = 0x000000) => new THREE.MeshStandardMaterial({ color, metalness: metal, roughness: rough, emissive: emi });

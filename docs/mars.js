@@ -5,6 +5,24 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 let LOAD_PERSEVERANCE = null;
+// NASA 3D Resources models for the other landing sites: file, real size in metres (longest side), and the hand-built stand-in to hide
+const REAL = { MS2_Opportunity: ['mer.glb', 2.3], MS2_Spirit: ['mer.glb', 2.3], MS2_Viking1: ['viking.glb', 3.0], MS2_Viking2: ['viking.glb', 3.0],
+  MS2_InSight: ['insight.glb', 6.0], MS2_Ingenuity: ['ingenuity.glb', 1.2] };
+const REAL_PINS = [], realCache = {};
+function loadReal() {   // all of them at once (about 4 MB), the first time anything on Mars is visited
+  if (loadReal.done) return; loadReal.done = true;
+  LOAD_PERSEVERANCE?.();   // its neighbour Perseverance too, so Ingenuity is not seen next to the old stand-in
+  const L = new GLTFLoader().setDRACOLoader(new DRACOLoader().setDecoderPath('three/examples/jsm/libs/draco/gltf/'));
+  for (const [k, pin, lon] of REAL_PINS) { const [file, metres] = REAL[k];
+    (realCache[file] ||= L.loadAsync('models/' + file).then(g => g.scene)).then(src => {
+      const m = src.clone(true), bb = new THREE.Box3().setFromObject(m), c = bb.getCenter(V()), size = bb.getSize(V());
+      m.position.set(-c.x, -bb.min.y, -c.z);                                     // feet or wheels on the ground, centred
+      const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.0085 * metres / Math.max(size.x, size.y, size.z)); holder.rotation.y = lon * 0.1;
+      m.traverse(o => { if (o.isMesh) { const mats = [].concat(o.material).map(mt => mt.clone()); o.material = mats.length > 1 ? mats : mats[0];
+        for (const mt of mats) if (mt.emissive && mt.emissive.getHex() === 0) { mt.emissive.set(0xffffff); if (mt.map) mt.emissiveMap = mt.map; else mt.emissive.copy(mt.color); mt.emissiveIntensity = 0.1; } } });
+      for (const ch of pin.children) if (ch.userData.stand) ch.visible = false;
+      pin.add(holder); }); }
+}
 const SS = window.SS;
 const { scene, camera, bodies, sim, flyTo, focusSel, glowSprite } = SS;
 const { info } = SS.cosmos;
@@ -68,21 +86,21 @@ const SITES = [ // key, name, lat, lon (east), kind, model, category, where, fac
     'On 19 April 2021 this 1.8 kg helicopter made the first powered flight on another planet. Planned for 5 test flights, it flew 72 times before a damaged rotor blade grounded it in January 2024.'],
   ['MS2_Curiosity', 'Curiosity', -4.59, 137.44, 'live', 'rover', 'Rover · on Mars since 2012', 'Gale Crater, Mars',
     'Landed on 6 August 2012 and still exploring, slowly climbing Mount Sharp, a 5 km-high mountain of rock layers that record Mars\'s watery past. It passed 5,000 Martian days on the job in 2026.'],
-  ['MS2_Opportunity', 'Opportunity', -1.95, 354.47, 'us', 'pin', 'Rover · 2004–2018', 'Meridiani Planum, Mars',
+  ['MS2_Opportunity', 'Opportunity', -1.95, 354.47, 'us', 'real', 'Rover · 2004–2018', 'Meridiani Planum, Mars',
     'Built to last 90 days, it kept going for almost 15 years and drove 45.16 km, a marathon. A planet-wide dust storm ended its mission in 2018.'],
-  ['MS2_Spirit', 'Spirit', -14.57, 175.47, 'us', 'pin', 'Rover · 2004–2010', 'Gusev Crater, Mars',
+  ['MS2_Spirit', 'Spirit', -14.57, 175.47, 'us', 'real', 'Rover · 2004–2010', 'Gusev Crater, Mars',
     'Opportunity\'s twin. It found signs of ancient hot springs before getting stuck in soft sand in 2009.'],
   ['MS2_Sojourner', 'Sojourner (Pathfinder)', 19.13, 326.78, 'us', 'pin', 'First Mars rover · 1997', 'Ares Vallis, Mars',
     'Landed on 4 July 1997: the first rover on another planet, about the size of a microwave oven.'],
-  ['MS2_Viking1', 'Viking 1', 22.27, 312.05, 'us', 'pin', 'Lander · 1976', 'Chryse Planitia, Mars',
+  ['MS2_Viking1', 'Viking 1', 22.27, 312.05, 'us', 'real', 'Lander · 1976', 'Chryse Planitia, Mars',
     'NASA\'s first Mars landing, on 20 July 1976. It sent back the first clear colour pictures of the Martian surface.'],
-  ['MS2_Viking2', 'Viking 2', 47.64, 134.29, 'us', 'pin', 'Lander · 1976', 'Utopia Planitia, Mars',
+  ['MS2_Viking2', 'Viking 2', 47.64, 134.29, 'us', 'real', 'Lander · 1976', 'Utopia Planitia, Mars',
     'Landed on 3 September 1976 and photographed thin white frost on the ground during the Martian winter.'],
   ['MS2_Mars3', 'Mars 3', -45.0, 202.0, 'ussr', 'pin', 'Lander · 1971', 'Terra Sirenum, Mars',
     'The Soviet Union\'s Mars 3 made the first soft landing on Mars on 2 December 1971, but fell silent after about 20 seconds.'],
   ['MS2_Phoenix', 'Phoenix', 68.22, 234.25, 'us', 'pin', 'Lander · 2008', 'near the north pole, Mars',
     'Dug into the ground near the north pole and found real water ice just under the surface.'],
-  ['MS2_InSight', 'InSight', 4.50, 135.62, 'us', 'pin', 'Lander · 2018–2022', 'Elysium Planitia, Mars',
+  ['MS2_InSight', 'InSight', 4.50, 135.62, 'us', 'real', 'Lander · 2018–2022', 'Elysium Planitia, Mars',
     'Listened to the inside of Mars and recorded more than 1,300 marsquakes.'],
   ['MS2_Zhurong', 'Zhurong', 25.07, 109.93, 'cn', 'pin', 'Rover · 2021', 'Utopia Planitia, Mars',
     'China\'s first Mars rover, named after a god of fire. China became the first country to orbit, land and drive on Mars on its very first try.'],
@@ -116,12 +134,14 @@ for (const [k, name, lat, lon, kind, model, cat, where, fact] of SITES) {
         const holder = new THREE.Group(); holder.add(m); holder.scale.setScalar(0.0085); holder.rotation.y = ry;
         m.traverse(o => { if (o.isMesh) for (const mt of [].concat(o.material)) if (mt.emissive && mt.emissive.getHex() === 0) { mt.emissive.set(0xffffff); if (mt.map) mt.emissiveMap = mt.map; else mt.emissive.copy(mt.color); mt.emissiveIntensity = 0.1; } });
         r.visible = false; pin.add(holder); }); }; } }
-  else if (model === 'heli') { const h = buildIngenuity(); h.scale.setScalar(0.0085); h.position.set(0.045, 0, 0.02); pin.add(h); }
+  else if (model === 'real') { REAL_PINS.push([k, pin, lon]); }
+  if (model === 'heli') REAL_PINS.push([k, pin, lon]);
+  if (model === 'heli') { const h = buildIngenuity(); h.scale.setScalar(0.0085); h.position.set(0.045, 0, 0.02); h.userData.stand = true; pin.add(h); }
   pin.add(glowSprite(model === 'pin' ? 0.012 : 0.006, COL[kind], 'rgba(0,0,0,0)', 0.9));
   if (model === 'pin') cyl(0.0004, 0.0004, 0.012, M(0xffffff), 0, 0.006, 0, pin, 6);
   nearLabel(pin, name, model === 'pin' ? 0.02 : 0.035, k, 'craft', 2.2);
   pins.push(pin); lockFor[k] = lon;
-  bodies[k] = { obj: pin, radius: 0.02, view: model === 'pin' ? 0.55 : 0.07, dir: () => { pin.getWorldPosition(wp); T.getWorldPosition(mp); const up = wp.clone().sub(mp).normalize(); const sun = mp.clone().negate().normalize();
+  bodies[k] = { obj: pin, radius: 0.02, view: model === 'pin' ? 0.55 : model === 'real' ? (k === 'MS2_InSight' ? 0.11 : 0.07) : 0.07, dir: () => { pin.getWorldPosition(wp); T.getWorldPosition(mp); const up = wp.clone().sub(mp).normalize(); const sun = mp.clone().negate().normalize();
     const t = sun.sub(up.clone().multiplyScalar(sun.dot(up))); if (t.lengthSq() < 1e-6) t.set(1, 0, 0); t.normalize();
     return model === 'pin' ? up.add(t.multiplyScalar(0.35)).normalize() : up.multiplyScalar(0.5).add(t.multiplyScalar(0.9)).normalize(); } };
   info(k, name, cat, where, fact); if (SS.more.INFO_EN) delete SS.more.INFO_EN[k];
@@ -146,7 +166,7 @@ sim.push(() => {
   const sunLon = Math.atan2(-sl.z, sl.x);
   mars.rotation.y = sunLon - 0.45 - lockLon * D2R;
 });
-{ const prev = SS.onFocus; SS.onFocus = key => { prev(key); lockLon = key in lockFor ? lockFor[key] : null; if (key === 'Perseverance') LOAD_PERSEVERANCE?.(); }; }
+{ const prev = SS.onFocus; SS.onFocus = key => { prev(key); lockLon = key in lockFor ? lockFor[key] : null; if (key === 'Perseverance') LOAD_PERSEVERANCE?.(); if (key === 'Mars' || key in lockFor) loadReal(); }; }
 const visit = k => () => { lockLon = lockFor[k]; $('speed').value = '0.000694'; const au = $('auto'); if (au.checked) { au.checked = false; au.dispatchEvent(new Event('change')); } SS.controls.autoRotate = false; setTimeout(() => flyTo(k), 250); };
 for (const k in lockFor) special[k] = visit(k);
 
