@@ -405,3 +405,5 @@ SS.i18nAdd?.({
     'still circling the Sun over its poles, silent since 2009': 'tourne toujours autour du Soleil en passant au-dessus de ses pôles, silencieux depuis 2009',
     'at Sun–Earth L1, 1.5 million km towards the Sun': 'au point L1 Soleil–Terre, à 1,5 million de km vers le Soleil', 'at Sun–Earth L1, looking back at Earth': 'au point L1 Soleil–Terre, tourné vers la Terre' },
 });
+
+SS.fleet = { orbiter, LOAD, litDir };   // shared with nasa3d.js
