@@ -7,7 +7,7 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 let LOAD_PERSEVERANCE = null;
 // NASA 3D Resources models for the other landing sites: file, real size in metres (longest side), and the hand-built stand-in to hide
 const REAL = { MS2_Opportunity: ['mer.glb', 2.3], MS2_Spirit: ['mer.glb', 2.3], MS2_Viking1: ['viking.glb', 3.0], MS2_Viking2: ['viking.glb', 3.0],
-  MS2_InSight: ['insight.glb', 6.0], MS2_Ingenuity: ['ingenuity.glb', 1.2] };
+  MS2_InSight: ['insight.glb', 6.0], MS2_Curiosity: ['curiosity.glb', 3.95], MS2_Ingenuity: ['ingenuity.glb', 1.2] };
 const REAL_PINS = [], realCache = {};
 function loadReal() {   // all of them at once (about 4 MB), the first time anything on Mars is visited
   if (loadReal.done) return; loadReal.done = true;
@@ -84,7 +84,7 @@ const SITES = [ // key, name, lat, lon (east), kind, model, category, where, fac
     'A car-sized robot exploring an ancient river delta and lake bed for signs of past life, and collecting rock samples. On 11 October 2026 it broke the record for the longest drive on another world, passing Opportunity\'s 45.16 km. It brought the Ingenuity helicopter with it.'],
   ['MS2_Ingenuity', 'Ingenuity', 18.47, 77.40, 'us', 'heli', 'Helicopter · 2021–2024', 'Jezero Crater, Mars',
     'On 19 April 2021 this 1.8 kg helicopter made the first powered flight on another planet. Planned for 5 test flights, it flew 72 times before a damaged rotor blade grounded it in January 2024.'],
-  ['MS2_Curiosity', 'Curiosity', -4.59, 137.44, 'live', 'rover', 'Rover · on Mars since 2012', 'Gale Crater, Mars',
+  ['MS2_Curiosity', 'Curiosity', -4.59, 137.44, 'live', 'real', 'Rover · on Mars since 2012', 'Gale Crater, Mars',
     'Landed on 6 August 2012 and still exploring, slowly climbing Mount Sharp, a 5 km-high mountain of rock layers that record Mars\'s watery past. It passed 5,000 Martian days on the job in 2026.'],
   ['MS2_Opportunity', 'Opportunity', -1.95, 354.47, 'us', 'real', 'Rover · 2004–2018', 'Meridiani Planum, Mars',
     'Built to last 90 days, it kept going for almost 15 years and drove 45.16 km, a marathon. A planet-wide dust storm ended its mission in 2018.'],
@@ -141,9 +141,9 @@ for (const [k, name, lat, lon, kind, model, cat, where, fact] of SITES) {
   if (model === 'pin') cyl(0.0004, 0.0004, 0.012, M(0xffffff), 0, 0.006, 0, pin, 6);
   nearLabel(pin, name, model === 'pin' ? 0.02 : 0.035, k, 'craft', 2.2);
   pins.push(pin); lockFor[k] = lon;
-  bodies[k] = { obj: pin, radius: 0.02, view: model === 'pin' ? 0.55 : model === 'real' ? (k === 'MS2_InSight' ? 0.11 : 0.07) : 0.07, dir: () => { pin.getWorldPosition(wp); T.getWorldPosition(mp); const up = wp.clone().sub(mp).normalize(); const sun = mp.clone().negate().normalize();
+  bodies[k] = { obj: pin, radius: 0.02, view: model === 'pin' ? 0.55 : model === 'real' ? (k === 'MS2_InSight' ? 0.11 : k === 'MS2_Curiosity' ? 0.08 : 0.07) : 0.07, dir: () => { pin.getWorldPosition(wp); T.getWorldPosition(mp); const up = wp.clone().sub(mp).normalize(); const sun = mp.clone().negate().normalize();
     const t = sun.sub(up.clone().multiplyScalar(sun.dot(up))); if (t.lengthSq() < 1e-6) t.set(1, 0, 0); t.normalize();
-    return model === 'pin' ? up.add(t.multiplyScalar(0.35)).normalize() : up.multiplyScalar(0.5).add(t.multiplyScalar(0.9)).normalize(); } };
+    return model === 'pin' ? up.add(t.multiplyScalar(0.35)).normalize() : up.multiplyScalar(0.8).add(t.multiplyScalar(0.6)).normalize(); } };   // from higher up, so the craft reads as standing on the ground
   info(k, name, cat, where, fact); if (SS.more.INFO_EN) delete SS.more.INFO_EN[k];
 }
 for (const [k, name, lat, lon, cat, where, fact] of MARKS) {
@@ -223,3 +223,24 @@ SS.i18nAdd?.({
   },
 });
 await import('./launches.js' + new URL(import.meta.url).search);
+
+// ---------- Curiosity: a full info card (NASA science.nasa.gov/mission/msl-curiosity) ----------
+const addCuriosityCard = () => { const D = SS.more?.cards2, T = (l, lf, v, vf) => [l, lf, v, vf];
+  if (!D) return setTimeout(addCuriosityCard, 500);   // the cards module may load after this one
+  D.MS2_Curiosity = {
+    intro: ['Curiosity is NASA’s Mars Science Laboratory: a rover the size of a small SUV, sent to find out whether Mars ever had conditions that could support microscopic life. Since 2012 it has been exploring Gale Crater and slowly climbing Mount Sharp, a 5 km-high mountain of rock layers that record how Mars dried out.',
+      'Curiosity est le Mars Science Laboratory de la NASA : un rover de la taille d’un petit SUV, envoyé pour savoir si Mars a déjà eu des conditions favorables à une vie microscopique. Depuis 2012, il explore le cratère Gale et gravit lentement le mont Sharp, une montagne de 5 km faite de couches de roche qui racontent comment Mars s’est asséchée.'],
+    tiles: [T('Launch', 'Lancement', '26 Nov 2011 · Atlas V, Cape Canaveral', '26 nov. 2011 · Atlas V, Cap Canaveral'),
+      T('Landing', 'Atterrissage', '6 Aug 2012, Gale Crater, lowered on cables by a "sky crane"', '6 août 2012, cratère Gale, descendu au bout de câbles par une « grue volante »'),
+      T('Size', 'Taille', 'about 3 m long, 2.7 m wide, 2.2 m tall', 'environ 3 m de long, 2,7 m de large, 2,2 m de haut'),
+      T('Mass', 'Masse', '899 kg (337 kg in Mars gravity)', '899 kg (337 kg avec la gravité martienne)'),
+      T('Power', 'Énergie', 'a nuclear MMRTG, no solar panels', 'un générateur nucléaire MMRTG, sans panneaux solaires'),
+      T('Tools', 'Outils', '10 science instruments, 17 cameras, a drill and a rock-zapping laser', '10 instruments scientifiques, 17 caméras, une foreuse et un laser qui vaporise la roche'),
+      T('Status', 'État', 'still working; climbed 1 km up Mount Sharp by Aug 2026', 'toujours en activité ; 1 km d’ascension sur le mont Sharp en août 2026')],
+    facts: [['In its first year it found that Gale Crater once held a lake with fresh water and the chemistry microbes could have used: the first proof that Mars was once habitable.', 'Dès sa première année, il a montré que le cratère Gale abritait autrefois un lac d’eau douce, avec la chimie dont des microbes auraient pu se servir : la première preuve que Mars a été habitable.'],
+      ['It has found organic molecules, the building blocks of life’s chemistry. In 2025 scientists reported the largest ones yet found on Mars, in a rock called Cumberland.', 'Il a trouvé des molécules organiques, briques de la chimie du vivant. En 2025, des chercheurs ont annoncé les plus grandes jamais trouvées sur Mars, dans une roche appelée Cumberland.'],
+      ['It has measured methane in the air of Gale Crater rising and falling with the seasons, a mystery still being studied.', 'Il a mesuré du méthane dans l’air du cratère Gale qui varie avec les saisons, un mystère encore étudié.'],
+      ['Its landing, after the "seven minutes of terror" through the atmosphere, was the first by sky crane, the method later used for Perseverance.', 'Son atterrissage, après les « sept minutes de terreur » à travers l’atmosphère, fut le premier par grue volante, la méthode reprise ensuite pour Perseverance.'],
+      ['Its arm reaches about 2.2 m, and its wheels are 50 cm across, made of aluminium.', 'Son bras atteint environ 2,2 m, et ses roues en aluminium mesurent 50 cm de diamètre.']] };
+};
+addCuriosityCard();
