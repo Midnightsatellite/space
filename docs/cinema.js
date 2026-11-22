@@ -33,7 +33,7 @@ addEventListener('resize', () => { composer.setSize(innerWidth, innerHeight); bl
   const after = $('swarmsOn')?.parentElement || $('labels').parentElement; after.after(row);
   const box = $('glowOn');
   let saved = null; try { saved = localStorage.getItem('ss_glow'); } catch (e) { }
-  glowOn = saved != null ? saved === '1' : !matchMedia('(pointer: coarse)').matches;   // on by default, except on phones
+  glowOn = saved != null ? saved === '1' : false;   // off by default (the user can turn it on; the choice is remembered)
   box.checked = glowOn;
   box.onchange = () => { glowOn = box.checked; try { localStorage.setItem('ss_glow', glowOn ? '1' : '0'); } catch (e) { } };
   // if the device struggles (under ~24 frames a second for a few seconds), switch the glow off once

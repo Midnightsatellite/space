@@ -254,3 +254,7 @@ await import('./doc2.js' + new URL(import.meta.url).search);
 await import('./earthpins.js' + new URL(import.meta.url).search);
 await import('./animals.js' + new URL(import.meta.url).search);
 await import('./docfr.js' + new URL(import.meta.url).search);
+
+// Orbit paths start hidden. Many lines are added later (when a craft or mission loads), so keep them in step with the tick box.
+{ const box = document.getElementById('paths'); let n = -1, was = null;
+  SS.sim.push(() => { const L = SS.orbitLines; if (!L || (L.length === n && box.checked === was)) return; n = L.length; was = box.checked; for (const l of L) l.visible = was; }); }

@@ -94,12 +94,12 @@
     </select>
   </label>
   <label>Date <input id="date" type="datetime-local" step="60"> <button id="now" type="button">Now</button></label>
-  <label>Auto-rotate camera <input id="auto" type="checkbox" checked></label>
+  <label>Auto-rotate camera <input id="auto" type="checkbox"></label>
   <label>Names <input id="labels" type="checkbox" checked></label>
   <label>Constellations <input id="const" type="checkbox"></label>
   <label>Zodiac / star signs <input id="zodiac" type="checkbox"></label>
   <div id="sunin"></div>
-  <label>Orbit paths <input id="paths" type="checkbox" checked></label>
+  <label>Orbit paths <input id="paths" type="checkbox"></label>
 </div>
 <div id="note">Sizes and distances compressed so everything fits on screen · Planet maps: <a href="https://www.solarsystemscope.com/textures/" style="color:inherit">Solar System Scope</a> (CC BY 4.0), Earth: NASA · Star positions: Hipparcos catalogue · <a href="https://www.youtube.com/@MidnightSatellite" style="color:#ffd27a">Midnight Satellite on YouTube</a> · <a href="https://ko-fi.com/midnightsatellite" style="color:#ffd27a">☕ Ko-fi</a></div>
 <script type="module">
@@ -127,7 +127,7 @@ camera.position.copy(OVERVIEW_POS);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.autoRotate = true;
+controls.autoRotate = false;
 controls.autoRotateSpeed = 0.25;
 controls.minDistance = 0.03;
 controls.maxDistance = 12000;
@@ -680,7 +680,7 @@ addEventListener('resize',()=>{
   renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight);
 });
 </script>
-<script type="module" src="cosmos.js?v=67"></script>
-<script type="module">{ const t = setInterval(() => { if (window.SS && SS.doc2 && SS.setLang) { clearInterval(t); import('./mobile.js?v=67'); } }, 300); }</script>
+<script type="module" src="cosmos.js?v=68"></script>
+<script type="module">{ const t = setInterval(() => { if (window.SS && SS.doc2 && SS.setLang) { clearInterval(t); import('./mobile.js?v=68'); } }, 300); }</script>
 </body>
 </html>
