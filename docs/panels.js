@@ -52,3 +52,32 @@ if (info) { new MutationObserver(() => buttons()).observe(info, { childList: tru
     const was = SS.setLang; if (was) SS.setLang = (...a) => { const r = was(...a); set(ui.classList.contains('min')); buttons(); return r; };
   }
 }
+
+// ---------- footer: a small credits link instead of the long line of credits (computers; phones keep them in Settings) ----------
+{
+  const note = $('note');
+  if (note) {
+    const st = document.createElement('style');
+    st.textContent = `body:not(.phone) #note{display:none!important}
+      #creditBar{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);font-size:11px;opacity:.75;z-index:5;white-space:nowrap}
+      #creditBar a,#creditBar button{color:#ffd27a;background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:underline}
+      #creditBar button{color:#c8d0f0}
+      body.phone #creditBar,body.clean #creditBar,body.photo #creditBar,body.doc #creditBar,body.cinema #creditBar,body.lightride #creditBar{display:none!important}
+      #creditPop{position:fixed;inset:0;background:rgba(2,4,12,.55);z-index:40;display:none;align-items:center;justify-content:center}
+      #creditPop.on{display:flex}
+      #creditPop .box{width:min(460px,92vw);max-height:80vh;overflow:auto;background:rgba(12,16,34,.97);border:1px solid rgba(140,160,255,.25);border-radius:14px;padding:14px 16px;color:#dfe5ff;font-size:13px;line-height:1.7}
+      #creditPop h3{margin:0 0 6px;font-size:16px;color:#fff;display:flex;justify-content:space-between;align-items:center}
+      #creditPop a{color:#ffd27a}`;
+    document.head.appendChild(st);
+    const bar = document.createElement('div'); bar.id = 'creditBar';
+    bar.innerHTML = '<a href="https://www.youtube.com/@MidnightSatellite" target="_blank" rel="noopener">▶ Midnight Satellite on YouTube</a> · <a href="https://ko-fi.com/midnightsatellite" target="_blank" rel="noopener">☕ Ko-fi</a> · <button type="button" id="creditBtn"></button>';
+    const pop = document.createElement('div'); pop.id = 'creditPop'; pop.innerHTML = '<div class="box"><h3><span></span><button type="button" id="creditX">✕</button></h3><div class="body"></div></div>';
+    document.body.append(bar, pop);
+    const label = () => { $('creditBtn').textContent = fr() ? 'ⓘ Crédits' : 'ⓘ Credits'; pop.querySelector('h3 span').textContent = fr() ? 'Crédits' : 'Credits'; };
+    label();
+    $('creditBtn').onclick = () => { pop.querySelector('.body').innerHTML = note.innerHTML.replace(/\s*·\s*/g, '<br>'); label(); pop.classList.add('on'); };
+    $('creditX').onclick = () => pop.classList.remove('on');
+    pop.onclick = e => { if (e.target === pop) pop.classList.remove('on'); };
+    const was = SS.setLang; if (was) SS.setLang = (...a) => { const r = was(...a); label(); return r; };
+  }
+}
