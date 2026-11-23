@@ -5,11 +5,10 @@
 // =====================================================================
 import * as THREE from 'three';
 const SS = window.SS;
-const { bodies, loadTex } = SS;
+const { bodies } = SS;
 const MAPS = ['Phobos', 'Deimos', 'Io', 'Europa', 'Ganymede', 'Callisto', 'Enceladus', 'Mimas', 'Tethys', 'Dione', 'Rhea', 'Iapetus',
   'Miranda', 'Ariel', 'Umbriel', 'Titania', 'Oberon'];
-const put = (mesh, file) => { if (!mesh?.material) return; const t = loadTex('tex/moons/' + file + '.jpg?v=1'); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  mesh.material.map = t; mesh.material.color?.set(0xffffff); mesh.material.needsUpdate = true; };
+const put = (mesh, file) => { if (mesh?.material) SS.lazyMap(mesh, 'tex/moons/' + file + '.jpg?v=1', 60); };   // loaded when you come near (the made-up surface shows until then)
 for (const k of MAPS) put(bodies[k]?.obj, k.toLowerCase());
 // Pluto and Charon live in index.html's dwarfPlanet(): the holder carries Pluto (tilted group) and Charon (on its own pivot)
 { const h = bodies.Pluto?.obj; if (h) { let pluto = null, charon = null;

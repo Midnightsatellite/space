@@ -140,6 +140,7 @@ if (bodies.SPARCS) { const sp = V(), su = V(), eo = V();   // SPARCS: look at it
     const toSun = su.sub(sp).normalize(), out = sp.clone().sub(eo).normalize();
     return toSun.multiplyScalar(0.75).addScaledVector(out, 0.55).add(V(0, 0.15, 0)).normalize(); }; }
 { const prev = SS.onFocus; SS.onFocus = k => { prev(k); if (GLB[k]) swap(k); }; }
-setTimeout(() => { let i = 0; const keys = Object.keys(GLB); const next = () => { if (i < keys.length) { swap(keys[i++]); setTimeout(next, 1500); } }; next(); }, 12000);
+{ const wait = setInterval(() => { if (!SS.doc2) return; clearInterval(wait);   // background model loading starts only once the page is fully up
+  setTimeout(() => { let i = 0; const keys = Object.keys(GLB); const next = () => { if (i < keys.length) { swap(keys[i++]); setTimeout(next, 1500); } }; next(); }, 10000); }, 1000); }
 SS.more.nasa2 = { swap, BUILD };
 await import('./webb.js' + new URL(import.meta.url).search);

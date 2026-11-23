@@ -12,7 +12,9 @@ const $ = id => document.getElementById(id);
 {
   const loader = new THREE.TextureLoader();
   const prep = t => { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = Math.min(8, SS.renderer.capabilities.getMaxAnisotropy()); t.generateMipmaps = true; return t; };
-  const tex = prep(loader.load('tex/milkyway4k.jpg'));
+  const tex = prep(loader.load('tex/milkyway2k.jpg'));   // a light version first; the sharp 4K one replaces it once everything else has loaded
+  { const up = () => loader.load('tex/milkyway4k.jpg', t => { prep(t); mat.uniforms.map.value = t; });
+    const wait = setInterval(() => { if (SS.doc2) { clearInterval(wait); setTimeout(up, 4000); } }, 1000); }
   const e = 23.4393 * Math.PI / 180;
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, depthTest: false,

@@ -720,6 +720,16 @@ sim.push(() => {
 
 { const layer = [...document.body.children].find(el => el.querySelector && el.querySelector('.lbl')); if (layer) layer.id = 'labelLayer'; }
 
+// Load a big picture only when the camera comes near the object that wears it (keeps the start of the page light).
+{ const pending = []; const cam = SS.camera, wp = new THREE.Vector3(); let t = 0;
+  SS.lazyMap = (mesh, url, near = 40) => { if (mesh) pending.push({ mesh, url, near }); };
+  SS.sim.push(() => { const now = performance.now(); if (now - t < 400 || !pending.length) return; t = now;
+    for (let i = pending.length - 1; i >= 0; i--) { const p = pending[i], m = p.mesh; if (!m.geometry) { pending.splice(i, 1); continue; }
+      if (!m.geometry.boundingSphere) m.geometry.computeBoundingSphere();
+      m.getWorldPosition(wp); const r = m.geometry.boundingSphere.radius * m.getWorldScale(new THREE.Vector3()).x;
+      if (cam.position.distanceTo(wp) > r * p.near) continue;
+      pending.splice(i, 1); const tx = SS.loadTex(p.url); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8;
+      if (m.material.uniforms?.map) m.material.uniforms.map.value = tx; else { m.material.map = tx; m.material.color?.set(0xffffff); m.material.needsUpdate = true; } } }); }
 SS.go = go; SS.stopTour = stopTour;
 SS.extras = { observer: LONDON, enterNight: () => go('night'), addMoon, smallBody, exoPlanet, paint, lumpy, auToScene, addGroup, nearLabel, scaleHide, PL, EVENTS, TOUR, showInfo, litMaterial, dps, J2000, getTour: () => tour };
 await import('./documentary.js' + new URL(import.meta.url).search);
