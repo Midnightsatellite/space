@@ -21,10 +21,15 @@ if (synth && window.SpeechSynthesisUtterance) {
   let voices = [], cur = null; // cur = { btn, els }
   const loadVoices = () => { voices = synth.getVoices(); };
   loadVoices(); synth.addEventListener?.('voiceschanged', loadVoices);
+  // Devices list many novelty or robotic voices (on a Mac: Eddy, Grandpa, Rocko, Zarvox, Bubbles…). Skip those and prefer natural ones.
+  const BAD = /eddy|flo\b|reed|rocko|sandy|shelley|grandma|grandpa|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|espeak|compact/i;
+  const NICE = /daniel|serena|kate|stephanie|jamie|oliver|arthur|martha|samantha|ava|zoe|allison|susan|evan|nathan|libby|sonia|ryan|thomas|am[eé]lie|audrey|aur[eé]lie|marie|jacques|denise|henri|eloise|vivienne|r[ée]my|chantal|virginie/i;
   const pickVoice = lang => {
-    const two = lang.slice(0, 2), own = voices.filter(v => v.lang?.replace('_', '-').toLowerCase().startsWith(two));
-    const score = v => (/premium|enhanced|natural|neural/i.test(v.name) ? 8 : 0) + (/google|siri|microsoft/i.test(v.name) ? 4 : 0) + (v.lang.replace('_', '-').toLowerCase() === lang.toLowerCase() ? 2 : 0) + (v.localService ? 1 : 0);
-    return own.sort((a, b) => score(b) - score(a))[0] || null;
+    const two = lang.slice(0, 2), norm = v => (v.lang || '').replace('_', '-').toLowerCase();
+    const score = v => (BAD.test(v.name) ? -100 : 0) + (/premium|enhanced|natural|neural|am[eé]lior/i.test(v.name) ? 12 : 0) + (/google|online/i.test(v.name) ? 7 : 0)
+      + (NICE.test(v.name) ? 5 : 0) + (norm(v) === lang.toLowerCase() ? 2 : 0) + (v.default ? 1 : 0);
+    const best = voices.filter(v => norm(v).startsWith(two)).sort((a, b) => score(b) - score(a))[0];
+    return best && score(best) > -50 ? best : null;
   };
   const clean = t => (t || '').replace(/\p{Extended_Pictographic}|\p{Regional_Indicator}|\uFE0F/gu, ' ').replace(/~\s*/g, '').replace(/[▶›‹•·]/g, ' ').replace(/\s+/g, ' ').trim();
   function stop() {
@@ -40,7 +45,7 @@ if (synth && window.SpeechSynthesisUtterance) {
     const me = cur = { btn, els: pieces.map(p => p[0]).filter(Boolean) };
     if (btn) { btn.classList.add('on'); btn.textContent = '⏹'; }
     pieces.forEach(([el, text], n) => {
-      const u = new SpeechSynthesisUtterance(text); u.lang = lang; if (voice) u.voice = voice; u.rate = 1;
+      const u = new SpeechSynthesisUtterance(text); u.lang = lang; if (voice) u.voice = voice; u.rate = 0.95;
       u.onstart = () => { if (cur !== me) return; me.els.forEach(e => e.classList.remove('saying'));
         if (el) { el.closest('details')?.setAttribute('open', ''); el.classList.add('saying'); el.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }); } };
       if (n === pieces.length - 1) { u.onend = () => { if (cur === me) stop(); }; u.onerror = u.onend; }
