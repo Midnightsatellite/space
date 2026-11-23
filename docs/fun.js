@@ -115,13 +115,70 @@ const btn = (id, text) => { const b = document.createElement('button'); b.type =
     ['Neptune', 'Which planet is the farthest from the Sun?', ['Neptune', 'Uranus', 'Saturn'], 'Quelle planète est la plus éloignée du Soleil ?', ['Neptune', 'Uranus', 'Saturne']],
     ['Moon', 'Why do we always see the same side of the Moon?', ['It spins once per orbit', 'It does not spin', 'The other side is dark'], 'Pourquoi voit-on toujours la même face de la Lune ?', ['Elle tourne une fois par orbite', 'Elle ne tourne pas', 'L\'autre face est sombre']],
   ];
+  const EASY = [ // for children
+    ['Earth', 'Which planet do we live on?', ['Earth', 'Mars', 'Jupiter'], 'Sur quelle planète vivons-nous ?', ['La Terre', 'Mars', 'Jupiter']],
+    ['Sun', 'The Sun is a…', ['star', 'planet', 'moon'], 'Le Soleil est…', ['une étoile', 'une planète', 'une lune']],
+    ['Moon', 'What goes around the Earth?', ['The Moon', 'The Sun', 'Mars'], 'Qu\'est-ce qui tourne autour de la Terre ?', ['La Lune', 'Le Soleil', 'Mars']],
+    ['Mars', 'Which planet is called the Red Planet?', ['Mars', 'Venus', 'Neptune'], 'Quelle planète appelle-t-on la planète rouge ?', ['Mars', 'Vénus', 'Neptune']],
+    ['Saturn', 'Which planet has big, bright rings?', ['Saturn', 'Mercury', 'Earth'], 'Quelle planète a de grands anneaux brillants ?', ['Saturne', 'Mercure', 'La Terre']],
+    ['Jupiter', 'Which is the biggest planet?', ['Jupiter', 'Earth', 'Mars'], 'Quelle est la plus grosse planète ?', ['Jupiter', 'La Terre', 'Mars']],
+    ['Mercury', 'Which planet is closest to the Sun?', ['Mercury', 'Neptune', 'Earth'], 'Quelle planète est la plus proche du Soleil ?', ['Mercure', 'Neptune', 'La Terre']],
+    ['ISS', 'Where do astronauts live in space?', ['On the space station', 'On the Sun', 'On a cloud'], 'Où vivent les astronautes dans l\'espace ?', ['Dans la station spatiale', 'Sur le Soleil', 'Sur un nuage']],
+    ['MS_A11', 'Who was the first person to walk on the Moon?', ['Neil Armstrong', 'Isaac Newton', 'Albert Einstein'], 'Qui a marché le premier sur la Lune ?', ['Neil Armstrong', 'Isaac Newton', 'Albert Einstein']],
+    ['Sun', 'How many planets go around our Sun?', ['8', '3', '20'], 'Combien de planètes tournent autour de notre Soleil ?', ['8', '3', '20']],
+    ['Moon', 'What covers the Moon\'s ground?', ['Craters and dust', 'Forests', 'Oceans of water'], 'Qu\'est-ce qui recouvre le sol de la Lune ?', ['Des cratères et de la poussière', 'Des forêts', 'Des océans d\'eau']],
+    ['ISS', 'What do astronauts wear to go outside in space?', ['A spacesuit', 'A swimsuit', 'A raincoat'], 'Que portent les astronautes pour sortir dans l\'espace ?', ['Une combinaison spatiale', 'Un maillot de bain', 'Un imperméable']],
+    ['Pluto', 'Pluto is a…', ['dwarf planet', 'star', 'comet'], 'Pluton est…', ['une planète naine', 'une étoile', 'une comète']],
+    ['Comet67P', 'A comet is mostly made of…', ['ice and dust', 'fire', 'chocolate'], 'Une comète est surtout faite…', ['de glace et de poussière', 'de feu', 'de chocolat']],
+    ['Moon', 'About how long does the Moon take to go around Earth?', ['About a month', 'One day', 'One year'], 'Combien de temps la Lune met-elle à peu près pour faire le tour de la Terre ?', ['Environ un mois', 'Un jour', 'Un an']],
+    ['Uranus', 'Which planet rolls around the Sun on its side?', ['Uranus', 'Earth', 'Mars'], 'Quelle planète roule autour du Soleil couchée sur le côté ?', ['Uranus', 'La Terre', 'Mars']],
+    ['Earth', 'Why is Earth blue from space?', ['It is mostly covered by oceans', 'It is painted blue', 'It is made of ice'], 'Pourquoi la Terre est-elle bleue vue de l\'espace ?', ['Elle est surtout couverte d\'océans', 'Elle est peinte en bleu', 'Elle est faite de glace']],
+    ['Sun', 'Why must you never look straight at the Sun?', ['It can hurt your eyes', 'It is shy', 'It makes you sneeze forever'], 'Pourquoi ne faut-il jamais regarder le Soleil en face ?', ['Ça peut abîmer les yeux', 'Il est timide', 'On éternue pour toujours']],
+  ];
+  const HARD = [ // for space fans
+    ['Sun', 'What is the Sun mostly made of?', ['Hydrogen', 'Helium', 'Iron'], 'De quoi le Soleil est-il surtout composé ?', ['D\'hydrogène', 'D\'hélium', 'De fer']],
+    ['Proxima', 'How far away is Proxima Centauri?', ['About 4.2 light-years', 'About 42 light-years', 'About 0.4 light-years'], 'À quelle distance se trouve Proxima du Centaure ?', ['Environ 4,2 années-lumière', 'Environ 42 années-lumière', 'Environ 0,4 année-lumière']],
+    ['Titan', 'Titan\'s lakes and seas are filled with…', ['liquid methane and ethane', 'water', 'lava'], 'Les lacs et les mers de Titan sont remplis…', ['de méthane et d\'éthane liquides', 'd\'eau', 'de lave']],
+    ['Io', 'Which is the most volcanic world in the Solar System?', ['Io', 'Venus', 'Mars'], 'Quel est le monde le plus volcanique du Système solaire ?', ['Io', 'Vénus', 'Mars']],
+    ['Europa', 'NASA\'s Europa Clipper is heading to a moon of…', ['Jupiter', 'Saturn', 'Neptune'], 'La sonde Europa Clipper de la NASA se dirige vers une lune de…', ['Jupiter', 'Saturne', 'Neptune']],
+    ['M87', 'The first photo of a black hole (2019) showed the one in…', ['galaxy M87', 'the centre of the Milky Way', 'the Andromeda galaxy'], 'La première photo d\'un trou noir (2019) montrait celui…', ['de la galaxie M87', 'du centre de la Voie lactée', 'de la galaxie d\'Andromède']],
+    ['SgrA', 'What sits at the centre of the Milky Way?', ['A black hole of about 4 million Suns', 'A giant blue star', 'Nothing at all'], 'Qu\'y a-t-il au centre de la Voie lactée ?', ['Un trou noir d\'environ 4 millions de Soleils', 'Une étoile bleue géante', 'Rien du tout']],
+    ['Voyager1', 'In which year did Voyager 1 launch?', ['1977', '1969', '1986'], 'En quelle année Voyager 1 a-t-il été lancé ?', ['1977', '1969', '1986']],
+    ['Mars', 'How many moons does Mars have?', ['2', '0', '4'], 'Combien de lunes Mars possède-t-elle ?', ['2', '0', '4']],
+    ['Uranus', 'Who discovered Uranus in 1781?', ['William Herschel', 'Galileo Galilei', 'Isaac Newton'], 'Qui a découvert Uranus en 1781 ?', ['William Herschel', 'Galilée', 'Isaac Newton']],
+    ['Peg51b', '51 Pegasi b (1995) was the first planet found around…', ['a Sun-like star', 'a pulsar', 'a black hole'], '51 Pegasi b (1995) fut la première planète trouvée autour…', ['d\'une étoile comme le Soleil', 'd\'un pulsar', 'd\'un trou noir']],
+    ['Neptune', 'Neptune was found in 1846 thanks to…', ['maths predicting where it was', 'a space probe', 'a radio telescope'], 'Neptune a été trouvée en 1846 grâce…', ['aux calculs qui prédisaient sa position', 'à une sonde spatiale', 'à un radiotélescope']],
+    ['Saturn', 'How long does Saturn take to go around the Sun?', ['About 29 years', 'About 12 years', 'About 84 years'], 'Combien de temps Saturne met-elle pour faire le tour du Soleil ?', ['Environ 29 ans', 'Environ 12 ans', 'Environ 84 ans']],
+    ['Betelgeuse', 'Betelgeuse is a…', ['red supergiant', 'white dwarf', 'neutron star'], 'Bételgeuse est…', ['une supergéante rouge', 'une naine blanche', 'une étoile à neutrons']],
+    ['Phobetor', 'Poltergeist and Phobetor orbit a…', ['pulsar', 'red dwarf', 'brown dwarf'], 'Poltergeist et Phobetor tournent autour…', ['d\'un pulsar', 'd\'une naine rouge', 'd\'une naine brune']],
+    ['JWST', 'Where does the James Webb Space Telescope fly?', ['Around a point 1.5 million km from Earth', 'In low Earth orbit, like Hubble', 'Around the Moon'], 'Où se trouve le télescope spatial James Webb ?', ['Autour d\'un point à 1,5 million de km de la Terre', 'En orbite basse, comme Hubble', 'Autour de la Lune']],
+    ['Moon', 'How fast is the Moon drifting away from Earth?', ['About 3.8 cm a year', 'About 3.8 m a year', 'It is not moving away'], 'À quelle vitesse la Lune s\'éloigne-t-elle de la Terre ?', ['Environ 3,8 cm par an', 'Environ 3,8 m par an', 'Elle ne s\'éloigne pas']],
+    ['Mercury', 'Which planet goes from about 430 °C by day to about −180 °C at night?', ['Mercury', 'Venus', 'Mars'], 'Quelle planète passe d\'environ 430 °C le jour à environ −180 °C la nuit ?', ['Mercure', 'Vénus', 'Mars']],
+    ['Jupiter', 'About how many Earths would fit side by side across Jupiter?', ['About 11', 'About 3', 'About 100'], 'Combien de Terres tiendraient à peu près côte à côte sur le diamètre de Jupiter ?', ['Environ 11', 'Environ 3', 'Environ 100']],
+    ['Io', 'Who discovered Jupiter\'s four big moons in 1610?', ['Galileo Galilei', 'Johannes Kepler', 'Edwin Hubble'], 'Qui a découvert les quatre grandes lunes de Jupiter en 1610 ?', ['Galilée', 'Johannes Kepler', 'Edwin Hubble']],
+  ];
+  const LEVELS = { easy: [EASY, '🧒 Easy', '🧒 Facile', 'For children', 'Pour les enfants'], normal: [Q, '🚀 Normal', '🚀 Normal', 'For everyone', 'Pour tout le monde'], hard: [HARD, '🧠 Hard', '🧠 Difficile', 'For space fans', 'Pour les passionnés'] };
+  const best = () => { try { return JSON.parse(localStorage.getItem('ms_quiz_best') || '{}'); } catch (e) { return {}; } };
+  const saveBest = (lv, n) => { try { const b = best(); if (!(b[lv] >= n)) { b[lv] = n; localStorage.setItem('ms_quiz_best', JSON.stringify(b)); } } catch (e) {} };
   const p = popup('quizPop'); const box = p.querySelector('.box');
-  let deck = [], i = 0, score = 0, pool = null, film = false;
+  let deck = [], i = 0, score = 0, pool = null, film = false, level = 'normal';
   const shuffle = a => { const b = [...a]; for (let k = b.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [b[k], b[j]] = [b[j], b[k]]; } return b; };
-  function start(list) { film = Array.isArray(list); pool = film ? list : Q; deck = shuffle(pool).slice(0, 10); i = 0; score = 0; ask(); p.classList.add('on'); }
+  const title = F => film ? (F ? '🎬 Quiz cinéma et séries' : '🎬 Film & TV quiz') : `${F ? '❓ Quiz de l\'espace' : '❓ Space quiz'} · ${LEVELS[level][F ? 2 : 1]}`;
+  function choose() { // pick a level
+    const F = fr(), b = best();
+    box.innerHTML = `<h3><span>${F ? '❓ Quiz de l\'espace' : '❓ Space quiz'}</span><button type="button" id="qX">✕</button></h3><div style="margin:2px 0 6px">${F ? 'Choisissez un niveau :' : 'Pick a level:'}</div>` +
+      Object.entries(LEVELS).map(([k, L]) => `<button type="button" class="opt" data-lv="${k}"><b>${L[F ? 2 : 1]}</b> · ${L[F ? 4 : 3]}${b[k] != null ? ` <span style="float:right;color:#ffd27a">${F ? 'record' : 'best'} ${b[k]}/10</span>` : ''}</button>`).join('');
+    $('qX').onclick = () => p.classList.remove('on');
+    for (const x of box.querySelectorAll('.opt')) x.onclick = () => start(x.dataset.lv);
+    p.classList.add('on');
+  }
+  function start(list) {
+    film = Array.isArray(list); if (!film) level = LEVELS[list] ? list : 'normal';
+    pool = film ? list : LEVELS[level][0]; deck = shuffle(pool).slice(0, 10); i = 0; score = 0; ask(); p.classList.add('on');
+  }
   function ask() {
     const F = fr(), q = deck[i], opts = shuffle([0, 1, 2]);
-    box.innerHTML = `<h3><span>${film ? (F ? '🎬 Quiz cinéma et séries' : '🎬 Film & TV quiz') : (F ? '❓ Quiz de l\'espace' : '❓ Space quiz')} · ${i + 1}/10</span><button type="button" id="qX">✕</button></h3>
+    box.innerHTML = `<h3><span>${title(F)} · ${i + 1}/10</span><button type="button" id="qX">✕</button></h3>
       <div style="font-size:16px;margin:6px 0 4px">${F ? q[3] : q[1]}</div>${opts.map(o => `<button type="button" class="opt" data-o="${o}">${(F ? q[4] : q[2])[o]}</button>`).join('')}<div id="qNext"></div>`;
     $('qX').onclick = () => p.classList.remove('on');
     for (const b of box.querySelectorAll('.opt')) b.onclick = () => {
@@ -137,15 +194,21 @@ const btn = (id, text) => { const b = document.createElement('button'); b.type =
   }
   function end() {
     const F = fr(), msg = score >= 9 ? (F ? 'Astronaute confirmé ! 🚀' : 'Certified astronaut! 🚀') : score >= 6 ? (F ? 'Belle mission ! 🌟' : 'Great mission! 🌟') : (F ? 'Encore un tour en orbite ? 🌍' : 'Another orbit? 🌍');
-    box.innerHTML = `<h3><span>❓ ${F ? 'Votre score' : 'Your score'}</span><button type="button" id="qX">✕</button></h3><div class="big">${score}/10</div><div style="text-align:center">${msg}</div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:12px"><button type="button" id="qAgain">${F ? '↺ Rejouer' : '↺ Play again'}</button><button type="button" id="qShare">${F ? '🔗 Défier un ami' : '🔗 Challenge a friend'}</button></div>`;
-    $('qX').onclick = () => p.classList.remove('on'); $('qAgain').onclick = () => start(film ? pool : undefined);
-    $('qShare').onclick = () => { const t = F ? `J'ai eu ${score}/10 au quiz de l'espace de Midnight Satellite 🚀 Tu fais mieux ? ${location.origin}${location.pathname}?quiz=1&lang=fr` : `I scored ${score}/10 on the Midnight Satellite space quiz 🚀 Can you beat me? ${location.origin}${location.pathname}?quiz=1`;
+    const prev = film ? null : best()[level]; if (!film) saveBest(level, score);
+    const rec = !film && (prev == null || score > prev) && score > 0 ? `<div style="text-align:center;color:#ffd27a;margin-top:4px">${F ? '🏆 Nouveau record !' : '🏆 New best score!'}</div>` : '';
+    const lvName = LEVELS[level][F ? 2 : 1].replace(/^\S+\s/, '');
+    box.innerHTML = `<h3><span>${title(F)} · ${F ? 'votre score' : 'your score'}</span><button type="button" id="qX">✕</button></h3><div class="big">${score}/10</div><div style="text-align:center">${msg}</div>${rec}
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px"><button type="button" id="qAgain">${F ? '↺ Rejouer' : '↺ Play again'}</button>${film ? '' : `<button type="button" id="qLevel">${F ? '⇄ Autre niveau' : '⇄ Other level'}</button>`}<button type="button" id="qShare">${F ? '🔗 Défier un ami' : '🔗 Challenge a friend'}</button></div>`;
+    $('qX').onclick = () => p.classList.remove('on'); $('qAgain').onclick = () => start(film ? pool : level);
+    if (!film) $('qLevel').onclick = choose;
+    const link = `${location.origin}${location.pathname}?quiz=${film ? 1 : level}${F ? '&lang=fr' : ''}`;
+    $('qShare').onclick = () => { const t = film ? (F ? `J'ai eu ${score}/10 au quiz cinéma et séries de Midnight Satellite 🎬 Tu fais mieux ? ${link}` : `I scored ${score}/10 on the Midnight Satellite film & TV quiz 🎬 Can you beat me? ${link}`)
+        : (F ? `J'ai eu ${score}/10 au quiz de l'espace de Midnight Satellite (niveau ${lvName.toLowerCase()}) 🚀 Tu fais mieux ? ${link}` : `I scored ${score}/10 on the Midnight Satellite space quiz (${lvName.toLowerCase()} level) 🚀 Can you beat me? ${link}`);
       (navigator.clipboard?.writeText(t) || Promise.reject()).then(() => $('qShare').textContent = F ? '✓ Copié' : '✓ Copied', () => prompt('', t)); };
   }
-  btn('quizBtn', '❓ Quiz').onclick = () => start();
-  if (new URLSearchParams(location.search).get('quiz')) setTimeout(start, 1500);
-  SS.more.quiz = { start, Q };
+  btn('quizBtn', '❓ Quiz').onclick = () => choose();
+  { const lv = new URLSearchParams(location.search).get('quiz'); if (lv) setTimeout(() => start(LEVELS[lv] ? lv : 'normal'), 1500); }
+  SS.more.quiz = { start, choose, Q, EASY, HARD };
 }
 
 // =====================================================================
