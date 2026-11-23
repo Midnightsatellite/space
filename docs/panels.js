@@ -13,7 +13,7 @@ css.textContent = `
   #infoX,#infoMin{position:absolute!important;top:8px;float:none!important;margin:0!important;z-index:3;width:28px;height:28px;padding:0!important;border-radius:999px;font-size:13px;line-height:26px;text-align:center;cursor:pointer}
   #infoX{right:8px} #infoMin{right:42px}
   #info > .cat{padding-right:66px}
-  #info.mini > :not(.cat):not(b):not(.dist):not(#infoX):not(#infoMin){display:none!important}
+  #info.mini > :not(.cat):not(b):not(.dist):not(.sayIntro):not(#infoX):not(#infoMin):not(#infoSay){display:none!important}
   #info.mini{max-height:none!important;overflow:visible!important}
   #uiMin{float:right;margin:-2px -4px 0 10px;width:26px;height:24px;padding:0;border-radius:8px;font-size:14px;line-height:22px;cursor:pointer}
   #ui.min > :not(h1){display:none!important}
