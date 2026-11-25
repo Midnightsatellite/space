@@ -133,7 +133,7 @@ const go = (key, txt) => key && (bodies[key] || special[key]) ? `<a href="#" dat
 const row = (head, line2, status, bar) => `<div style="padding:7px 0;border-top:1px solid #ffffff1a">
   <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b style="font-size:13px">${head}</b>${status}</div>
   <div style="font-size:11.5px;opacity:.85;margin-top:2px;line-height:1.45">${line2}</div>${bar || ''}</div>`;
-const H = t => `<div style="margin:12px 0 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.65">${t}</div>`;
+const H = (t, k) => `<div data-say="${k}" style="margin:12px 0 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.65">${t}</div>`;
 const progress = f => `<div style="height:4px;border-radius:2px;background:#ffffff1a;margin-top:5px"><div style="height:4px;border-radius:2px;width:${Math.round(Math.min(1, Math.max(0, f)) * 100)}%;background:#7fc8ff"></div></div>`;
 
 function card() {
@@ -141,7 +141,7 @@ function card() {
   let h = `<div style="font-size:12px;opacity:.85">${t2(F, 'Like an airport board, for spaceships: who is docked at the space stations, who is on the way, and the probes travelling between worlds.', 'Comme un tableau d’aéroport, pour les vaisseaux : qui est amarré aux stations, qui arrive, et les sondes en route entre les mondes.')}</div>`;
 
   // --- stations
-  h += H(t2(F, '🛬 Docked at the stations now', '🛬 Amarrés aux stations en ce moment'));
+  h += H(t2(F, '🛬 Docked at the stations now', '🛬 Amarrés aux stations en ce moment'), 'docked');
   if (S.status === 'busy' && !S.docked.length) h += `<div style="font-size:12px;opacity:.7;padding:6px 0">${t2(F, 'Loading live data…', 'Chargement des données en direct…')}</div>`;
   else if (S.status === 'err') h += `<div style="font-size:12px;opacity:.7;padding:6px 0">${t2(F, 'Live data is not available right now. Try again in a few minutes.', 'Données en direct indisponibles pour le moment. Réessayez dans quelques minutes.')}</div>`;
   else if (!S.docked.length) h += `<div style="font-size:12px;opacity:.7;padding:6px 0">—</div>`;
@@ -154,7 +154,7 @@ function card() {
 
   // --- next to a station
   if (S.next.length) {
-    h += H(t2(F, '🛫 Next ships to a station', '🛫 Prochains départs vers une station'));
+    h += H(t2(F, '🛫 Next ships to a station', '🛫 Prochains départs vers une station'), 'next');
     for (const x of S.next) {
       const si = shipInfo(x.name), tk = TO_TIANGONG.test(x.name) ? 'Tiangong' : 'ISS', ms = Date.parse(x.net) - now;
       const st = /go/i.test(x.status) ? pill(t2(F, 'Go', 'Feu vert'), '#6fdc8c') : /tbd|tbc/i.test(x.status) ? pill(t2(F, 'Date to confirm', 'Date à confirmer'), '#f3c969') : pill(esc(x.status || '—'), '#9fb4c8');
@@ -165,7 +165,7 @@ function card() {
 
   // --- recently left
   if (S.left.length) {
-    h += H(t2(F, '↩ Recently left', '↩ Partis récemment'));
+    h += H(t2(F, '↩ Recently left', '↩ Partis récemment'), 'left');
     for (const d of S.left) {
       const si = shipInfo(d.ship + ' ' + d.type), stK = STATION_KEY(d.station);
       h += row(`${esc(d.ship)} <span style="font-weight:400;opacity:.7">${go(stK, stationName(d.station, F))} ${A} ${t2(F, 'Earth', 'Terre')}</span>`,
@@ -175,7 +175,7 @@ function card() {
   }
 
   // --- probes
-  h += H(t2(F, '🌌 Between worlds', '🌌 Entre les mondes'));
+  h += H(t2(F, '🌌 Between worlds', '🌌 Entre les mondes'), 'worlds');
   for (const p of PROBES) {
     const t0 = Date.parse(p.left), t1 = Date.parse(p.arr), here = p.done || now >= t1;
     const yrs = (t1 - now) / (365.25 * DAY), mo = Math.max(1, Math.round(yrs * 12));

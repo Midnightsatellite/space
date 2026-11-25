@@ -141,7 +141,7 @@ function card() {
     const ps = (state.passes[st.key] || []).filter(p => p.end > Date.now());
     // one pass per city (the best one), the highest passes first, then the soonest
     const seen = new Set(), list = ps.filter(p => p.max >= 20).sort((a, b) => b.max - a.max).filter(p => !seen.has(p.c) && seen.add(p.c)).slice(0, 8).sort((a, b) => a.start - b.start);
-    return `<div style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(140,160,255,.2)">
+    return `<div data-say="${st.key}" style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(140,160,255,.2)">
       <a href="#" data-go="${st.key}" style="color:#9fd0ff"><b style="display:inline;font-size:13.5px">🛰 ${esc(st.name[F ? 1 : 0])}</b></a>
       <div style="font-size:12.5px;margin-top:2px" data-where="${st.key}">${whereText(st, F)}</div>
       <div style="font-size:12px;margin-top:6px;color:#ffd27a">${t2(F, 'Where to see it in the next 24 hours', 'Où la voir dans les prochaines 24 heures')}</div>
@@ -149,7 +149,7 @@ function card() {
         : `<div style="font-size:12px;opacity:.75">${t2(F, 'No good passes over the listed cities in the next 24 hours.', 'Aucun bon passage au-dessus des villes de la liste dans les prochaines 24 heures.')}</div>`}
     </div>`;
   }).join('') + `<div style="margin-top:8px;font-size:12px"><a href="#" data-go="ISSPasses">📍 ${t2(F, 'Passes over your own city', 'Passages au-dessus de votre ville')}</a></div>
-    <div style="font-size:10.5px;opacity:.6;margin-top:6px">${t2(F, 'Times are local to each city. A station looks like a bright star gliding across the sky with no blinking lights; you can see it when it is dark where you are but the station is still in sunlight. Orbit data: CelesTrak.', 'Heures locales de chaque ville. Une station ressemble à une étoile brillante qui glisse dans le ciel sans clignoter ; on la voit quand il fait nuit chez soi alors qu’elle est encore au soleil. Orbites : CelesTrak.')}</div>`;
+    <div data-say="tip" style="font-size:10.5px;opacity:.6;margin-top:6px">${t2(F, 'Times are local to each city. A station looks like a bright star gliding across the sky with no blinking lights; you can see it when it is dark where you are but the station is still in sunlight. Orbit data: CelesTrak.', 'Heures locales de chaque ville. Une station ressemble à une étoile brillante qui glisse dans le ciel sans clignoter ; on la voit quand il fait nuit chez soi alors qu’elle est encore au soleil. Orbites : CelesTrak.')}</div>`;
 }
 
 async function load() {

@@ -38,6 +38,7 @@ function target(id) {
     return [s || [...info.children].find(c => c.matches('div,p') && !c.matches('.cat,.dist') && c.style.display !== 'grid' && !c.querySelector('button,a,select'))];
   }
   const m = /^f(\d+)$/.exec(id); if (m) return [info.querySelectorAll('details.pmore li')[+m[1]]];
+  if (id.startsWith('s:')) return [info.querySelector(`[data-say="${id.slice(2)}"]`)];
   return [];
 }
 function play(key, lang, btn, find = target) {
