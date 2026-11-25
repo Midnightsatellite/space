@@ -46,17 +46,38 @@ function model(key, file, size, base = false) {
 }
 if (!SS.fleet) { const prev = SS.onFocus; SS.onFocus = key => { LOAD[key]?.(); prev(key); }; }
 
-// ---------------------------------------------------------------- 1. Saturn V on pad 39A (28.608° N, 80.604° W)
+// ---------------------------------------------------------------- 1. NASA's rocket line-up at Cape Canaveral
+// Like Kennedy's real Rocket Garden: three rockets side by side, all at one scale (Saturn V 110.6 m),
+// drawn far larger than life so they can be seen on the globe. Their real pads are only a few km apart.
+const ROCKETS = [   // key, file, metres tall, label, offset along the coast (north +), card category, where
+  ['JupiterC', 'jupiterc.glb', 21.2, 'Jupiter-C', -0.05, 'Rocket · launched Explorer 1, 1958', 'Launch Complex 26A, Cape Canaveral'],
+  ['SaturnV', 'saturnv.glb', 110.6, 'Saturn V', 0, 'Rocket · NASA’s Moon rocket, 1967–1973', 'pad 39A, Kennedy Space Center'],
+  ['SLS', 'sls.glb', 98.1, 'SLS', 0.058, 'Rocket · NASA’s Artemis Moon rocket', 'pad 39B, Kennedy Space Center'],
+];
 {
-  const earthMesh = PL.Earth.tilted.children[0], lat = 28.608 * D2R, lon = -80.604 * D2R;
+  const earthMesh = PL.Earth.tilted.children[0], lat = 28.55 * D2R, lon = -80.6 * D2R, PER_M = 0.075 / 110.6;
   const n = V(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon)).normalize();
-  const site = new THREE.Group(); site.position.copy(n); site.quaternion.setFromUnitVectors(V(0, 1, 0), n); earthMesh.add(site);
-  const { g } = model('SaturnV', 'saturnv.glb', 0.075, true); site.add(g);   // 110.6 m tall: drawn next to Ariane 6 (63 m) at the same scale
-  const top = new THREE.Object3D(); top.position.y = 0.06; site.add(top);
-  nearLabel(top, '🚀 Saturn V', 0.015, 'SaturnV', 'craft', 3);
-  bodies.SaturnV = { obj: top, radius: 0.04, view: 0.2, dir: () => { site.getWorldQuaternion(q); return V(1, 0.1, 0.7).normalize().applyQuaternion(q); } };
-  info('SaturnV', 'Saturn V', 'Rocket · NASA’s Moon rocket, 1967–1973', 'shown on pad 39A, Kennedy Space Center, Florida', 'See card.');
-  special.SaturnV = () => flyTo('SaturnV');
+  const north = V(-Math.sin(lat) * Math.cos(lon), Math.cos(lat), Math.sin(lat) * Math.sin(lon)).normalize();
+  const loads = [];
+  for (const [key, file, m, label, off, cat, where] of ROCKETS) {
+    const up = n.clone().addScaledVector(north, off).normalize();
+    const site = new THREE.Group(); site.position.copy(up); site.quaternion.setFromUnitVectors(V(0, 1, 0), up); earthMesh.add(site);
+    const h = m * PER_M, { g, load } = model(key, file, h, true); site.add(g); loads.push(load);
+    const top = new THREE.Object3D(); top.position.y = h * 0.8; site.add(top);
+    nearLabel(top, '🚀 ' + label, 0.015, key, 'craft', 3);
+    bodies[key] = { obj: top, radius: h * 0.5, view: Math.max(0.08, h * 2.6), dir: () => { site.getWorldQuaternion(q); return V(1, 0.1, 0.7).normalize().applyQuaternion(q); } };
+    info(key, label, cat, 'shown at ' + where + ' (with the other rockets, much larger than life)', 'See card.');
+    special[key] = () => flyTo(key);
+  }
+  // flying to any of them loads the whole line-up, so the neighbours are real models too
+  for (const [key] of ROCKETS) { const one = LOAD[key]; LOAD[key] = () => { one(); loads.forEach(f => f()); }; }
+  // the whole line-up in one view
+  const mid = new THREE.Object3D(); mid.position.copy(n.clone().addScaledVector(north, 0).normalize().multiplyScalar(1.03)); earthMesh.add(mid);
+  const eastL = V(-Math.sin(lon), 0, -Math.cos(lon));
+  bodies.RocketGarden = { obj: mid, radius: 0.1, view: 0.36, dir: () => { earthMesh.getWorldQuaternion(q); const up = mid.getWorldPosition(wp).clone().sub(earthMesh.getWorldPosition(cp)).normalize();
+    return eastL.clone().applyQuaternion(q).multiplyScalar(0.9).add(up.multiplyScalar(0.5)).normalize(); } };
+  info('RocketGarden', 'NASA rocket line-up', 'Rockets · from the first satellite to Artemis', 'Cape Canaveral, Florida (much larger than life)', 'See card.');
+  special.RocketGarden = () => { loads.forEach(f => f()); flyTo('RocketGarden'); };
 }
 
 // ---------------------------------------------------------------- 2 and 3. A probe beside its comet
@@ -89,8 +110,21 @@ atComet({ key: 'DeepImpact', file: 'deepimpact.glb', name: 'Deep Impact · comet
 // ---------------------------------------------------------------- cards
 const closed = true;
 Object.assign(D, {
-  SaturnV: { closed, intro: ['Saturn V is the rocket that took people to the Moon. Standing 110.6 metres tall, taller than Big Ben, it is still one of the most powerful rockets ever flown. Every Apollo Moon crew rode one, including Apollo 11 from this very pad, 39A, on 16 July 1969.',
-      'Saturn V est la fusée qui a emmené des humains sur la Lune. Haute de 110,6 mètres, plus que Big Ben, elle reste l’une des fusées les plus puissantes jamais lancées. Chaque équipage Apollo parti vers la Lune en a pris une, dont Apollo 11 depuis ce même pas de tir, le 39A, le 16 juillet 1969.'],
+  RocketGarden: { intro: ['Three NASA rockets side by side, at one scale: the little Jupiter-C that launched America’s first satellite in 1958, the giant Saturn V that took astronauts to the Moon, and today’s SLS for Artemis. Kennedy Space Center has a real "Rocket Garden" like this.',
+      'Trois fusées de la NASA côte à côte, à la même échelle : la petite Jupiter-C qui a lancé le premier satellite américain en 1958, la géante Saturn V qui a emmené des astronautes sur la Lune, et l’actuelle SLS d’Artemis. Le centre spatial Kennedy a un vrai « jardin des fusées » comme celui-ci.'],
+    tiles: [T('Smallest', 'La plus petite', 'Jupiter-C, 21 m', 'Jupiter-C, 21 m'), T('Tallest', 'La plus haute', 'Saturn V, 110.6 m', 'Saturn V, 110,6 m'), T('Scale', 'Échelle', 'all the same, much larger than life', 'la même pour toutes, bien plus grandes qu’en vrai')],
+    facts: [['Click a rocket’s name to fly to it and read its story.', 'Cliquez sur le nom d’une fusée pour vous en approcher et lire son histoire.']] },
+  JupiterC: { closed, intro: ['On 31 January 1958 this Jupiter-C rocket launched Explorer 1, the first American satellite, less than four months after the Soviet Sputnik. Explorer 1 discovered the Van Allen radiation belts around the Earth.',
+      'Le 31 janvier 1958, cette fusée Jupiter-C a lancé Explorer 1, le premier satellite américain, moins de quatre mois après le Spoutnik soviétique. Explorer 1 a découvert les ceintures de radiation de Van Allen autour de la Terre.'],
+    tiles: [T('Launch', 'Lancement', '31 Jan 1958, 22:48 local time', '31 janv. 1958, 22 h 48 heure locale'), T('Height', 'Hauteur', '21.2 m', '21,2 m'), T('Pad', 'Pas de tir', 'Launch Complex 26A', 'Complexe de lancement 26A'), T('Built by', 'Construite par', 'the Army team of Wernher von Braun', 'l’équipe de l’armée de Wernher von Braun')],
+    facts: [['Explorer 1 weighed only about 14 kg, and it kept circling Earth until 1970.', 'Explorer 1 ne pesait qu’environ 14 kg, et a tourné autour de la Terre jusqu’en 1970.']] },
+  SLS: { closed, intro: ['The Space Launch System is NASA’s rocket for the Artemis missions back to the Moon. Its orange core stage carries four RS-25 engines that once flew on the Space Shuttle, with two white solid-rocket boosters at its sides and the Orion capsule on top.',
+      'Le Space Launch System est la fusée de la NASA pour les missions Artemis vers la Lune. Son étage central orange porte quatre moteurs RS-25 qui ont autrefois volé sur la navette spatiale, avec deux propulseurs blancs à poudre sur les côtés et la capsule Orion au sommet.'],
+    tiles: [T('First flight', 'Premier vol', 'Artemis I, 16 Nov 2022, uncrewed', 'Artemis I, 16 nov. 2022, sans équipage'), T('First crew', 'Premier équipage', 'Artemis II, 1 Apr 2026, around the Moon', 'Artemis II, 1er avril 2026, autour de la Lune'),
+      T('Height', 'Hauteur', '98 m', '98 m'), T('Pad', 'Pas de tir', '39B, Kennedy Space Center', '39B, centre spatial Kennedy')],
+    facts: [['At lift-off it pushes harder than the Saturn V did, about 39 meganewtons.', 'Au décollage, elle pousse plus fort que la Saturn V, environ 39 méganewtons.'], ['The core stage holds about 2.7 million litres of liquid hydrogen and oxygen.', 'L’étage central contient environ 2,7 millions de litres d’hydrogène et d’oxygène liquides.']] },
+  SaturnV: { closed, intro: ['Saturn V is the rocket that took people to the Moon. Standing 110.6 metres tall, taller than Big Ben, it is still one of the most powerful rockets ever flown. Every Apollo Moon crew rode one, including Apollo 11 from pad 39A on 16 July 1969.',
+      'Saturn V est la fusée qui a emmené des humains sur la Lune. Haute de 110,6 mètres, plus que Big Ben, elle reste l’une des fusées les plus puissantes jamais lancées. Chaque équipage Apollo parti vers la Lune en a pris une, dont Apollo 11 depuis le pas de tir 39A le 16 juillet 1969.'],
     tiles: [T('First launch', 'Premier lancement', '9 Nov 1967 · Apollo 4, uncrewed', '9 nov. 1967 · Apollo 4, sans équipage'), T('Last launch', 'Dernier lancement', '14 May 1973 · lifting Skylab', '14 mai 1973 · avec Skylab'),
       T('Launches', 'Lancements', '13, none lost', '13, aucun perdu'), T('Weight at lift-off', 'Masse au décollage', 'about 2,900 tonnes', 'environ 2 900 tonnes'), T('Stages', 'Étages', '3, then the Apollo spacecraft on top', '3, puis le vaisseau Apollo au sommet')],
     facts: [['Its five first-stage F-1 engines burned about 15 tonnes of fuel every second.', 'Les cinq moteurs F-1 de son premier étage brûlaient environ 15 tonnes de carburant par seconde.'],
@@ -112,21 +146,23 @@ Object.assign(D, {
       ['It also hunted for planets around other stars, watching stars dim as their planets passed in front.', 'Elle a aussi cherché des planètes autour d’autres étoiles, en guettant les baisses de lumière quand elles passaient devant.']] },
 });
 
-// ---------------------------------------------------------------- menu: into 🏛 Space history
+// ---------------------------------------------------------------- menu: a 🚀 NASA rockets group, and the comet probes in 🏛 Space history
 {
-  const og = focusSel.querySelector('option[value="Skylab"]')?.parentElement;
-  const add = (k, t, before) => { if (!og || !bodies[k]) return; const o = document.createElement('option'); o.value = k; o.textContent = t; const b = og.querySelector(`option[value="${before}"]`); b ? b.before(o) : og.appendChild(o); };
-  add('SaturnV', 'Saturn V at pad 39A (1967–1973)', 'Skylab');
+  const hist = focusSel.querySelector('option[value="Skylab"]')?.parentElement;
+  const og = document.createElement('optgroup'); og.label = '🚀 NASA rockets'; hist ? hist.before(og) : focusSel.appendChild(og);
+  for (const [k, t] of [['RocketGarden', '🚀 NASA rocket line-up'], ['JupiterC', 'Jupiter-C (Explorer 1, 1958)'], ['SaturnV', 'Saturn V (1967–1973)'], ['SLS', 'SLS (Artemis)']]) { const o = document.createElement('option'); o.value = k; o.textContent = t; og.appendChild(o); }
+  const add = (k, t, before) => { if (!hist || !bodies[k]) return; const o = document.createElement('option'); o.value = k; o.textContent = t; const b = hist.querySelector(`option[value="${before}"]`); b ? b.before(o) : hist.appendChild(o); };
   add('Stardust', 'Stardust at comet Wild 2 (1999–2011)', 'LADEE');
   add('DeepImpact', 'Deep Impact at comet Tempel 1 (2005–2013)', 'LADEE');
 }
 
 SS.i18nAdd?.({
-  ui: { '🚀 Saturn V': '🚀 Saturn V' },
-  name: { 'Saturn V at pad 39A (1967–1973)': 'Saturn V au pas de tir 39A (1967–1973)', 'Stardust at comet Wild 2 (1999–2011)': 'Stardust à la comète Wild 2 (1999–2011)',
+  ui: { '🚀 NASA rockets': '🚀 Fusées de la NASA', '🚀 NASA rocket line-up': '🚀 Les fusées de la NASA côte à côte' },
+  name: { '🚀 NASA rockets': '🚀 Fusées de la NASA', '🚀 NASA rocket line-up': '🚀 Les fusées de la NASA côte à côte', 'NASA rocket line-up': 'Les fusées de la NASA côte à côte', 'Mercury-Redstone (Alan Shepard, 1961)': 'Mercury-Redstone (Alan Shepard, 1961)', 'Mercury-Atlas (John Glenn, 1962)': 'Mercury-Atlas (John Glenn, 1962)', 'Stardust at comet Wild 2 (1999–2011)': 'Stardust à la comète Wild 2 (1999–2011)',
     'Deep Impact at comet Tempel 1 (2005–2013)': 'Deep Impact à la comète Tempel 1 (2005–2013)', 'Stardust · comet Wild 2': 'Stardust · comète Wild 2', 'Deep Impact · comet Tempel 1': 'Deep Impact · comète Tempel 1' },
-  cat: { 'Rocket · NASA’s Moon rocket, 1967–1973': 'Fusée · la fusée lunaire de la NASA, 1967–1973', 'Spacecraft · NASA comet sample return, 1999–2011': 'Engin spatial · retour d’échantillons de comète (NASA), 1999–2011',
+  cat: { 'Rocket · NASA’s Moon rocket, 1967–1973': 'Fusée · la fusée lunaire de la NASA, 1967–1973', 'Rocket · launched Explorer 1, 1958': 'Fusée · a lancé Explorer 1, 1958', 'Rocket · first American in space, 1961': 'Fusée · premier Américain dans l’espace, 1961', 'Rocket · first American in orbit, 1962': 'Fusée · premier Américain en orbite, 1962', 'Rocket · NASA’s Artemis Moon rocket': 'Fusée · la fusée lunaire Artemis de la NASA', 'Rockets · from the first satellite to Artemis': 'Fusées · du premier satellite à Artemis', 'Spacecraft · NASA comet sample return, 1999–2011': 'Engin spatial · retour d’échantillons de comète (NASA), 1999–2011',
     'Spacecraft · NASA comet impactor, 2005–2013': 'Engin spatial · impacteur de comète (NASA), 2005–2013' },
-  dist: { 'shown on pad 39A, Kennedy Space Center, Florida': 'montrée sur le pas de tir 39A, centre spatial Kennedy, Floride', 'shown at comet Wild 2, which it flew through in 2004': 'montrée à la comète Wild 2, qu’elle a traversée en 2004',
+  dist: { 'Cape Canaveral, Florida (much larger than life)': 'cap Canaveral, Floride (bien plus grandes qu’en vrai)',
+    ...Object.fromEntries(ROCKETS.map(r => ['shown at ' + r[6] + ' (with the other rockets, much larger than life)', 'montrée à ' + r[6].replace('Launch Complex', 'complexe de lancement').replace('pad', 'pas de tir').replace('Kennedy Space Center', 'centre spatial Kennedy').replace('Cape Canaveral', 'cap Canaveral') + ' (avec les autres fusées, bien plus grande qu’en vrai)'])), 'shown at comet Wild 2, which it flew through in 2004': 'montrée à la comète Wild 2, qu’elle a traversée en 2004',
     'shown at comet Tempel 1, which it hit in 2005': 'montrée à la comète Tempel 1, qu’elle a percutée en 2005' },
 });

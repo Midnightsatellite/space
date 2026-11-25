@@ -84,7 +84,9 @@ function loadApi() {
         onStateChange: e => { if (e.data === 0) { idx = (idx + 1) % order.length; playTrack(); } if (e.data === 1) { const a = $('sound'); if (a?.checked) { a.checked = false; a.dispatchEvent(new Event('change')); } } },
         onError: () => { idx = (idx + 1) % order.length; playTrack(); } } });
   };
-  const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+  if (window.YT?.Player) window.onYouTubeIframeAPIReady();   // already loaded by the live TV window
+  else if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) { const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s); }
+  else { const t = setInterval(() => { if (window.YT?.Player) { clearInterval(t); if (!player) window.onYouTubeIframeAPIReady(); } }, 200); }
   setTimeout(() => { if (!ready) $('radioNow').textContent = cur()[1] + ' · ' + tr('open on YouTube ↗'); }, 9000);
 }
 function openRadio() { box.classList.add('on'); pill.style.display = 'none'; if (!order.length) { order = shuffle(STATIONS[0].tracks.length); const lo = order.indexOf(0); [order[0], order[lo]] = [order[lo], order[0]]; showNow(); }

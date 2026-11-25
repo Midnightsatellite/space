@@ -27,7 +27,7 @@ css.textContent = `
 #liveTV .head span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #liveTV .head button{margin:0;padding:2px 8px}
 #liveTV .frame{position:relative;width:100%;aspect-ratio:16/9;background:#000}
-#liveTV iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#liveTV iframe,#liveTV #tvPlayer{position:absolute;inset:0;width:100%;height:100%;border:0}
 #liveTV .bar{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;color:#e8ecff}
 #liveTV .bar select{flex:1;min-width:0}
 #liveTV .bar a{color:#9fd0ff;white-space:nowrap}
@@ -40,6 +40,7 @@ document.head.appendChild(css);
 const box = document.createElement('div'); box.id = 'liveTV';
 box.innerHTML = `<div class="head"><span><i class="dot"></i><b id="tvTitle">LIVE</b></span><button id="tvBig" type="button">▢</button><button id="tvClose" type="button">✕</button></div>
 <div class="frame" id="tvFrame"></div>
+<div id="tvNote" style="display:none;padding:6px 10px 0;font-size:11.5px;color:#ffd27a"></div>
 <div class="bar"><select id="tvSel"></select><a id="tvYT" target="_blank" rel="noopener">YouTube ↗</a></div>`;
 document.body.appendChild(box);
 
@@ -49,22 +50,40 @@ function options() {
   sel.innerHTML = (launchItem ? `<option value="launch">🚀 ${esc(launchItem.title)}</option>` : '') + CHANNELS.map(c => `<option value="${c.id}">📡 ${esc(c.name[F ? 1 : 0])}</option>`).join('');
   if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
 }
-function src(v) {
-  const q = 'autoplay=1&playsinline=1&rel=0&modestbranding=1';
-  if (v === 'launch' && launchItem) return [`https://www.youtube-nocookie.com/embed/${launchItem.id}?${q}`, `https://www.youtube.com/watch?v=${launchItem.id}`];
-  const c = CHANNELS.find(c => c.id === v) || CHANNELS[0];
-  return [`https://www.youtube.com/embed/live_stream?channel=${c.ch}&${q}`, `https://www.youtube.com/channel/${c.ch}/live`];
+// the YouTube player API (shared with the radio): wait until it is there
+let apiP = null;
+const ytApi = () => apiP || (apiP = new Promise(res => {
+  if (window.YT?.Player) return res(window.YT);
+  if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) { const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(sc); }
+  const t = setInterval(() => { if (window.YT?.Player) { clearInterval(t); res(window.YT); } }, 200);
+}));
+let player = null, showing = null;
+const note = (en, f) => { const n = $('tvNote'); n.textContent = en ? t2(fr(), en, f) : ''; n.style.display = en ? '' : 'none'; };
+async function show(v) {
+  const F = fr(), c = CHANNELS.find(c => c.id === v) || CHANNELS[0], isLaunch = v === 'launch' && launchItem;
+  showing = v;
+  $('tvYT').href = isLaunch ? `https://www.youtube.com/watch?v=${launchItem.id}` : `https://www.youtube.com/channel/${c.ch}/live`;
+  $('tvSel').value = v;
+  $('tvTitle').textContent = isLaunch ? launchItem.title : c.name[F ? 1 : 0];
+  const radio = $('radio'); if (radio?.classList.contains('on')) SS.more.radio?.closeRadio?.();   // pause the radio while live TV plays
+  box.classList.add('on'); note(t2(F, 'Connecting…', 'Connexion…'), 'Connexion…');
+  const YT = await ytApi(); if (showing !== v) return;
+  try { player?.destroy(); } catch (e) { }
+  $('tvFrame').innerHTML = '<div id="tvPlayer"></div>';
+  let fellBack = false;
+  // a channel that is not live right now makes YouTube say "This video is unavailable": show its latest videos instead
+  const fallback = () => { if (fellBack || isLaunch) { note('This stream isn’t available. Try YouTube ↗', 'Ce direct n’est pas disponible. Essayez YouTube ↗'); return; }
+    fellBack = true; note(`Not live right now: showing ${c.name[0].replace(' live', '')}’s latest videos. The window switches to the live stream when you reopen it during a launch.`,
+      `Pas en direct pour le moment : voici les dernières vidéos de ${c.name[0].replace(' live', '')}. Rouvrez la fenêtre pendant un lancement pour voir le direct.`);
+    $('tvYT').href = `https://www.youtube.com/channel/${c.ch}/videos`;
+    player.loadPlaylist({ listType: 'playlist', list: 'UU' + c.ch.slice(2) }); };
+  player = new YT.Player('tvPlayer', { width: '100%', height: '100%', host: 'https://www.youtube-nocookie.com',
+    videoId: isLaunch ? launchItem.id : 'live_stream',
+    playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, ...(isLaunch ? {} : { channel: c.ch }) },
+    events: { onReady: e => { note(); e.target.playVideo(); }, onError: fallback,
+      onStateChange: e => { if (e.data === 1 && !fellBack) note(); } } });
 }
-function show(v) {
-  const F = fr(), [u, yt] = src(v);
-  $('tvFrame').innerHTML = `<iframe src="${u}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Live"></iframe>`;
-  $('tvYT').href = yt; $('tvSel').value = v;
-  $('tvTitle').textContent = v === 'launch' && launchItem ? launchItem.title : (CHANNELS.find(c => c.id === v) || CHANNELS[0]).name[F ? 1 : 0];
-  // pause the radio while live TV plays
-  const radio = $('radio'); if (radio?.classList.contains('on')) SS.more.radio?.closeRadio?.();
-  box.classList.add('on');
-}
-function close() { box.classList.remove('on'); $('tvFrame').innerHTML = ''; }
+function close() { showing = null; box.classList.remove('on'); try { player?.destroy(); } catch (e) { } player = null; $('tvFrame').innerHTML = ''; }
 
 // play a launch: its own stream when the schedule has one, otherwise Space Affairs, who stream most launches
 function playLaunch(video, title) {
