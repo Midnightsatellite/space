@@ -150,7 +150,7 @@ SS.i18nAdd?.({
   cat: { 'Live data · our star today': 'Données en direct · notre étoile aujourd’hui', 'Live data · launches worldwide': 'Données en direct · lancements dans le monde' },
   dist: { 'pictures and readings from the last few minutes': 'images et mesures des dernières minutes', 'the next rockets to leave Earth': 'les prochaines fusées à quitter la Terre' },
 });
-SS.live = { loadSun, loadLaunches, sun, L, showLaunch };
+SS.live = { loadSun, loadLaunches, sun, L, showLaunch, loadVideo };
 
 // 🚀 Next launch button: opens this list (panel on computers; the phone layout moves it to Play)
 { const row = document.getElementById('factBtn')?.parentElement;

@@ -1,0 +1,97 @@
+// =====================================================================
+// 📺 Live TV: a small window on the page that plays a launch's YouTube live stream (or NASA's live channel),
+// so you can watch without leaving the explorer. Drag it by its title bar; ▢ makes it bigger or smaller.
+// The Midnight Satellite radio pauses while it plays.
+// =====================================================================
+const SS = window.SS;
+const $ = id => document.getElementById(id);
+const fr = () => SS.lang === 'fr';
+const t2 = (F, en, f) => F ? f : en;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// YouTube channels whose current live stream can be shown when a launch has no stream of its own
+const CHANNELS = [
+  { id: 'nasa', ch: 'UCLA_DiR1FfKNvjuUpBHmylQ', name: ['NASA live', 'NASA en direct'] },
+  { id: 'spacex', ch: 'UCtI0Hodo5o5dUb67FeUjDeA', name: ['SpaceX live', 'SpaceX en direct'] },
+];
+// a YouTube link → its video id (watch?v=, youtu.be/, /live/, /embed/)
+const ytId = u => { const m = /(?:v=|youtu\.be\/|\/live\/|\/embed\/|\/shorts\/)([\w-]{11})/.exec(u || ''); return m ? m[1] : null; };
+
+const css = document.createElement('style');
+css.textContent = `
+#liveTV{position:fixed;right:372px;bottom:40px;z-index:15;width:400px;display:none;background:rgba(10,14,30,.95);backdrop-filter:blur(8px);border:1px solid rgba(255,90,90,.45);border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+#liveTV.on{display:block}
+#liveTV.big{width:min(760px,calc(100vw - 32px))}
+#liveTV .head{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;font-size:12px;color:#ff8a8a;letter-spacing:.1em;font-weight:700;cursor:move;user-select:none}
+#liveTV .head span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#liveTV .head button{margin:0;padding:2px 8px}
+#liveTV .frame{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+#liveTV iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#liveTV .bar{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;color:#e8ecff}
+#liveTV .bar select{flex:1;min-width:0}
+#liveTV .bar a{color:#9fd0ff;white-space:nowrap}
+#liveTV .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4d;margin-right:6px;animation:tvPulse 1.4s infinite}
+@keyframes tvPulse{50%{opacity:.25}}
+@media (max-width:1150px) and (min-width:701px){#liveTV{right:16px;bottom:auto;top:70px}}
+@media (max-width:700px){#liveTV,#liveTV.big{left:8px!important;right:8px!important;width:auto;top:auto!important;bottom:calc(64px + env(safe-area-inset-bottom))!important}}`;
+document.head.appendChild(css);
+
+const box = document.createElement('div'); box.id = 'liveTV';
+box.innerHTML = `<div class="head"><span><i class="dot"></i><b id="tvTitle">LIVE</b></span><button id="tvBig" type="button">▢</button><button id="tvClose" type="button">✕</button></div>
+<div class="frame" id="tvFrame"></div>
+<div class="bar"><select id="tvSel"></select><a id="tvYT" target="_blank" rel="noopener">YouTube ↗</a></div>`;
+document.body.appendChild(box);
+
+let launchItem = null;   // { id (video), title } for the launch being watched
+function options() {
+  const F = fr(), sel = $('tvSel'), keep = sel.value;
+  sel.innerHTML = (launchItem ? `<option value="launch">🚀 ${esc(launchItem.title)}</option>` : '') + CHANNELS.map(c => `<option value="${c.id}">📡 ${esc(c.name[F ? 1 : 0])}</option>`).join('');
+  if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
+function src(v) {
+  const q = 'autoplay=1&playsinline=1&rel=0&modestbranding=1';
+  if (v === 'launch' && launchItem) return [`https://www.youtube-nocookie.com/embed/${launchItem.id}?${q}`, `https://www.youtube.com/watch?v=${launchItem.id}`];
+  const c = CHANNELS.find(c => c.id === v) || CHANNELS[0];
+  return [`https://www.youtube.com/embed/live_stream?channel=${c.ch}&${q}`, `https://www.youtube.com/channel/${c.ch}/live`];
+}
+function show(v) {
+  const F = fr(), [u, yt] = src(v);
+  $('tvFrame').innerHTML = `<iframe src="${u}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Live"></iframe>`;
+  $('tvYT').href = yt; $('tvSel').value = v;
+  $('tvTitle').textContent = v === 'launch' && launchItem ? launchItem.title : (CHANNELS.find(c => c.id === v) || CHANNELS[0]).name[F ? 1 : 0];
+  // pause the radio while live TV plays
+  const radio = $('radio'); if (radio?.classList.contains('on')) SS.more.radio?.closeRadio?.();
+  box.classList.add('on');
+}
+function close() { box.classList.remove('on'); $('tvFrame').innerHTML = ''; }
+
+// play a launch: its own stream when the schedule has one, otherwise NASA's live channel
+function playLaunch(video, title) {
+  const id = ytId(video);
+  launchItem = id ? { id, title: title || 'Launch' } : null;
+  options(); show(id ? 'launch' : 'nasa');
+}
+function playChannel(which = 'nasa') { options(); show(which); }
+
+$('tvSel').onchange = e => show(e.target.value);
+$('tvClose').onclick = close;
+$('tvBig').onclick = () => { box.classList.toggle('big'); $('tvBig').textContent = box.classList.contains('big') ? '▣' : '▢'; };
+{ // drag by the title bar
+  const head = box.querySelector('.head'); let drag = null;
+  head.addEventListener('pointerdown', e => { if (e.target.tagName === 'BUTTON' || innerWidth <= 700) return; const r = box.getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top }; head.setPointerCapture(e.pointerId); });
+  head.addEventListener('pointermove', e => { if (!drag) return; const r = box.getBoundingClientRect();
+    Object.assign(box.style, { left: Math.min(innerWidth - r.width, Math.max(0, e.clientX - drag.dx)) + 'px', top: Math.min(innerHeight - r.height, Math.max(0, e.clientY - drag.dy)) + 'px', right: 'auto', bottom: 'auto' }); });
+  head.addEventListener('pointerup', () => { drag = null; });
+}
+{ const prev = SS.setLang; if (prev) SS.setLang = (...a) => { const r = prev(...a); if (box.classList.contains('on')) { const v = $('tvSel').value; options(); $('tvSel').value = v; } return r; }; }
+
+// "▶ Watch live" on a launch card now plays here instead of opening a new tab
+document.addEventListener('click', e => {
+  const a = e.target.closest?.('a[data-watch]'); if (!a) return;
+  const id = ytId(a.getAttribute('href')); if (!id) return;   // no stream yet: keep the YouTube search link
+  e.preventDefault();
+  const title = document.querySelector('#info > b')?.textContent?.replace(/^🚀\s*/, '') || '';
+  playLaunch(a.getAttribute('href'), title);
+});
+SS.i18nAdd?.({ ui: { 'YouTube ↗': 'YouTube ↗' } });
+SS.tv = { playLaunch, playChannel, close, ytId };

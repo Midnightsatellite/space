@@ -246,6 +246,7 @@ await import('./moonmaps.js' + new URL(import.meta.url).search);
 await import('./obs.js' + new URL(import.meta.url).search);
 await import('./nasafleet.js' + new URL(import.meta.url).search);
 await import('./nasa3d.js' + new URL(import.meta.url).search);
+await import('./classics.js' + new URL(import.meta.url).search);
 await import('./skymonth.js' + new URL(import.meta.url).search);
 await import('./weather.js' + new URL(import.meta.url).search);
 await import('./livespace.js' + new URL(import.meta.url).search);
@@ -259,6 +260,7 @@ await import('./panels.js' + new URL(import.meta.url).search);
 await import('./speech.js' + new URL(import.meta.url).search);
 await import('./shorts.js' + new URL(import.meta.url).search);
 await import('./stations.js' + new URL(import.meta.url).search);
+await import('./livetv.js' + new URL(import.meta.url).search);
 await import('./departures.js' + new URL(import.meta.url).search);
 
 // Orbit paths start hidden. Many lines are added later (when a craft or mission loads), so keep them in step with the tick box.

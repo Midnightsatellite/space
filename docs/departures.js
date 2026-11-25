@@ -4,6 +4,7 @@
 // ships that recently left, and the next ships launching to a station.
 // Fixed part: probes travelling between worlds, where they left from, when, where to and when they arrive.
 // =====================================================================
+import * as THREE from 'three';
 const SS = window.SS;
 const { bodies, flyTo, focusSel } = SS;
 const { info, INFO } = SS.cosmos;
@@ -75,7 +76,7 @@ const PROBES = [
 ];
 
 // ---------------------------------------------------------------- live data
-const S = { status: 'idle', at: 0, docked: [], left: [], next: [] };
+const S = { status: 'idle', at: 0, docked: [], left: [], next: [], all: [] };
 const DCACHE = 'msDock1', LCACHE = 'msLaunches3';
 const LL = 'https://ll.thespacedevs.com/2.2.0/';
 const getJSON = async u => { const r = await fetch(u); if (!r.ok) throw r.status; return r.json(); };
@@ -118,6 +119,7 @@ async function load() {
     S.left = dock.value.filter(d => d.left && now - Date.parse(d.left) < 45 * DAY && Date.parse(d.left) <= now).sort((a, b) => Date.parse(b.left) - Date.parse(a.left)).slice(0, 5);
   }
   if (launches.status === 'fulfilled') {
+    S.all = launches.value;
     S.next = launches.value.filter(x => TO_STATION.test(x.name) || /iss|space station|tiangong/i.test(x.orbit + ' ' + x.desc.slice(0, 160)))
       .filter(x => Date.parse(x.net) > now - 6 * 3600e3).slice(0, 5);
   }
@@ -136,10 +138,97 @@ const row = (head, line2, status, bar) => `<div style="padding:7px 0;border-top:
 const H = (t, k) => `<div data-say="${k}" style="margin:12px 0 2px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.65">${t}</div>`;
 const progress = f => `<div style="height:4px;border-radius:2px;background:#ffffff1a;margin-top:5px"><div style="height:4px;border-radius:2px;width:${Math.round(Math.min(1, Math.max(0, f)) * 100)}%;background:#7fc8ff"></div></div>`;
 
+const BTN = 'padding:3px 10px;border-radius:8px;border:1px solid rgba(255,120,120,.45);background:rgba(120,30,40,.35);color:#fff;font-size:12px;cursor:pointer';
+const tvBtn = (id, F) => `<a href="#" data-tv="${esc(id)}" style="color:#ff9a9a">📺 ${t2(F, 'Watch here', 'Regarder ici')}</a>`;
+const fmtT = ms => { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0'); };
+const destName = (x, F) => TO_TIANGONG.test(x.name) ? 'Tiangong' : TO_STATION.test(x.name) ? 'ISS' : (x.orbit && x.orbit !== 'Unknown' ? x.orbit : t2(F, 'orbit', 'orbite'));
+
+// ---------------------------------------------------------------- launches climbing to orbit, little by little, on the globe
+// An approximate path, worked out from the pad, the launch time and where it is going: the real one may differ.
+const D2R = Math.PI / 180, ASCENT = 540, SHOW = 100 * 60;   // engines burn about 9 minutes; shown for 100 minutes after lift-off
+const climbing = () => S.all.filter(x => isFinite(x.lat) && !/fail/i.test(x.status + ' ' + x.statusName) && (() => { const t = (Date.now() - Date.parse(x.net)) / 1000; return t >= 0 && t < SHOW; })());
+function incl(x) {
+  if (TO_TIANGONG.test(x.name)) return 41.5;
+  if (TO_STATION.test(x.name) || /space station/i.test(x.desc)) return 51.6;
+  if (/sun-synchronous|sso|polar/i.test(x.orbit)) return 97.6;
+  return Math.max(Math.abs(x.lat) + 0.5, 1);
+}
+function ascentAt(x, t) {   // t seconds after lift-off → height (km), distance travelled over the ground (km), angle (rad)
+  const k = Math.min(1, t / ASCENT);
+  const h = t < ASCENT ? 210 * (1 - Math.pow(1 - k, 2.2)) : 210;
+  const down = t < ASCENT ? 1800 * k * k : 1800 + (t - ASCENT) * 7.4;
+  return { h, down, ang: down / 6371 };
+}
+const earthMesh = PL.Earth.tilted.children[0], ER = earthMesh.geometry.parameters.radius;
+const unit = (lat, lon) => new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), -Math.cos(lat) * Math.sin(lon));
+function pathPoint(x, t, out) {
+  const lat = x.lat * D2R, lon = x.lon * D2R, i = incl(x) * D2R;
+  let sa = Math.cos(i) / Math.cos(lat); sa = Math.max(-1, Math.min(1, sa));
+  const az = sa >= 0 ? Math.asin(sa) : Math.PI - Math.asin(sa);   // compass direction of the climb (0 = north, 90° = east)
+  const p0 = unit(lat, lon), north = new THREE.Vector3(-Math.sin(lat) * Math.cos(lon), Math.cos(lat), Math.sin(lat) * Math.sin(lon)), east = new THREE.Vector3(-Math.sin(lon), 0, -Math.cos(lon));
+  const dir = north.multiplyScalar(Math.cos(az)).add(east.multiplyScalar(Math.sin(az)));
+  const a = ascentAt(x, t);
+  return out.copy(p0).multiplyScalar(Math.cos(a.ang)).addScaledVector(dir, Math.sin(a.ang)).normalize().multiplyScalar(ER * (1.004 + a.h / 2500 * 2));
+}
+const ascentGroup = new THREE.Group(); earthMesh.add(ascentGroup);
+const rocketTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.font = '100px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🚀', 64, 70);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+const flights = new Map();   // launch id → { sprite, trail }
+let followId = null;
+SS.sim?.push(() => {
+  const list = climbing(), now = Date.now(), keep = new Set();
+  for (const x of list) {
+    keep.add(x.id);
+    let f = flights.get(x.id);
+    if (!f) {
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: rocketTex, transparent: true, depthTest: false })); sprite.scale.setScalar(ER * 0.05);
+      const trail = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xff8a6a, transparent: true, opacity: 0.85 }));
+      ascentGroup.add(sprite, trail); f = { sprite, trail, at: 0 }; flights.set(x.id, f);
+    }
+    const t = (now - Date.parse(x.net)) / 1000;
+    pathPoint(x, t, f.sprite.position);
+    if (now - f.at > 1000) {   // redraw the trail once a second
+      f.at = now; const pts = [], n = 60; for (let k = 0; k <= n; k++) pts.push(pathPoint(x, t * k / n, new THREE.Vector3()));
+      f.trail.geometry.dispose(); f.trail.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+    }
+  }
+  for (const [id, f] of flights) if (!keep.has(id)) { ascentGroup.remove(f.sprite, f.trail); f.trail.geometry.dispose(); flights.delete(id); }
+  const fol = flights.get(followId) || flights.values().next().value;
+  if (fol) ascentTarget.position.copy(fol.sprite.position);
+});
+const ascentTarget = new THREE.Object3D(); ascentGroup.add(ascentTarget);
+bodies.Ascent = { obj: ascentTarget, radius: ER * 0.02, view: ER * 1.2, dir: () => ascentTarget.getWorldPosition(new THREE.Vector3()).sub(earthMesh.getWorldPosition(new THREE.Vector3())).normalize().add(new THREE.Vector3(0, 0.2, 0)).normalize() };
+special.Ascent = () => flyTo('Ascent');
+
+// 📺 play a launch's own stream in the live window (NASA live if it has none yet)
+async function watch(id) {
+  const x = S.all.find(l => l.id === id) || SS.live?.L?.list?.find(l => l.id === id); if (!x) return;
+  if (x.video === undefined) {
+    x.video = '';
+    try { const j = await getJSON(LL + 'launch/' + encodeURIComponent(id) + '/');
+      const v = [...(j.vidURLs || j.vid_urls || [])].filter(v => /youtu/.test(v.url)).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))[0]; if (v) x.video = v.url; } catch (e) { }
+  }
+  SS.tv?.playLaunch(x.video, x.name.split('|').pop().trim());
+}
+
 function card() {
   const F = fr(), now = Date.now(), A = '→';
   let h = `<div style="font-size:12px;opacity:.85">${t2(F, 'Like an airport board, for spaceships: who is docked at the space stations, who is on the way, and the probes travelling between worlds.', 'Comme un tableau d’aéroport, pour les vaisseaux : qui est amarré aux stations, qui arrive, et les sondes en route entre les mondes.')}</div>`;
 
+  h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" data-tvch="nasa" style="${BTN}">📺 ${t2(F, 'NASA live', 'NASA en direct')}</button><button type="button" data-tvch="spacex" style="${BTN}">📺 ${t2(F, 'SpaceX live', 'SpaceX en direct')}</button></div>`;
+  // --- launches climbing to orbit right now, drawn on the globe
+  const up = climbing();
+  if (up.length) {
+    h += H(t2(F, '🔴 Climbing to orbit now', '🔴 En route vers l’orbite'), 'climb');
+    for (const x of up) {
+      const p = ascentAt(x, (now - Date.parse(x.net)) / 1000);
+      h += row(`${esc(x.name.split('|').pop().trim())} <span style="font-weight:400;opacity:.7">${A} ${esc(destName(x, F))}</span>`,
+        `${esc(x.rocket)} ${t2(F, 'from', 'depuis')} ${esc(x.place || x.pad)} · ${t2(F, 'lift-off', 'décollage')} ${date(x.net, F, true)}<br>
+         <span style="opacity:.8">≈ ${Math.round(p.h)} km ${t2(F, 'up', 'd’altitude')} · ${Math.round(p.down).toLocaleString(F ? 'fr-FR' : 'en-GB')} km ${t2(F, 'downrange', 'parcourus')}</span><br>
+         <a href="#" data-go="Ascent" data-ascent="${esc(x.id)}" style="color:#8fd0ff">👁 ${t2(F, 'Follow it on the globe', 'Le suivre sur le globe')}</a> · ${tvBtn(x.id, F)}`,
+        pill(`T+${fmtT(now - Date.parse(x.net))}`, '#ff7a7a'));
+    }
+  }
   // --- stations
   h += H(t2(F, '🛬 Docked at the stations now', '🛬 Amarrés aux stations en ce moment'), 'docked');
   if (S.status === 'busy' && !S.docked.length) h += `<div style="font-size:12px;opacity:.7;padding:6px 0">${t2(F, 'Loading live data…', 'Chargement des données en direct…')}</div>`;
@@ -159,7 +248,7 @@ function card() {
       const si = shipInfo(x.name), tk = TO_TIANGONG.test(x.name) ? 'Tiangong' : 'ISS', ms = Date.parse(x.net) - now;
       const st = /go/i.test(x.status) ? pill(t2(F, 'Go', 'Feu vert'), '#6fdc8c') : /tbd|tbc/i.test(x.status) ? pill(t2(F, 'Date to confirm', 'Date à confirmer'), '#f3c969') : pill(esc(x.status || '—'), '#9fb4c8');
       h += row(`${esc(x.name.split('|').pop().trim())} <span style="font-weight:400;opacity:.7">${A} ${go(tk, tk)}</span>`,
-        `${esc(x.rocket)} ${t2(F, 'from', 'depuis')} ${esc(x.place || x.pad)} · ${date(x.net, F, true)}${ms > 0 ? ` (${t2(F, 'in', 'dans')} ${ms > DAY ? Math.round(ms / DAY) + t2(F, ' days', ' jours') : Math.round(ms / 3600e3) + ' h'})` : ''}<br><span style="opacity:.75">${t2(F, 'Docks', 'Amarrage')} ${t2(F, si[5], si[6])} ${t2(F, 'after launch', 'après le décollage')}.</span>`, st);
+        `${esc(x.rocket)} ${t2(F, 'from', 'depuis')} ${esc(x.place || x.pad)} · ${date(x.net, F, true)}${ms > 0 ? ` (${t2(F, 'in', 'dans')} ${ms > DAY ? Math.round(ms / DAY) + t2(F, ' days', ' jours') : Math.round(ms / 3600e3) + ' h'})` : ''}<br><span style="opacity:.75">${t2(F, 'Docks', 'Amarrage')} ${t2(F, si[5], si[6])} ${t2(F, 'after launch', 'après le décollage')}.</span><br>${tvBtn(x.id, F)}`, st);
     }
   }
 
@@ -195,9 +284,18 @@ function refresh() { if (focused === 'Departures') { INFO.Departures.fact = card
 const R = PL.Earth.tilted.children[0].geometry.parameters.radius;
 bodies.Departures = { obj: bodies.Earth.obj, radius: bodies.Earth.radius, view: R * 5 };
 info('Departures', 'Departures & arrivals', 'Spaceships · live board', 'stations, ships and probes on the move', card());
-{ const prev = SS.onFocus; SS.onFocus = key => { focused = key; if (key === 'Departures') { INFO.Departures.fact = card(); if (SS.more.INFO_EN?.Departures) SS.more.INFO_EN.Departures.fact = INFO.Departures.fact; } prev(key); }; }
+info('Ascent', 'Departures & arrivals', 'Spaceships · live board', 'stations, ships and probes on the move', '');
+{ const prev = SS.onFocus; SS.onFocus = key => { if (key === 'Ascent') { INFO.Ascent.fact = card(); if (SS.more.INFO_EN?.Ascent) SS.more.INFO_EN.Ascent.fact = INFO.Ascent.fact; prev(key); focused = 'Departures'; return; } focused = key; if (key === 'Departures') { INFO.Departures.fact = card(); if (SS.more.INFO_EN?.Departures) SS.more.INFO_EN.Departures.fact = INFO.Departures.fact; } prev(key); }; }
 special.Departures = () => { load(); flyTo('Departures'); };
-document.addEventListener('click', e => { const a = e.target.closest?.('#info [data-go]'); if (!a || focused !== 'Departures') return; e.preventDefault(); const k = a.dataset.go; focusSel.value = k; SS.go(k); });
+document.addEventListener('click', e => {
+  if (focused !== 'Departures') return;
+  const tv = e.target.closest?.('#info [data-tv]'); if (tv) { e.preventDefault(); watch(tv.dataset.tv); return; }
+  const ch = e.target.closest?.('#info [data-tvch]'); if (ch) { e.preventDefault(); SS.tv?.playChannel(ch.dataset.tvch); return; }
+  const a = e.target.closest?.('#info [data-go]'); if (!a) return; e.preventDefault();
+  if (a.dataset.ascent) followId = a.dataset.ascent;
+  const k = a.dataset.go; if (k === 'Ascent') { flyTo('Ascent'); return; } focusSel.value = k; SS.go(k); });
+// keep the "climbing now" numbers moving while the board is open
+setInterval(() => { if (focused === 'Departures' && climbing().length) refresh(); }, 5000);
 { const prev = SS.setLang; if (prev) SS.setLang = (...a) => { const r = prev(...a); refresh(); return r; }; }
 
 // menu entry and a button next to 🛰 Space stations (the phone layout moves it to Play)
