@@ -65,7 +65,7 @@ special.SunLive = () => flyTo('SunLive');
 // 🚀 Upcoming launches
 // =====================================================================
 const L = { at: 0, list: [], busy: false, err: false, sel: null };
-const CACHE = 'msLaunches2';
+const CACHE = 'msLaunches3';
 async function loadLaunches(force) {
   if (L.busy) return;
   try { const c = JSON.parse(localStorage.getItem(CACHE) || 'null'); if (!force && c && Date.now() - c.t < 20 * 6e4) { L.list = c.list; L.at = c.t; return; } } catch (e) { }
@@ -75,7 +75,7 @@ async function loadLaunches(force) {
     if (!j.results) throw 0;
     L.list = j.results.map(x => ({ id: x.id, name: x.name, net: x.net, status: x.status?.abbrev || '', statusName: x.status?.name || '', rocket: x.rocket?.configuration?.full_name || '', lsp: x.launch_service_provider?.name || '',
       mission: x.mission?.name || '', desc: x.mission?.description || '', orbit: x.mission?.orbit?.name || '', pad: x.pad?.name || '', place: x.pad?.location?.name || '',
-      lat: parseFloat(x.pad?.latitude), lon: parseFloat(x.pad?.longitude), webcast: x.webcast_live }));
+      lat: parseFloat(x.pad?.latitude), lon: parseFloat(x.pad?.longitude), webcast: x.webcast_live, image: typeof x.image === 'string' ? x.image : (x.image?.image_url || '') }));
     L.at = Date.now(); L.err = false;
     try { localStorage.setItem(CACHE, JSON.stringify({ t: L.at, list: L.list })); } catch (e) { }
   } catch (e) { L.err = true; }
@@ -117,8 +117,22 @@ function showLaunch(id) {
      <div style="margin-top:5px">${t2(F, 'Rocket', 'Fusée')}: ${esc(x.rocket)} · ${esc(x.lsp)}</div>
      ${x.orbit && x.orbit !== 'Unknown' ? `<div>${t2(F, 'Orbit', 'Orbite')}: ${esc(x.orbit)}</div>` : ''}
      ${x.desc && x.desc !== 'Details TBD.' ? `<div style="margin-top:5px;font-size:12px;opacity:.85">${esc(x.desc)}</div>` : ''}
+     ${x.image ? `<img src="${esc(x.image)}" alt="" loading="lazy" style="display:block;width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px">` : ''}
+     <div style="margin-top:8px"><a href="${esc(watchUrl(x))}" target="_blank" rel="noopener" data-watch="${esc(x.id)}" style="display:inline-block;padding:4px 10px;border-radius:8px;border:1px solid rgba(140,160,255,.35);background:rgba(60,80,170,.35);color:#fff;text-decoration:none">▶ ${t2(F, 'Watch live', 'Regarder en direct')}</a></div>
      <div style="margin-top:7px"><a href="#" data-back-launches="1">${t2(F, '← All upcoming launches', '← Tous les prochains lancements')}</a></div>`);
   flyTo('LaunchPad');
+  if (x.video === undefined) loadVideo(x);
+}
+// the official live stream, when the schedule lists one; otherwise a YouTube search for the Space Affairs stream of that launch
+const watchUrl = x => x.video || 'https://www.youtube.com/results?search_query=' + encodeURIComponent('Space Affairs live ' + x.name.split('|').pop().trim());
+async function loadVideo(x) {
+  x.video = '';
+  try {
+    const j = await (await fetch(`https://ll.thespacedevs.com/2.2.0/launch/${encodeURIComponent(x.id)}/`)).json();
+    const v = [...(j.vidURLs || j.vid_urls || [])].filter(v => /youtu/.test(v.url)).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))[0];
+    if (v) { x.video = v.url; for (const a of document.querySelectorAll(`[data-watch="${CSS.escape(x.id)}"]`)) a.href = v.url; }
+    if (!x.image && j.image) x.image = typeof j.image === 'string' ? j.image : j.image.image_url || '';
+  } catch (e) { }
 }
 document.addEventListener('click', e => {
   const a = e.target.closest?.('[data-launch]'); if (a) { e.preventDefault(); showLaunch(a.dataset.launch); return; }
@@ -137,3 +151,10 @@ SS.i18nAdd?.({
   dist: { 'pictures and readings from the last few minutes': 'images et mesures des dernières minutes', 'the next rockets to leave Earth': 'les prochaines fusées à quitter la Terre' },
 });
 SS.live = { loadSun, loadLaunches, sun, L, showLaunch };
+
+// 🚀 Next launch button: opens this list (panel on computers; the phone layout moves it to Play)
+{ const row = document.getElementById('factBtn')?.parentElement;
+  if (row && !document.getElementById('launchBtn')) { const b = document.createElement('button'); b.type = 'button'; b.id = 'launchBtn'; b.textContent = '🚀 Next launch';
+    b.onclick = () => { const f = document.getElementById('focus'); f.value = 'LiveLaunches'; SS.go('LiveLaunches'); }; row.insertBefore(b, document.getElementById('factBtn')); }
+  SS.i18nAdd?.({ ui: { '🚀 Next launch': '🚀 Prochain lancement' } });
+  if (new URLSearchParams(location.search).get('launch')) { const w = setInterval(() => { if (SS.doc2) { clearInterval(w); document.getElementById('launchBtn')?.click(); } }, 500); } }
