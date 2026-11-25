@@ -259,6 +259,7 @@ await import('./panels.js' + new URL(import.meta.url).search);
 await import('./speech.js' + new URL(import.meta.url).search);
 await import('./shorts.js' + new URL(import.meta.url).search);
 await import('./stations.js' + new URL(import.meta.url).search);
+await import('./departures.js' + new URL(import.meta.url).search);
 
 // Orbit paths start hidden. Many lines are added later (when a craft or mission loads), so keep them in step with the tick box.
 { const box = document.getElementById('paths'); let n = -1, was = null;
