@@ -303,6 +303,10 @@ setInterval(() => { if (focused === 'Departures' && climbing().length) refresh()
   const after = views.querySelector('option[value="Stations"]'); after ? after.after(o) : views.appendChild(o); }
 { const sb = $('stationsBtn') || $('launchBtn'); if (sb) { const b = document.createElement('button'); b.type = 'button'; b.id = 'boardBtn'; b.textContent = '🛸 Departures';
   b.onclick = () => { focusSel.value = 'Departures'; SS.go('Departures'); }; sb.after(b); } }
+// 🚀 Rockets button: straight to the NASA rocket line-up (Jupiter-C, Saturn V, SLS)
+{ const bb = $('boardBtn'); if (bb && bodies.RocketGarden) { const b = document.createElement('button'); b.type = 'button'; b.id = 'rocketsBtn'; b.textContent = '🚀 Rockets';
+  b.onclick = () => { focusSel.value = 'RocketGarden'; SS.go('RocketGarden'); }; bb.after(b); } }
+SS.i18nAdd?.({ ui: { '🚀 Rockets': '🚀 Fusées' } });
 SS.i18nAdd?.({ ui: { '🛸 Departures & arrivals': '🛸 Départs et arrivées', '🛸 Departures': '🛸 Départs' },
   name: { 'Departures & arrivals': 'Départs et arrivées' },
   cat: { 'Spaceships · live board': 'Vaisseaux · tableau en direct' },
