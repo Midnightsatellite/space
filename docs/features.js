@@ -143,6 +143,8 @@ $('cmpBtn').onclick = () => { const k = SS.more.current; openCmp(SIZES.some(s =>
 SS.more.openCmp = openCmp; SS.more.redrawCmp = () => { if (cmp.style.display === 'flex') { fillCmp(); drawCmp(); } };
 
 // ---------- Share link in the info card ----------
+const SHARE = new Set();
+fetch('s/index.json' + new URL(import.meta.url).search).then(r => r.ok ? r.json() : []).then(a => a.forEach(k => SHARE.add(k)), () => {});
 {
   const prev = SS.onFocus;
   SS.onFocus = key => {
@@ -150,7 +152,9 @@ SS.more.openCmp = openCmp; SS.more.redrawCmp = () => { if (cmp.style.display ===
     const el = $('info');
     if (el.style.display === 'block' && SS.cosmos.INFO[key] && !key.startsWith('EV_')) {
       const s = document.createElement('div'); s.className = 'share'; s.textContent = tr('🔗 Copy link to this view');
-      s.onclick = () => { const u = `${location.origin}${location.pathname}?go=${encodeURIComponent(key)}${SS.lang === 'fr' ? '&lang=fr' : ''}`;
+      s.onclick = () => { const base = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}`;
+        // share pages give each place its own title, text and picture in WhatsApp, X, Facebook…; other views keep the plain link
+        const u = SHARE.has(key) ? `${base}s/${SS.lang === 'fr' ? 'fr/' : ''}${encodeURIComponent(key)}.html` : `${base}?go=${encodeURIComponent(key)}${SS.lang === 'fr' ? '&lang=fr' : ''}`;
         (navigator.clipboard?.writeText(u) || Promise.reject()).then(() => s.textContent = tr('✓ Link copied'), () => prompt(tr('Copy this link:'), u)); };
       el.appendChild(s);
     }
@@ -216,7 +220,7 @@ fact.innerHTML = '<button class="x" id="factX">✕</button><div class="lab">ONE 
 document.body.appendChild(fact);
 let deck = [], curFact = null;
 function showFact(i) {
-  curFact = i; const [k] = FACTS[i]; const [, hook, text] = SS.more.factText(i);
+  curFact = i; fact.dataset.clip = 'fact-' + String(i).padStart(2, '0'); const [k] = FACTS[i]; const [, hook, text] = SS.more.factText(i);
   fact.querySelector('.hook').textContent = hook; fact.querySelector('.txt').textContent = text;
   $('factNext').textContent = tr('Next fact ›'); $('factCmp').textContent = tr('⚖️ Compare sizes');
   $('factCmp').style.display = SIZES.some(s => s[0] === k) ? '' : 'none';

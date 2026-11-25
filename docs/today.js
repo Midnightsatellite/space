@@ -88,10 +88,12 @@ function fill() {
   let lab, hook, txt;
   if (e) {
     const ago = d.getFullYear() - e[1];
+    box.dataset.clip = 'day-' + key(d).replace('-', '');
     lab = F ? `L'espace aujourd'hui · ${date} ${e[1]} · il y a ${ago} ans` : `Space today · ${date} ${e[1]} · ${ago} years ago`;
     [fly, hook, txt] = [e[0], F ? e[4] : e[2], F ? e[5] : e[3]];
   } else { // no anniversary today: the fact of the day, the same for everyone
     const n = SS.more.FACTS.length, i = (dayOfYear(d) * 7) % n, f = SS.more.factText(i);
+    box.dataset.clip = 'fact-' + String(i).padStart(2, '0');
     lab = F ? `L'espace aujourd'hui · ${date} · le fait du jour` : `Space today · ${date} · fact of the day`;
     [fly, hook, txt] = [f[0], f[1], f[2]];
   }
@@ -110,7 +112,7 @@ $('todayGo').onclick = () => { if (fly) { $('focus').value = fly; SS.go(fly); } 
 { let seen = null; try { seen = localStorage.getItem('ms_today'); } catch (e) {}
   const q = new URLSearchParams(location.search);
   if (seen !== key(new Date()) && !q.get('quiz') && !q.get('focus') && !q.get('doc')) {
-    const wait = setInterval(() => { if (SS.doc2) { clearInterval(wait); setTimeout(show, 2500); setTimeout(() => box.classList.remove('on'), 22500); } }, 500);
+    const wait = setInterval(() => { if (SS.doc2) { clearInterval(wait); setTimeout(show, 2500); setTimeout(() => { if (!box.querySelector('.boxSay.on')) box.classList.remove('on'); }, 22500); } }, 500);
   } }
 
 // keep the language in step

@@ -13,7 +13,9 @@ css.textContent = `
   .saying{background:rgba(255,210,122,.16)!important;box-shadow:0 0 0 2px rgba(255,210,122,.45);border-radius:6px;transition:background .2s}
   #infoSay{position:absolute!important;top:8px;right:76px;z-index:3;width:28px;height:28px;padding:0!important;border-radius:999px;font-size:13px;line-height:26px;text-align:center;cursor:pointer}
   #infoSay.on{background:#6b5a1f!important;border-color:#ffd27a!important}
-  #info.hasSay > .cat{padding-right:100px!important}`;
+  #info.hasSay > .cat{padding-right:100px!important}
+  .boxSay{margin-left:auto;padding:2px 10px;border-radius:999px;cursor:pointer}
+  .boxSay.on{background:#6b5a1f!important;border-color:#ffd27a!important}`;
 document.head.appendChild(css);
 
 let index = null, asked = false;
@@ -38,11 +40,11 @@ function target(id) {
   const m = /^f(\d+)$/.exec(id); if (m) return [info.querySelectorAll('details.pmore li')[+m[1]]];
   return [];
 }
-function play(key, lang, btn) {
+function play(key, lang, btn, find = target) {
   if (cur && cur.btn === btn) { stop(); return; }
   stop();
   const rec = index[key][lang], audio = new Audio(`audio/${key}-${lang}.m4a${V}`);
-  const els = rec.p.map(target);
+  const els = rec.p.map(find);
   const me = cur = { audio, btn, els, raf: 0, at: -1 };
   btn.classList.add('on'); btn.textContent = '⏹';
   const tick = () => {
@@ -59,7 +61,7 @@ function play(key, lang, btn) {
   audio.onerror = () => { if (cur === me) stop(); };
   audio.play().then(tick, () => { if (cur === me) stop(); });
 }
-function addBtn() {
+let addBtn = function () {
   if (!info || info.style.display === 'none' || !info.firstChild) return;
   const key = SS.more.current, lang = fr() ? 'fr' : 'en', has = index?.[key]?.[lang];
   const old = $('infoSay');
@@ -75,6 +77,26 @@ if (info) new MutationObserver(() => {
   if (cur && (!info.contains(cur.btn) || info.style.display === 'none')) stop(); // flew elsewhere or closed the card
   if (index) addBtn(); else if (info.style.display !== 'none') getIndex();
 }).observe(info, { childList: true, attributes: true, attributeFilter: ['style'] });
+
+// ---------- Space today and One Fact: their own short recordings (day-MMDD / fact-NN) ----------
+const boxes = [];
+function boxBtn(box) {
+  const row = box.querySelector('.row'); if (!row) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'boxSay'; b.textContent = '🔊'; b.style.display = 'none';
+  row.appendChild(b);
+  const sync = () => {
+    const clip = box.dataset.clip, lang = fr() ? 'fr' : 'en', ok = !!(index?.[clip]?.[lang]);
+    if (cur && cur.btn === b && (cur.clip !== clip + lang || !box.classList.contains('on'))) stop();
+    b.style.display = ok ? '' : 'none'; b.title = fr() ? 'Écouter' : 'Listen';
+    if (ok && !index) getIndex();
+  };
+  b.onclick = () => { const clip = box.dataset.clip, lang = fr() ? 'fr' : 'en'; if (!index?.[clip]?.[lang]) return;
+    play(clip, lang, b, id => [box.querySelector(id === 'hook' ? '.hook' : '.txt')]); if (cur?.btn === b) cur.clip = clip + lang; };
+  new MutationObserver(() => { if (!index) getIndex(); sync(); }).observe(box, { attributes: true, attributeFilter: ['class', 'data-clip'] });
+  boxes.push(sync); sync();
+}
+for (const id of ['today', 'fact']) { const box = $(id); if (box) boxBtn(box); }
+{ const was = addBtn; addBtn = () => { was(); boxes.forEach(f => f()); }; }
 
 { const was = SS.setLang; if (was) SS.setLang = (...a) => { stop(); const r = was(...a); addBtn(); return r; }; }
 addEventListener('pagehide', stop);
