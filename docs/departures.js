@@ -215,7 +215,7 @@ function card() {
   const F = fr(), now = Date.now(), A = '→';
   let h = `<div style="font-size:12px;opacity:.85">${t2(F, 'Like an airport board, for spaceships: who is docked at the space stations, who is on the way, and the probes travelling between worlds.', 'Comme un tableau d’aéroport, pour les vaisseaux : qui est amarré aux stations, qui arrive, et les sondes en route entre les mondes.')}</div>`;
 
-  h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" data-tvch="nasa" style="${BTN}">📺 ${t2(F, 'NASA live', 'NASA en direct')}</button><button type="button" data-tvch="spacex" style="${BTN}">📺 ${t2(F, 'SpaceX live', 'SpaceX en direct')}</button></div>`;
+  h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" data-tvch="spaceaffairs" style="${BTN}">📺 Space Affairs</button><button type="button" data-tvch="nasa" style="${BTN}">📺 ${t2(F, 'NASA live', 'NASA en direct')}</button><button type="button" data-tvch="spacex" style="${BTN}">📺 ${t2(F, 'SpaceX live', 'SpaceX en direct')}</button></div>`;
   // --- launches climbing to orbit right now, drawn on the globe
   const up = climbing();
   if (up.length) {

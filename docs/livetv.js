@@ -11,6 +11,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 // YouTube channels whose current live stream can be shown when a launch has no stream of its own
 const CHANNELS = [
+  { id: 'spaceaffairs', ch: 'UCjgjQf5OMZizKBSjmwUFiuA', name: ['Space Affairs live', 'Space Affairs en direct'] },
   { id: 'nasa', ch: 'UCLA_DiR1FfKNvjuUpBHmylQ', name: ['NASA live', 'NASA en direct'] },
   { id: 'spacex', ch: 'UCtI0Hodo5o5dUb67FeUjDeA', name: ['SpaceX live', 'SpaceX en direct'] },
 ];
@@ -65,13 +66,13 @@ function show(v) {
 }
 function close() { box.classList.remove('on'); $('tvFrame').innerHTML = ''; }
 
-// play a launch: its own stream when the schedule has one, otherwise NASA's live channel
+// play a launch: its own stream when the schedule has one, otherwise Space Affairs, who stream most launches
 function playLaunch(video, title) {
   const id = ytId(video);
   launchItem = id ? { id, title: title || 'Launch' } : null;
-  options(); show(id ? 'launch' : 'nasa');
+  options(); show(id ? 'launch' : 'spaceaffairs');
 }
-function playChannel(which = 'nasa') { options(); show(which); }
+function playChannel(which = 'spaceaffairs') { options(); show(which); }
 
 $('tvSel').onchange = e => show(e.target.value);
 $('tvClose').onclick = close;
@@ -88,8 +89,7 @@ $('tvBig').onclick = () => { box.classList.toggle('big'); $('tvBig').textContent
 // "▶ Watch live" on a launch card now plays here instead of opening a new tab
 document.addEventListener('click', e => {
   const a = e.target.closest?.('a[data-watch]'); if (!a) return;
-  const id = ytId(a.getAttribute('href')); if (!id) return;   // no stream yet: keep the YouTube search link
-  e.preventDefault();
+  e.preventDefault();   // no stream listed yet: Space Affairs' live channel plays instead
   const title = document.querySelector('#info > b')?.textContent?.replace(/^🚀\s*/, '') || '';
   playLaunch(a.getAttribute('href'), title);
 });
