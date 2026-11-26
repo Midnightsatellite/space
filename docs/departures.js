@@ -76,7 +76,7 @@ const PROBES = [
 ];
 
 // ---------------------------------------------------------------- live data
-const S = { status: 'idle', at: 0, docked: [], left: [], next: [], all: [] };
+const S = { status: 'idle', at: 0, docked: [], left: [], next: [], all: [], events: [] };
 const DCACHE = 'msDock1', LCACHE = 'msLaunches3';
 const LL = 'https://ll.thespacedevs.com/2.2.0/';
 const getJSON = async u => { const r = await fetch(u); if (!r.ok) throw r.status; return r.json(); };
@@ -93,22 +93,30 @@ async function loadDocking() {
   try { localStorage.setItem(DCACHE, JSON.stringify({ t: Date.now(), list })); } catch (e) { }
   return list;
 }
+// the launch list is shared with the 🚀 launches panel (one request for both)
 async function loadLaunchList() {
-  try { const c = JSON.parse(localStorage.getItem(LCACHE) || 'null'); if (c && Date.now() - c.t < 3 * 3600e3) return c.list; } catch (e) { }
-  // same format as the live launches panel, so both share one cache
-  const j = await getJSON(LL + 'launch/upcoming/?limit=14&mode=normal');
+  await SS.live.loadLaunches();
+  if (!SS.live.L.list.length) throw 0;
+  return SS.live.L.list;
+}
+// 📅 events: dockings, spacewalks, landings, captures, gravity assists, press events (with their live streams)
+const ECACHE = 'msEvents1';
+async function loadEvents() {
+  try { const c = JSON.parse(localStorage.getItem(ECACHE) || 'null'); if (c && Date.now() - c.t < 45 * 6e4) return c.list; } catch (e) { }
+  const j = await getJSON(LL + 'event/upcoming/?limit=14');
   if (!j.results) throw 0;
-  const list = j.results.map(x => ({ id: x.id, name: x.name, net: x.net, status: x.status?.abbrev || '', statusName: x.status?.name || '', rocket: x.rocket?.configuration?.full_name || '', lsp: x.launch_service_provider?.name || '',
-    mission: x.mission?.name || '', desc: x.mission?.description || '', orbit: x.mission?.orbit?.name || '', pad: x.pad?.name || '', place: x.pad?.location?.name || '',
-    lat: parseFloat(x.pad?.latitude), lon: parseFloat(x.pad?.longitude), webcast: x.webcast_live, image: typeof x.image === 'string' ? x.image : (x.image?.image_url || '') }));
-  try { localStorage.setItem(LCACHE, JSON.stringify({ t: Date.now(), list })); } catch (e) { }
+  const list = j.results.map(e => ({ id: e.id, name: e.name, type: e.type?.name || '', date: e.date, prec: e.date_precision?.abbrev || '', dur: e.duration || '',
+    desc: e.description || '', where: e.location || '', live: !!e.webcast_live, image: e.feature_image || '',
+    yt: [...(e.vid_urls || [])].filter(v => /youtu/.test(v.url)).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))[0]?.url || (/youtu/.test(e.video_url || '') ? e.video_url : ''),
+    video: e.video_url || '', news: e.news_url || e.info_urls?.[0]?.url || '' }));
+  try { localStorage.setItem(ECACHE, JSON.stringify({ t: Date.now(), list })); } catch (e) { }
   return list;
 }
-
 async function load() {
   if (S.status === 'busy' || (S.status === 'ok' && Date.now() - S.at < 30 * 6e4)) return;
   S.status = 'busy'; refresh();
-  const [dock, launches] = await Promise.allSettled([loadDocking(), loadLaunchList()]);
+  const [dock, launches, events] = await Promise.allSettled([loadDocking(), loadLaunchList(), loadEvents()]);
+  if (events.status === 'fulfilled') S.events = events.value;
   const now = Date.now();
   if (dock.status === 'fulfilled') {
     const seen = new Set();
@@ -123,7 +131,7 @@ async function load() {
     S.next = launches.value.filter(x => TO_STATION.test(x.name) || /iss|space station|tiangong/i.test(x.orbit + ' ' + x.desc.slice(0, 160)))
       .filter(x => Date.parse(x.net) > now - 6 * 3600e3).slice(0, 5);
   }
-  S.status = dock.status === 'fulfilled' || launches.status === 'fulfilled' ? 'ok' : 'err';
+  S.status = dock.status === 'fulfilled' || launches.status === 'fulfilled' || events.status === 'fulfilled' ? 'ok' : 'err';
   S.at = now; refresh();
 }
 
@@ -140,6 +148,8 @@ const progress = f => `<div style="height:4px;border-radius:2px;background:#ffff
 
 const BTN = 'padding:3px 10px;border-radius:8px;border:1px solid rgba(255,120,120,.45);background:rgba(120,30,40,.35);color:#fff;font-size:12px;cursor:pointer';
 const tvBtn = (id, F) => `<a href="#" data-tv="${esc(id)}" style="color:#ff9a9a">📺 ${t2(F, 'Watch here', 'Regarder ici')}</a>`;
+const EVICON = t => /dock/i.test(t) ? '🔗' : /undock|depart/i.test(t) ? '↩' : /capture|berth/i.test(t) ? '🦾' : /landing|splash/i.test(t) ? '🪂' : /eva|spacewalk/i.test(t) ? '👩‍🚀' : /assist|flyby|fly-by/i.test(t) ? '🌍' : /press|conference|briefing/i.test(t) ? '🎤' : /test|fire/i.test(t) ? '🔥' : '📅';
+const fmtIn = (ms, F) => { const m = Math.round(ms / 6e4); if (m < 60) return m + ' min'; const h = Math.round(m / 60); if (h < 48) return h + ' h'; const d = Math.round(h / 24); return d + t2(F, ' days', ' jours'); };
 const fmtT = ms => { const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0'); };
 const destName = (x, F) => TO_TIANGONG.test(x.name) ? 'Tiangong' : TO_STATION.test(x.name) ? 'ISS' : (x.orbit && x.orbit !== 'Unknown' ? x.orbit : t2(F, 'orbit', 'orbite'));
 
@@ -203,8 +213,8 @@ special.Ascent = () => flyTo('Ascent');
 // 📺 play a launch's own stream in the live window (NASA live if it has none yet)
 async function watch(id) {
   const x = S.all.find(l => l.id === id) || SS.live?.L?.list?.find(l => l.id === id); if (!x) return;
-  if (x.video === undefined) {
-    x.video = '';
+  if (!x.video && !x.videoTried) {
+    x.videoTried = true;
     try { const j = await getJSON(LL + 'launch/' + encodeURIComponent(id) + '/');
       const v = [...(j.vidURLs || j.vid_urls || [])].filter(v => /youtu/.test(v.url)).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))[0]; if (v) x.video = v.url; } catch (e) { }
   }
@@ -216,6 +226,20 @@ function card() {
   let h = `<div style="font-size:12px;opacity:.85">${t2(F, 'Like an airport board, for spaceships: who is docked at the space stations, who is on the way, and the probes travelling between worlds.', 'Comme un tableau d’aéroport, pour les vaisseaux : qui est amarré aux stations, qui arrive, et les sondes en route entre les mondes.')}</div>`;
 
   h += `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" data-tvch="spaceaffairs" style="${BTN}">📺 Space Affairs</button><button type="button" data-tvch="nasa" style="${BTN}">📺 ${t2(F, 'NASA live', 'NASA en direct')}</button><button type="button" data-tvch="spacex" style="${BTN}">📺 ${t2(F, 'SpaceX live', 'SpaceX en direct')}</button></div>`;
+  // --- events: dockings, spacewalks, landings, gravity assists…
+  const evs = S.events.filter(e => { const t = Date.parse(e.date); return t > now - 12 * 3600e3 && t < now + 21 * DAY; }).slice(0, 8);
+  if (evs.length) {
+    h += H(t2(F, '📅 Coming up in space', '📅 Bientôt dans l’espace'), 'events');
+    for (const e of evs) {
+      const t = Date.parse(e.date), dur = /PT(?:(\d+)H)?(?:(\d+)M)?/.exec(e.dur), end = t + (dur ? ((+dur[1] || 0) * 60 + (+dur[2] || 0)) * 6e4 : 3600e3);
+      const live = e.live || (now >= t - 15 * 6e4 && now <= end), past = now > end;
+      const st = live ? pill('🔴 ' + t2(F, 'LIVE now', 'EN DIRECT'), '#ff6b6b') : past ? pill(t2(F, 'Done', 'Terminé'), '#9fb4c8') : pill(t2(F, 'in ', 'dans ') + fmtIn(t - now, F), '#7fc8ff');
+      const links = [e.yt ? `<a href="#" data-evtv="${e.id}" style="color:#ff9a9a">📺 ${t2(F, 'Watch here', 'Regarder ici')}</a>` : (e.video ? `<a href="${esc(e.video)}" target="_blank" rel="noopener" style="color:#ff9a9a">📺 ${t2(F, 'Watch', 'Regarder')} ↗</a>` : ''),
+        e.news ? `<a href="${esc(e.news)}" target="_blank" rel="noopener" style="color:#8fd0ff">${t2(F, 'Read more', 'En savoir plus')} ↗</a>` : ''].filter(Boolean).join(' · ');
+      h += row(`${EVICON(e.type)} ${esc(e.name)}`,
+        `${date(e.date, F, true)}${e.prec && e.prec !== 'MIN' && e.prec !== 'SEC' ? ` <span style="opacity:.7">(${t2(F, 'approx.', 'env.')})</span>` : ''}${e.where ? ' · ' + esc(e.where) : ''}${e.desc ? `<br><span style="opacity:.75">${esc(e.desc.length > 170 ? e.desc.slice(0, 167).replace(/\s+\S*$/, '') + '…' : e.desc)}</span>` : ''}${links ? '<br>' + links : ''}`, st);
+    }
+  }
   // --- launches climbing to orbit right now, drawn on the globe
   const up = climbing();
   if (up.length) {
@@ -279,7 +303,9 @@ function card() {
 }
 
 let focused = null;
-function refresh() { if (focused === 'Departures') { INFO.Departures.fact = card(); if (SS.more.INFO_EN?.Departures) SS.more.INFO_EN.Departures.fact = INFO.Departures.fact; SS.onFocus('Departures'); } }
+function refresh() { if (focused === 'Departures') { const box = document.getElementById('info'), y = box?.scrollTop || 0, sc = [...(box?.querySelectorAll('*') || [])].filter(el => el.scrollTop > 0).map(el => [el.className, el.scrollTop]);
+  INFO.Departures.fact = card(); if (SS.more.INFO_EN?.Departures) SS.more.INFO_EN.Departures.fact = INFO.Departures.fact; SS.onFocus('Departures');
+  if (box) { box.scrollTop = y; for (const [c, t] of sc) { const el = c && box.querySelector('.' + String(c).split(' ')[0]); if (el) el.scrollTop = t; } } } }
 
 const R = PL.Earth.tilted.children[0].geometry.parameters.radius;
 bodies.Departures = { obj: bodies.Earth.obj, radius: bodies.Earth.radius, view: R * 5 };
@@ -290,12 +316,14 @@ special.Departures = () => { load(); flyTo('Departures'); };
 document.addEventListener('click', e => {
   if (focused !== 'Departures') return;
   const tv = e.target.closest?.('#info [data-tv]'); if (tv) { e.preventDefault(); watch(tv.dataset.tv); return; }
+  const et = e.target.closest?.('#info [data-evtv]'); if (et) { e.preventDefault(); const ev = S.events.find(x => String(x.id) === et.dataset.evtv); if (ev) SS.tv?.playLaunch(ev.yt, ev.name); return; }
   const ch = e.target.closest?.('#info [data-tvch]'); if (ch) { e.preventDefault(); SS.tv?.playChannel(ch.dataset.tvch); return; }
   const a = e.target.closest?.('#info [data-go]'); if (!a) return; e.preventDefault();
   if (a.dataset.ascent) followId = a.dataset.ascent;
   const k = a.dataset.go; if (k === 'Ascent') { flyTo('Ascent'); return; } focusSel.value = k; SS.go(k); });
 // keep the "climbing now" numbers moving while the board is open
 setInterval(() => { if (focused === 'Departures' && climbing().length) refresh(); }, 5000);
+setInterval(() => { if (focused === 'Departures') refresh(); }, 60000);   // keep the event countdowns fresh
 { const prev = SS.setLang; if (prev) SS.setLang = (...a) => { const r = prev(...a); refresh(); return r; }; }
 
 // menu entry and a button next to 🛰 Space stations (the phone layout moves it to Play)

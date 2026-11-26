@@ -84,7 +84,7 @@ function build() {
     for (const id of ids) { const b = $(id); if (b) { g.append(b); b.addEventListener('click', () => setTimeout(close, 50)); } }
     pane.append(h, g); };
   tiles(panes.watch, ['tourBtn', 'docBtn', 'doc2Btn', 'cineBtn'], 'watch');
-  tiles(panes.play, ['todayBtn', 'launchBtn', 'stationsBtn', 'boardBtn', 'rocketsBtn', 'factBtn', 'quizBtn', 'cmpBtn', 'ageBtn', 'photoBtn', 'shortBtn', 'postBtn', 'wxBtn'], 'play');
+  tiles(panes.play, ['todayBtn', 'launchBtn', 'stationsBtn', 'boardBtn', 'rocketsBtn', 'newsBtn', 'factBtn', 'quizBtn', 'cmpBtn', 'ageBtn', 'photoBtn', 'shortBtn', 'postBtn', 'wxBtn'], 'play');
 
   // Settings: time, then every switch, then app + credits
   { const p = panes.settings, ui = $('ui');

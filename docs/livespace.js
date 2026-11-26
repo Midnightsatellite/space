@@ -64,23 +64,60 @@ special.SunLive = () => flyTo('SunLive');
 // =====================================================================
 // 🚀 Upcoming launches
 // =====================================================================
-const L = { at: 0, list: [], busy: false, err: false, sel: null };
-const CACHE = 'msLaunches3';
+const L = { at: 0, list: [], busy: false, err: false, sel: null, filter: 'all' };
+const CACHE = 'msLaunches4';   // detailed: payload, booster, landing and live streams come with the list (one request every 30 minutes at most)
+// which group a launch belongs to, for the filters
+const GROUPS = [['all', '🌍 All', '🌍 Tous'], ['spacex', 'SpaceX', 'SpaceX'], ['usa', '🇺🇸 USA (others)', '🇺🇸 USA (autres)'], ['rocketlab', 'Rocket Lab', 'Rocket Lab'], ['china', '🇨🇳 China', '🇨🇳 Chine'],
+  ['russia', '🇷🇺 Russia', '🇷🇺 Russie'], ['europe', '🇪🇺 Europe', '🇪🇺 Europe'], ['india', '🇮🇳 India', '🇮🇳 Inde'], ['japan', '🇯🇵 Japan', '🇯🇵 Japon'], ['other', '🌐 Others', '🌐 Autres']];
+function groupOf(lsp, cc) {
+  if (/spacex/i.test(lsp)) return 'spacex';
+  if (/rocket lab/i.test(lsp)) return 'rocketlab';
+  if (/CHN/.test(cc)) return 'china';
+  if (/RUS/.test(cc)) return 'russia';
+  if (/arianespace|european space|avio/i.test(lsp) || /^(FRA|ITA|DEU|ESP|GBR|NOR|SWE)/.test(cc)) return 'europe';
+  if (/IND/.test(cc)) return 'india';
+  if (/JPN/.test(cc)) return 'japan';
+  if (/USA/.test(cc)) return 'usa';
+  return 'other';
+}
+const bestVideo = vids => { const v = [...(vids || [])].filter(v => /youtu/.test(v.url)).sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99))[0]; return v ? v.url : ''; };
 async function loadLaunches(force) {
   if (L.busy) return;
-  try { const c = JSON.parse(localStorage.getItem(CACHE) || 'null'); if (!force && c && Date.now() - c.t < 20 * 6e4) { L.list = c.list; L.at = c.t; return; } } catch (e) { }
+  try { const c = JSON.parse(localStorage.getItem(CACHE) || 'null'); if (!force && c && Date.now() - c.t < 30 * 6e4) { L.list = c.list; L.at = c.t; return; } } catch (e) { }
   L.busy = true;
   try {
-    const j = await (await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=14&mode=normal')).json();
+    const j = await (await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=40&mode=detailed')).json();
     if (!j.results) throw 0;
-    L.list = j.results.map(x => ({ id: x.id, name: x.name, net: x.net, status: x.status?.abbrev || '', statusName: x.status?.name || '', rocket: x.rocket?.configuration?.full_name || '', lsp: x.launch_service_provider?.name || '',
-      mission: x.mission?.name || '', desc: x.mission?.description || '', orbit: x.mission?.orbit?.name || '', pad: x.pad?.name || '', place: x.pad?.location?.name || '',
-      lat: parseFloat(x.pad?.latitude), lon: parseFloat(x.pad?.longitude), webcast: x.webcast_live, image: typeof x.image === 'string' ? x.image : (x.image?.image_url || '') }));
+    L.list = j.results.map(x => {
+      const lsp = x.launch_service_provider || {}, cc = lsp.country_code || x.pad?.country_code || '';
+      const boosters = (x.rocket?.launcher_stage || []).map(b => ({ serial: b.launcher?.serial_number || '', flight: b.launcher_flight_number, reused: !!b.reused, type: b.type || '',
+        landed: b.launcher?.successful_landings ?? null, turn: b.turn_around_time_days ?? null,
+        land: b.landing ? { attempt: !!b.landing.attempt, where: b.landing.location?.name || '', abbrev: b.landing.location?.abbrev || '', kind: b.landing.type?.abbrev || '', km: b.landing.downrange_distance ?? null } : null }));
+      return { id: x.id, name: x.name, net: x.net, status: x.status?.abbrev || '', statusName: x.status?.name || '', rocket: x.rocket?.configuration?.full_name || '', lsp: lsp.name || '', group: groupOf(lsp.name || '', cc),
+        mission: x.mission?.name || '', desc: x.mission?.description || '', mtype: x.mission?.type || '', orbit: x.mission?.orbit?.name || '', pad: x.pad?.name || '', place: x.pad?.location?.name || '',
+        lat: parseFloat(x.pad?.latitude), lon: parseFloat(x.pad?.longitude), webcast: x.webcast_live, image: typeof x.image === 'string' ? x.image : (x.image?.image_url || ''),
+        video: bestVideo(x.vidURLs || x.vid_urls), boosters };
+    });
     L.at = Date.now(); L.err = false;
     try { localStorage.setItem(CACHE, JSON.stringify({ t: L.at, list: L.list })); } catch (e) { }
   } catch (e) { L.err = true; }
   L.busy = false;
   if (focused === 'LiveLaunches') { INFO.LiveLaunches.fact = launchCard(); SS.onFocus('LiveLaunches'); }
+}
+// ♻ the first stage: which booster, which flight, where it lands
+function boosterLine(x, F, long) {
+  const b = x.boosters?.find(b => b.serial) || x.boosters?.[0]; if (!b) return '';
+  const th = n => F ? (n === 1 ? '1er' : n + 'e') : n + (n % 100 > 10 && n % 100 < 14 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  let t = b.serial ? `♻ ${esc(b.serial)}` : '♻';
+  if (b.flight) t += ` · ${b.flight === 1 ? t2(F, 'first flight', 'premier vol') : `${th(b.flight)} ${t2(F, 'flight', 'vol')}`}`;
+  if (b.land?.attempt) t += ` · ${t2(F, 'lands', 'atterrit')} ${b.land.kind === 'RTLS' ? t2(F, 'back at the launch site', 'au site de lancement') : t2(F, 'on', 'sur')} ${b.land.kind === 'RTLS' ? '' : esc(b.land.where || b.land.abbrev)}`;
+  else if (b.land && !b.land.attempt) t += ` · ${t2(F, 'not recovered', 'non récupéré')}`;
+  if (long) { const extra = [];
+    if (b.landed != null && b.flight > 1) extra.push(t2(F, `${b.landed} landings so far`, `${b.landed} atterrissages jusqu’ici`));
+    if (b.turn != null) extra.push(t2(F, `${b.turn} days since its last flight`, `${b.turn} jours depuis son dernier vol`));
+    if (b.land?.km) extra.push(t2(F, `${Math.round(b.land.km)} km from the pad`, `à ${Math.round(b.land.km)} km du pas de tir`));
+    if (extra.length) t += `<br><span style="opacity:.75">${extra.join(' · ')}</span>`; }
+  return t;
 }
 const when = (iso, F) => new Date(iso).toLocaleString(F ? 'fr-FR' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const countdown = (ms, F) => { const s = Math.round((ms - Date.now()) / 1000), a = Math.abs(s), d = Math.floor(a / 86400), h = Math.floor(a % 86400 / 3600), m = Math.floor(a % 3600 / 60), ss = a % 60;
@@ -89,16 +126,20 @@ const STATUS = { Go: ['Go for launch', 'Feu vert'], TBC: ['To be confirmed', 'À
 function launchCard() {
   const F = fr();
   if (!L.list.length) return L.err ? `<div style="color:#ff9090">${t2(F, 'Couldn’t load the launch list, try again later.', 'Liste des lancements indisponible, réessayez plus tard.')}</div>` : `<div style="opacity:.7">⏳ ${t2(F, 'Getting the launch list…', 'Récupération des lancements…')}</div>`;
-  const list = L.list.filter(x => Date.parse(x.net) > Date.now() - 3 * 36e5).slice(0, 10);
-  return list.map((x, i) => { const st = STATUS[x.status]?.[F ? 1 : 0] || x.statusName, go = x.status === 'Go';
+  const all = L.list.filter(x => Date.parse(x.net) > Date.now() - 3 * 36e5);
+  const counts = {}; for (const x of all) counts[x.group] = (counts[x.group] || 0) + 1;
+  const chips = GROUPS.filter(([k]) => k === 'all' || counts[k]).map(([k, en, f]) => { const on = L.filter === k;
+    return `<button type="button" data-lfilter="${k}" style="margin:2px 3px 2px 0;padding:2px 8px;border-radius:12px;font-size:11.5px;cursor:pointer;border:1px solid ${on ? '#9fd0ff' : 'rgba(140,160,255,.3)'};background:${on ? 'rgba(80,120,220,.55)' : 'rgba(40,50,90,.4)'};color:#fff">${t2(F, en, f)} ${k === 'all' ? all.length : counts[k]}</button>`; }).join('');
+  const list = all.filter(x => L.filter === 'all' || x.group === L.filter).slice(0, 30);
+  return `<div style="margin-top:4px">${chips}</div>` + list.map(x => { const st = STATUS[x.status]?.[F ? 1 : 0] || x.statusName, go = x.status === 'Go', bl = boosterLine(x, F);
     return `<div style="margin-top:7px;padding-top:6px;border-top:1px solid rgba(140,160,255,.15)"><a href="#" data-launch="${esc(x.id)}" style="color:#9fd0ff"><b style="display:inline;font-size:12.5px">🚀 ${esc(x.name)}</b></a>
-      <div style="font-size:12px">${esc(when(x.net, F))} · <span data-net="${esc(x.net)}" style="font-variant-numeric:tabular-nums;color:${go ? '#7be07b' : '#ffd27a'}">${countdown(Date.parse(x.net), F)}</span></div>
-      <div style="font-size:11.5px;opacity:.75">${esc(x.place)}${st ? ` · ${esc(st)}` : ''}</div></div>`; }).join('')
+      <div style="font-size:12px">${esc(when(x.net, F))} · <span data-net="${esc(x.net)}" style="font-variant-numeric:tabular-nums;color:${go ? '#7be07b' : '#ffd27a'}">${countdown(Date.parse(x.net), F)}</span>${x.video ? ` · <a href="${esc(x.video)}" data-watch="${esc(x.id)}" data-title="${esc(x.name.split('|').pop().trim())}" style="color:#ff9a9a">📺 ${t2(F, 'live', 'direct')}</a>` : ''}</div>
+      <div style="font-size:11.5px;opacity:.75">${esc(x.place)}${st ? ` · ${esc(st)}` : ''}${x.orbit && x.orbit !== 'Unknown' ? ` · ${esc(x.orbit)}` : ''}</div>${bl ? `<div style="font-size:11.5px;opacity:.8">${bl}</div>` : ''}</div>`; }).join('')
     + `<div style="font-size:11px;opacity:.6;margin-top:8px">${t2(F, 'Times in your own time zone. Launch dates often slip. Data: The Space Devs (Launch Library 2).', 'Heures dans votre fuseau horaire. Les dates glissent souvent. Données : The Space Devs (Launch Library 2).')}</div>`;
 }
 bodies.LiveLaunches = { obj: bodies.Earth.obj, radius: bodies.Earth.radius, view: (PL.Earth.tilted.children[0].geometry.parameters.radius) * 3.4 };
 info('LiveLaunches', 'Upcoming rocket launches', 'Live data · launches worldwide', 'the next rockets to leave Earth', launchCard());
-{ const prev = SS.onFocus; SS.onFocus = key => { if (key === 'LiveLaunches') { INFO.LiveLaunches.fact = launchCard(); if (SS.more.INFO_EN?.LiveLaunches) SS.more.INFO_EN.LiveLaunches.fact = INFO.LiveLaunches.fact; if (Date.now() - L.at > 20 * 6e4) loadLaunches(); } prev(key); }; }
+{ const prev = SS.onFocus; SS.onFocus = key => { if (key === 'LiveLaunches') { INFO.LiveLaunches.fact = launchCard(); if (SS.more.INFO_EN?.LiveLaunches) SS.more.INFO_EN.LiveLaunches.fact = INFO.LiveLaunches.fact; if (Date.now() - L.at > 30 * 6e4) loadLaunches(); } prev(key); }; }
 special.LiveLaunches = () => { loadLaunches(); flyTo('LiveLaunches'); };
 setInterval(() => { const F = fr(); for (const el of document.querySelectorAll('[data-net]')) el.textContent = countdown(Date.parse(el.dataset.net), F); }, 1000);
 
@@ -116,12 +157,14 @@ function showLaunch(id) {
     `<div style="font-size:13px"><span data-net="${esc(x.net)}" style="font-variant-numeric:tabular-nums">${countdown(Date.parse(x.net), F)}</span> · ${esc(when(x.net, F))}</div>
      <div style="margin-top:5px">${t2(F, 'Rocket', 'Fusée')}: ${esc(x.rocket)} · ${esc(x.lsp)}</div>
      ${x.orbit && x.orbit !== 'Unknown' ? `<div>${t2(F, 'Orbit', 'Orbite')}: ${esc(x.orbit)}</div>` : ''}
+     ${x.mission ? `<div>${t2(F, 'Payload', 'Charge utile')}: ${esc(x.mission)}${x.mtype ? ` <span style="opacity:.7">(${esc(x.mtype)})</span>` : ''}</div>` : ''}
+     ${boosterLine(x, F, true) ? `<div style="margin-top:5px;font-size:12px">${boosterLine(x, F, true)}</div>` : ''}
      ${x.desc && x.desc !== 'Details TBD.' ? `<div style="margin-top:5px;font-size:12px;opacity:.85">${esc(x.desc)}</div>` : ''}
      ${x.image ? `<img src="${esc(x.image)}" alt="" loading="lazy" style="display:block;width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px">` : ''}
-     <div style="margin-top:8px"><a href="${esc(watchUrl(x))}" target="_blank" rel="noopener" data-watch="${esc(x.id)}" style="display:inline-block;padding:4px 10px;border-radius:8px;border:1px solid rgba(140,160,255,.35);background:rgba(60,80,170,.35);color:#fff;text-decoration:none">▶ ${t2(F, 'Watch live', 'Regarder en direct')}</a></div>
+     <div style="margin-top:8px"><a href="${esc(watchUrl(x))}" target="_blank" rel="noopener" data-watch="${esc(x.id)}" data-title="${esc(x.name.split('|').pop().trim())}" style="display:inline-block;padding:4px 10px;border-radius:8px;border:1px solid rgba(140,160,255,.35);background:rgba(60,80,170,.35);color:#fff;text-decoration:none">▶ ${t2(F, 'Watch live', 'Regarder en direct')}</a></div>
      <div style="margin-top:7px"><a href="#" data-back-launches="1">${t2(F, '← All upcoming launches', '← Tous les prochains lancements')}</a></div>`);
   flyTo('LaunchPad');
-  if (x.video === undefined) loadVideo(x);
+  if (x.video === undefined || x.video === '') loadVideo(x);
 }
 // the official live stream, when the schedule lists one; otherwise a YouTube search for the Space Affairs stream of that launch
 const watchUrl = x => x.video || 'https://www.youtube.com/results?search_query=' + encodeURIComponent('Space Affairs live ' + x.name.split('|').pop().trim());
@@ -135,6 +178,7 @@ async function loadVideo(x) {
   } catch (e) { }
 }
 document.addEventListener('click', e => {
+  const fb = e.target.closest?.('[data-lfilter]'); if (fb) { e.preventDefault(); L.filter = fb.dataset.lfilter; INFO.LiveLaunches.fact = launchCard(); if (SS.more.INFO_EN?.LiveLaunches) SS.more.INFO_EN.LiveLaunches.fact = INFO.LiveLaunches.fact; SS.onFocus('LiveLaunches'); return; }
   const a = e.target.closest?.('[data-launch]'); if (a) { e.preventDefault(); showLaunch(a.dataset.launch); return; }
   const b = e.target.closest?.('[data-back-launches]'); if (b) { e.preventDefault(); padPin.visible = false; flyTo('LiveLaunches'); }
 });

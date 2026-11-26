@@ -109,7 +109,7 @@ $('tvBig').onclick = () => { box.classList.toggle('big'); $('tvBig').textContent
 document.addEventListener('click', e => {
   const a = e.target.closest?.('a[data-watch]'); if (!a) return;
   e.preventDefault();   // no stream listed yet: Space Affairs' live channel plays instead
-  const title = document.querySelector('#info > b')?.textContent?.replace(/^🚀\s*/, '') || '';
+  const title = a.dataset.title || document.querySelector('#info > b')?.textContent?.replace(/^🚀\s*/, '') || '';
   playLaunch(a.getAttribute('href'), title);
 });
 SS.i18nAdd?.({ ui: { 'YouTube ↗': 'YouTube ↗' } });
